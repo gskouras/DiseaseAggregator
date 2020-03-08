@@ -1,1 +1,6 @@
-#include "patient.h"
+#include "../Headers/patient.h"
+
+int PatientRecordsFile ( char * fileName)
+{
+	
+}
