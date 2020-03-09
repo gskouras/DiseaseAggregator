@@ -2,6 +2,7 @@
 #include <ctype.h> 
 #include <string.h>
 #include  <stdlib.h>
+#include "../Headers/patient_list.h"
 
 
 typedef struct 

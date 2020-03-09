@@ -1,27 +1,21 @@
 #include "../Headers/main.h"
 
-
-
-//only main stays at this file
-int main(int argc, char *argv[]) {
-
-	//./diseaseMonitor -p patientRecordsFile –h1 diseaseHashtableNumOfEntries  –h2 countryHashtableNumOfEntries –b bucketSize 
-
+int main(int argc, char *argv[])
+{
 	Params params = inputValidate(argc, argv);
 
-
-
-	printf("parameters of program are %s, %d, %d, %d\n", params.fileName, params.disHashNum, params.countryHashNum, params.bucketsize);
-
+	if(readPatientRecordsFile ( params.fileName))
+		return 0;
 }
 
 
 
-int digitValidate(char *a){
-	for (unsigned int i = 0; i < strlen(a); i++){
-		if(!isdigit(a[i])){
+int digitValidate(char *a)
+{
+	for (unsigned int i = 0; i < strlen(a); i++)
+	{
+		if(!isdigit(a[i]))
 			return -1;
-		}
 	}
 	return 0;
 }
