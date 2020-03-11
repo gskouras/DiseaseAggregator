@@ -37,11 +37,9 @@ typedef struct
 } Patient_list;
 
 
-int readPatientRecordsFile ( char * );
-
 Patient_Node *createPatientNode( Patient );
 
-Patient_list * initPatientList( Patient_list *);
+Patient_list * initPatientList();
 
 void insertNewPatient( Patient_list * , Patient );
 
