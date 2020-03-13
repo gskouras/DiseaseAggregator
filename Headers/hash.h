@@ -8,7 +8,7 @@
 
 typedef struct {
 	char string [20]; /* string to hold the information we want */
-	TreeNode * tree_ptr; /* Pointer to a Node of the AVL tree */
+	Tree * tree; /* Pointer to the root of the AVL tree */
 } BucketItem;
 
 

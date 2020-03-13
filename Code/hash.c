@@ -53,7 +53,7 @@ void insert_to_hash_table(HashTable *ht, char * string, Patient_Node * this_pati
 
 	//printf("insert to hash table in insert hash table\n");
 	insert_to_bucket_list(target_list, string, this_patient);
-		
+	ht->total_bucket_items++;		
 }
 
 

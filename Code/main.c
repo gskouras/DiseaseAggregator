@@ -51,9 +51,9 @@ int readPatientRecordsFile ( Params params, HashTable *hash_table, Patient_list 
         new_patient_node =  insertNewPatient(list, patient_attributes);
         insert_to_hash_table(hash_table, patient_attributes.diseaseID, new_patient_node);
         
-
     }
     print_hash_table(hash_table);
+    //printf("hash table total bucket items ar %d\n", hash_table->total_bucket_items);
     //printPatientList(list);
     // free(patient.firstName);
     // free(patient.lastName);
