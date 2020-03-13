@@ -6,19 +6,19 @@ int main(int argc, char *argv[])
     if(argc==1)
     {
         params.fileName = "sample";
-        params.disHashSize = 10;
+        params.disHashSize = 1;
         params.countryHashSize= 50;
-        params.bucketsize = 64;
+        params.bucketsize = 128;
     }
 	else
     { 
         params = inputValidate(argc, argv);
     }
 
-    HashTable *hash_table = NULL;
+    HashTable hash_table;
     Patient_list * list = NULL;
 
-	if(readPatientRecordsFile ( params, hash_table, list))
+	if(readPatientRecordsFile ( params, &hash_table, list))
 		return 0;
 }
 
@@ -36,24 +36,29 @@ int readPatientRecordsFile ( Params params, HashTable *hash_table, Patient_list 
     char *line = NULL;
     size_t len = 0;
     ssize_t nread;
+    int line_pos;
 
-    Patient patient;
+    Patient patient_attributes;
+
+    Patient_Node * new_patient_node;
     list = initPatientList();
-    createNewBucket(params.bucketsize);
-    hash_table = initHashTable(params.disHashSize);
+    initHashTable(hash_table, params.disHashSize, params.bucketsize);
 
     while ((nread = getline(&line, &len, fp)) != -1) 
-    {
-        patient = string_tokenize(line, patient, (nread-9));
-        //insertNewPatient(list, patient);
-        hash_table_insert(hash_table, patient.diseaseID, params.disHashSize, params.bucketsize);
+    {   
+
+        patient_attributes = string_tokenize(line, patient_attributes);
+        new_patient_node =  insertNewPatient(list, patient_attributes);
+        insert_to_hash_table(hash_table, patient_attributes.diseaseID, new_patient_node);
+        
+
     }
-    //hash_table_print(hash_table, params.disHashSize);
+    print_hash_table(hash_table);
     //printPatientList(list);
-    free(patient.firstName);
-    free(patient.lastName);
-    free(patient.diseaseID);
-    free(patient.country);
+    // free(patient.firstName);
+    // free(patient.lastName);
+    // free(patient.diseaseID);
+    // free(patient.country);
 
     free(line);
     fclose(fp);
@@ -107,7 +112,7 @@ Params inputValidate (int argc, char *argv[])
 }
 
 
-Patient string_tokenize(char *line, Patient patient, ssize_t size )
+Patient string_tokenize(char *line, Patient patient )
 {
         char * token;
 
@@ -143,25 +148,24 @@ Patient string_tokenize(char *line, Patient patient, ssize_t size )
         patient.entryDate.month = atoi (token);
         //printf("_%d_\n", patient.entryDate.month);
 
-        token = strtok(NULL, "- ");
+        token = strtok(NULL, " ");
         patient.entryDate.year = atoi (token);
         //printf("_%d_\n", patient.entryDate.year);
+        token = strtok(NULL, "- ");
+        
 
-
-        if ((char)line[(size)] == '-') //this means that current patient hasnt take discharge from hospital
+        if (atoi(token) == 0 ) //this means that current patient hasnt take discharge from hospital
         {
             patient.exitDate.day = 1;
             patient.exitDate.month = 1;
             patient.exitDate.year = 1;
-            //printf("_%d_\n", patient.exitDate.year);
-
+            return patient;
         }
         else
         {
-            token = strtok(NULL, "-");
             patient.exitDate.day = atoi (token);
             //printf("_%d_\n", patient.exitDate.day);
-
+        
             token = strtok(NULL, "-");
             patient.exitDate.month = atoi (token);
             //printf("_%d_\n", patient.exitDate.month);

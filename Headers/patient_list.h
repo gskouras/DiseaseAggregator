@@ -20,7 +20,7 @@ typedef struct
 	char * diseaseID;
 	char * country;
 	Date entryDate;
-	Date exitDate; //date is set to one if a patients haven't take discharge from hospital yet
+	Date exitDate; //date is set to 1 if a patients haven't take discharge from hospital yet
 } Patient;
 
 typedef struct Patient_Node
@@ -41,7 +41,7 @@ Patient_Node *createPatientNode( Patient );
 
 Patient_list * initPatientList();
 
-void insertNewPatient( Patient_list * , Patient );
+Patient_Node * insertNewPatient( Patient_list * , Patient );
 
 void printPatientList( Patient_list * );
 

@@ -3,64 +3,87 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../Headers/patient_list.h"
+#include "../Headers/tree.h"
 
-
-typedef struct TreeNode
-{
-	Date date;
-	struct TreeNode *left;
-	struct TreeNode *right;
-} TreeNode;
 
 typedef struct {
-	char * string;
-	TreeNode * tree_ptr;
+	char string [20]; /* string to hold the information we want */
+	TreeNode * tree_ptr; /* Pointer to a Node of the AVL tree */
 } BucketItem;
 
 
 typedef struct Bucket
 {
-	int bucket_size;
-	int max_slots;
-	int slot_counter;
-	BucketItem * bucket_item;
-	struct Bucket *next;
-} Bucket;
+	int capacity; /* How many records a bucket can hold */
+	int slot_counter; /* Counter to have knowledge of how many records currently are in this bucket */
+	BucketItem * bucket_item; /* Array of BucketItems in this bucket */
+	struct Bucket *next; /* Pointer to the next bucket */
+} Bucket_Node;
+
+
+typedef struct 
+{
+	Bucket_Node *head; /* Pointer to the head of this list */
+	Bucket_Node *tail; /* Pointer to the tail of this list */
+	int counter; /*Total amount of buckets this list has */
+	int capacity; /* How many records a bucket can hold */
+} Bucket_List;
+
 
 typedef struct
 {
-	Bucket ** buckets;
+	Bucket_List *lists_of_buckets; /* each slot of the hash table holds a list structure of buckets */
+	int size; /* size of current HastTable */
+	int total_bucket_items; /* total number of different items that have been inserted to Hash Table */
+	int bucket_capacity; /* How many records a bucket can hold */
 } HashTable;
 
 
 
 /**** Hash Table Constuctors ****/
 
-HashTable * initHashTable( int );
+void  initHashTable( HashTable * ht, int  , int );
 
-Bucket * createNewBucket( int );
+void initBucketLists(Bucket_List * , int , int);
+
+Bucket_Node * createNewBucketNode( int );
 
 /**********************/
 
 
 /**** Hash Table Functions ****/
 
-int hash_table_insert( HashTable * , char * , int, int);
+void insert_to_hash_table(HashTable *, char * , Patient_Node * );
 
-void hash_table_print( HashTable * , int);
+void print_hash_table(HashTable *);
 
 /***************************/
 
 
 
 
+/**** Hash Table List Functions ****/
+
+
+/* Return 1 if a Record succesfully inserted to the bucket list or 0 if the Record already excisted thus the Record is inserted only to the AVL tree */
+int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node * this_patient);
+
+/*Returns 0 if a Record successfully inserted a record to a bucket. Return 1 if it this record was te last record a bucket can hold thus a new a new bucket created*/
+int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient);
+
+/* Returns 1 if a Record excist in the bucket list thus the recorded is inserted only to the avl tree. Return 0 if requested records didnt found*/
+int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patient);
+
+void print_bucket_list(Bucket_List * );
+
+/***************************/
+
 
 /*** Others ***/
 
-int hash_fun( char * , int );
+int hash_fun( char * string, int max_size);
 
-void bucket_print(Bucket *);
+void bucket_print(Bucket_Node *bucket);
 
 /***************/
 

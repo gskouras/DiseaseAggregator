@@ -2,29 +2,41 @@
 
 /*** Constructors ***/
 
-HashTable * initHashTable( int size )
+void  initHashTable( HashTable * ht, int size , int bucket_size)
 {
-	HashTable * this_ht = malloc(sizeof(HashTable));
-	this_ht->buckets = malloc(sizeof(Bucket*)*size);
-	for (int i = 0; i < size; ++i)
-	{
-		this_ht->buckets[i] = NULL;
-	}
-	return this_ht;
+	ht->lists_of_buckets = malloc(sizeof(Bucket_List) * size);
+	ht->size = size;
+	ht->bucket_capacity = bucket_size / sizeof(BucketItem);
+	//printf("ht Bucket Capacity is %d\n",ht->bucket_capacity);
+	ht->total_bucket_items = 0;
+
+	initBucketLists(ht->lists_of_buckets, size, ht->bucket_capacity);
 }
 
-Bucket * createNewBucket( int b )
+
+void initBucketLists(Bucket_List * lists_of_buckets, int size, int capacity)
 {
-	Bucket *bucket = malloc(sizeof(Bucket));
+	for (int i = 0; i < size; ++i)
+	{
+		lists_of_buckets[i].head = NULL;
+		lists_of_buckets[i].tail = NULL;
+		lists_of_buckets[i].counter = 0;
+		lists_of_buckets[i].capacity = capacity;
+	}
+
+}
+
+Bucket_Node * createNewBucketNode( int capacity )
+{
+	Bucket_Node *bucket = malloc(sizeof(Bucket_Node));
 	bucket->next = NULL;
 	bucket->slot_counter = 0;
-
-	bucket->bucket_size = b;
-
-	bucket->max_slots = b-(sizeof(int)+sizeof(Bucket*)+sizeof(BucketItem));
-
-	bucket->bucket_item = malloc(sizeof(BucketItem)* (bucket->max_slots));
-
+	bucket->capacity = capacity;
+	bucket->bucket_item = malloc(sizeof(BucketItem)* capacity);
+	for (int i = 0; i < capacity; ++i)
+	{
+		//init avl tree
+	}
 	return bucket;
 }
 
@@ -32,96 +44,160 @@ Bucket * createNewBucket( int b )
 
 /*** Hash Table Functions ***/
 
-int hash_table_insert( HashTable * ht, char * string, int table_size, int bucket_size)
+void insert_to_hash_table(HashTable *ht, char * string, Patient_Node * this_patient)
 {
-	int index = hash_fun(string, table_size);
-	//printf("index of %s is %d\n",string, index );
-	Bucket * target_bucket = ht->buckets[index];
+	int index = hash_fun(string, ht->size);
+	//printf("index of %s is %d\n", string, index );
+	Bucket_List * target_list = &ht->lists_of_buckets[index];
 
-	if(target_bucket == NULL) //This means that this buckets is still free
-	{
-		Bucket *new_bucket = createNewBucket(bucket_size); //allocate memory for a new bucket
-		ht->buckets[index] = new_bucket;
-		printf("counter1 is :%d\n", new_bucket->slot_counter );
-		new_bucket->bucket_item[new_bucket->slot_counter].string = string; //put the requested item in the slot counter posision and the increase that slot counter.
-		printf("%s\n", new_bucket->bucket_item[new_bucket->slot_counter].string );
-		new_bucket->slot_counter++;
+
+	//printf("insert to hash table in insert hash table\n");
+	insert_to_bucket_list(target_list, string, this_patient);
 		
-	}
-	else // This means that we have a collision
-	{
-		if( target_bucket->slot_counter < target_bucket-> max_slots) //if an available slot exsist in current bucket
-		{
-			target_bucket->bucket_item[target_bucket->slot_counter].string = string;
-			printf("%s\n", target_bucket->bucket_item[target_bucket->slot_counter].string );
-			printf("counter2 is :%d\n", target_bucket->slot_counter );
-			target_bucket->slot_counter++;
-		}
-		else //if slots of current buckets are full
-		{	
-			Bucket *new_bucket = createNewBucket(bucket_size); //allocate memory for a new bucket
-
-			while(target_bucket->next != NULL)
-			{
-				target_bucket = target_bucket->next;
-				//printf("%s\n", new_bucket->bucket_item[new_bucket->slot_counter].string );
-				
-			}
-
-			new_bucket->bucket_item[new_bucket->slot_counter].string = string;
-			printf("%s\n", new_bucket->bucket_item[new_bucket->slot_counter].string );
-			printf(" counter3 is :%d\n", new_bucket->slot_counter );
-			new_bucket->slot_counter++;
-			target_bucket->next = new_bucket;
-		}
-	}
-	return 1;
-
 }
 
 
-
-void hash_table_print( HashTable *ht, int size)
+void print_hash_table(HashTable * ht)
 {
-	for (int i = 0; i < size; ++i)
-	{	
-		printf("Data of %d raw of hashtable is ", i);
-		if( ht->buckets[i] != NULL)
-			bucket_print(ht->buckets[i]);  
+	printf("/**** Hash Table Data *****/\n");
+	for (int i = 0; i < ht->size; ++i)
+	{		
+		if( ht->lists_of_buckets[i].head != NULL)
+		{
+			printf("Data of raw %d in :\n", i);
+			print_bucket_list(&ht->lists_of_buckets[i]);
+			printf("\n");
+			//printf("print_hash_table in hashtable\n");
+		}
 		else
-			printf("NULL\n");
+		{
+			continue;
+		}
+
 	}
 }
 
+/*****************************************/
+
+
+/**** Hash Table List Functions ****/
+
+int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node * this_patient)
+{
+	//printf("This list Memory is %p\n\n", this_list );
+	
+	
+	if (this_list->head == NULL)
+	{
+		//printf("this list counter == 0\n");
+		Bucket_Node * new_bucket = createNewBucketNode(this_list->capacity);
+		insert_to_bucket(new_bucket, string, this_patient);
+		this_list->head = new_bucket;
+		this_list->tail = new_bucket;
+
+	}	
+	else if(this_list->counter == 0)
+	{
+		if (insert_to_bucket(this_list->head, string, this_patient))
+		{
+			//printf("insert to bucket list\n");
+			this_list->tail= this_list->tail->next;
+			this_list->counter++;
+		}
+		return 1;		
+	}
+
+
+	if(isExist(this_list, string, this_patient)) //de xriastike na kano insert afou i eggrafi iparxei idi, apla ekana to record eisagogi sto dentro
+	{
+		//printf("is isExist\n");
+		return 0;
+	}
+
+	if (insert_to_bucket(this_list->tail, string, this_patient))
+	{
+		//printf("insert_to_bucket\n");
+		this_list->tail= this_list->tail->next;
+		this_list->counter++;
+	}
+}
+
+
+int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) //
+{
+	//printf("Memory of this bucket is  %p \n", this_bucket);
+	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string);
+	//printf("%s and slot is %d\n", this_bucket->bucket_item[this_bucket->slot_counter].string, this_bucket->slot_counter);
+	//insert to avl tree
+	this_bucket->slot_counter++;
+	if (this_bucket->slot_counter == this_bucket->capacity)
+	{
+		//printf("beno?\n");
+		this_bucket->next = createNewBucketNode(this_bucket->capacity);
+		return 1;
+	}
+	return 0;
+}
+
+
+int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patient)
+{
+	Bucket_Node *temp = this_list->head;
+	while(temp != NULL)
+	{
+		for (int i = 0; i < temp->slot_counter; ++i)
+		{
+			if(!strcmp( string, temp->bucket_item[i].string)) //vrethike i eggrafi
+			{
+				//insert to avl
+				return 1;
+			}
+		}
+		temp= temp->next;
+	}
+	return 0;
+}
+
+void print_bucket_list(Bucket_List * this_list)
+{
+	Bucket_Node *temp = this_list->head;
+	int i = 0;
+	while (temp !=NULL)
+	{	
+		printf("%d bucket is \n", i);
+		bucket_print(temp);
+		temp = temp->next;
+		i++;
+	}
+}
+
+/***************************/
 
 /*** Others ***/
 
 int hash_fun( char * string, int max_size)
 {
-	int length = strlen(string);
+	int length = strnlen(string, 30);
 	int hash_value = 0;
-
 	for (int i = 0; i < length; ++i)
 	{
 		hash_value += string[i];
-		hash_value = (hash_value * string[i] % (max_size));
+		hash_value = (hash_value * string[i]) % max_size;
 	}
 	return hash_value;
-
 }
 
-void bucket_print(Bucket *bucket)
+
+void bucket_print(Bucket_Node *bucket)
 {
-	Bucket *temp = bucket;
-	while(temp!= NULL)
+	//printf("Bucket slot_counter is %d\n",  bucket->slot_counter);
+	//printf(" this bucket slot_counter is %d \n", bucket->slot_counter);
+	for (int i = 0; i < bucket->slot_counter; ++i)
 	{
-		for (int i = 0; i < bucket->slot_counter; ++i)
-		{
-			printf("%s", temp->bucket_item[i].string);
-			printf("\n");
-		}
-		temp = temp->next;
+		printf("%s\t", bucket->bucket_item[i].string);
 	}
+	printf("\n");
 }
+
 
 /********************/
