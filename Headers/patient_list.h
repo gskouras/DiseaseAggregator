@@ -15,10 +15,10 @@ typedef struct
 typedef struct
 {
 	int recordID;
-	char * firstName;
-	char * lastName;
-	char * diseaseID;
-	char * country;
+	char firstName[20];
+	char lastName[20];
+	char diseaseID[20];
+	char country[20];
 	Date entryDate;
 	Date exitDate; //date is set to 1 if a patients haven't take discharge from hospital yet
 } Patient;

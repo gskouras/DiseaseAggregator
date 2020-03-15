@@ -8,13 +8,13 @@
 
 typedef struct {
 	char string [20]; /* string to hold the information we want */
-	Tree * tree; /* Pointer to the root of the AVL tree */
+	Tree_Node * root; /* Pointer to the root of the AVL tree */
 } BucketItem;
 
 
 typedef struct Bucket
 {
-	int capacity; /* How many records a bucket can hold */
+	unsigned long int  capacity; /* How many records a bucket can hold */
 	int slot_counter; /* Counter to have knowledge of how many records currently are in this bucket */
 	BucketItem * bucket_item; /* Array of BucketItems in this bucket */
 	struct Bucket *next; /* Pointer to the next bucket */
@@ -26,7 +26,7 @@ typedef struct
 	Bucket_Node *head; /* Pointer to the head of this list */
 	Bucket_Node *tail; /* Pointer to the tail of this list */
 	int counter; /*Total amount of buckets this list has */
-	int capacity; /* How many records a bucket can hold */
+	unsigned long int capacity; /* How many records a bucket can hold */
 } Bucket_List;
 
 
@@ -57,6 +57,8 @@ void insert_to_hash_table(HashTable *, char * , Patient_Node * );
 
 void print_hash_table(HashTable *);
 
+void destroyHashTable(HashTable *);
+
 /***************************/
 
 
@@ -66,15 +68,17 @@ void print_hash_table(HashTable *);
 
 
 /* Return 1 if a Record succesfully inserted to the bucket list or 0 if the Record already excisted thus the Record is inserted only to the AVL tree */
-int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node * this_patient);
+int  insert_to_bucket_list (Bucket_List * , char * , Patient_Node * );
 
 /*Returns 0 if a Record successfully inserted a record to a bucket. Return 1 if it this record was te last record a bucket can hold thus a new a new bucket created*/
-int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient);
+int insert_to_bucket(Bucket_Node * , char * string, Patient_Node * );
 
 /* Returns 1 if a Record excist in the bucket list thus the recorded is inserted only to the avl tree. Return 0 if requested records didnt found*/
-int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patient);
+int isExist( Bucket_List * , char * , Patient_Node * );
 
 void print_bucket_list(Bucket_List * );
+
+void freeBucketNodes(Bucket_List *);
 
 /***************************/
 

@@ -3,47 +3,45 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../Headers/patient_list.h"
+#include "../Headers/date_list.h"
 
 
 typedef struct Tree_Node
 {
 	Date date;
+	Date_List  date_list;
 	int height;
 	struct Tree_Node *left;
 	struct Tree_Node *right;
-	Patient_Node * patient;
 } Tree_Node;
 
-typedef struct 
-{
-	Tree_Node * root;
-	int counter;
-} Tree;
 
 /**** Tree Constructors ****/
 
-void TreeInitialize( Tree * );
 
-Tree_Node * createTreeNode();
+Tree_Node * createTreeNode( Date );
 
  /*****************/
 
 
 /*** Tree Functions ***/
 
+Tree_Node * tree_insert( Tree_Node * , Date , Patient_Node * );
 
 Tree_Node *rightRotate( Tree_Node * );
 
 Tree_Node *leftRotate( Tree_Node * ); 
 
+void tree_preorder_print(Tree_Node* root);
+
+
 /*******************/
-
-
 
 /*** Other Functions ***/
 
-int date_cpm( Date , Date );
+int date_cmp( Date , Date );
+
+void print_date(Date date);
 
 int height( Tree_Node * );
 

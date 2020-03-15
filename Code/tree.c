@@ -2,20 +2,15 @@
 
 /**** Tree Constructors ****/
 
-void TreeInitialize( Tree * tree)
-{
-	tree->root = NULL;
-	int counter = 0;
-}
 
-
-Tree_Node * createTreeNode()
+Tree_Node * createTreeNode(Date date)
 {
 	Tree_Node * new_node = malloc(sizeof(Tree_Node));
-	int height = 0;
+	int height = 1;
+	new_node->date = date;
 	new_node->left = NULL;
 	new_node->right = NULL;
-	new_node->patient = NULL;
+	initDateList(&new_node->date_list);
 	return new_node;
 }
 
@@ -24,6 +19,60 @@ Tree_Node * createTreeNode()
 
 
 /*** Tree Functions ***/
+
+
+Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this_patient )
+{	
+	if(tree_node == NULL)
+	{
+		Tree_Node * new_node = createTreeNode(date);
+		tree_node = new_node;
+		insertNewDate(&tree_node->date_list , this_patient);
+		return new_node;
+	}
+
+	if (date_cmp(date,tree_node->date) == 2) // equal dates
+	{
+		tree_node->date_list.counter++;
+	}
+
+
+	/**** Recursive Insert ****/
+	if (date_cmp(date, tree_node->date) == 0) //date 2 is bigger
+	{
+		tree_node->left = tree_insert(tree_node->left, date, this_patient);
+	}
+	else if(date_cmp(date, tree_node->date) == 1) //date 1 is bigger
+	{
+		tree_node->right = tree_insert(tree_node->right, date, this_patient);
+	}
+
+	tree_node->height = max(height(tree_node->left), height(tree_node->right)) + 1;
+
+	int balance = getBalance(tree_node);
+
+	if(balance > 1 && (date_cmp(date , tree_node->date)==0))
+		return rightRotate(tree_node);
+
+	if (balance < -1 && (date_cmp(date, tree_node->date)==1))
+		return leftRotate(tree_node);
+
+	if(balance > 1 && (date_cmp(date , tree_node->date)==1))
+	{
+		tree_node->left = leftRotate(tree_node->left);
+		return rightRotate(tree_node);
+	}
+
+	if (balance < -1 && (date_cmp(date, tree_node->date)==0))
+	{
+		tree_node->right = rightRotate(tree_node->right);
+		return leftRotate(tree_node);
+	}
+
+
+	return tree_node;
+}
+
 
 
 Tree_Node *rightRotate(Tree_Node * this_node) 
@@ -61,9 +110,20 @@ Tree_Node *leftRotate(Tree_Node * this_node)
     return right_child; 
 }
 
+
+
+void tree_preorder_print(Tree_Node* root) 
+{ 
+    if (root != NULL) {    	
+        print_date(root->date);
+		printDatetList(&root->date_list );
+        tree_preorder_print(root->left); 
+        tree_preorder_print(root->right); 
+    } 
+} 
+
+
 /*******************/
-
-
 
 /*** Other Functions ***/
 
@@ -78,6 +138,11 @@ int date_cmp(Date d1, Date d2)
 
    	else
    		return 0; //if date 2 is bigger than date 1
+}
+
+void print_date(Date date)
+{
+	printf(" %d-%d-%d,  ", date.day, date.month, date.year);
 }
 
 int max(int height1, int height2) 
@@ -98,7 +163,7 @@ int getBalance(Tree_Node * this_node)
 { 
     if (this_node == NULL) 
         return 0; 
-    
+
     return height(this_node->left) - height(this_node->right); 
 }
 

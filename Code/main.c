@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
     if(argc==1)
     {
         params.fileName = "sample";
-        params.disHashSize = 1;
+        params.disHashSize = 5;
         params.countryHashSize= 50;
         params.bucketsize = 128;
     }
@@ -15,15 +15,16 @@ int main(int argc, char *argv[])
         params = inputValidate(argc, argv);
     }
 
-    HashTable hash_table;
-    Patient_list * list = NULL;
+  
 
-	if(readPatientRecordsFile ( params, &hash_table, list))
+	if(readPatientRecordsFile ( params))
 		return 0;
+
+
 }
 
 
-int readPatientRecordsFile ( Params params, HashTable *hash_table, Patient_list * list)
+int readPatientRecordsFile ( Params params)
 {
     FILE *fp = fopen(params.fileName, "r");
 
@@ -39,27 +40,27 @@ int readPatientRecordsFile ( Params params, HashTable *hash_table, Patient_list 
     int line_pos;
 
     Patient patient_attributes;
+    HashTable hash_table;  
 
-    Patient_Node * new_patient_node;
-    list = initPatientList();
-    initHashTable(hash_table, params.disHashSize, params.bucketsize);
+    Patient_Node * new_patient_node = NULL;
+    Patient_list *list = initPatientList();
+
+    initHashTable(&hash_table, params.disHashSize, params.bucketsize);   
 
     while ((nread = getline(&line, &len, fp)) != -1) 
     {   
 
         patient_attributes = string_tokenize(line, patient_attributes);
         new_patient_node =  insertNewPatient(list, patient_attributes);
-        insert_to_hash_table(hash_table, patient_attributes.diseaseID, new_patient_node);
-        
-    }
-    print_hash_table(hash_table);
-    //printf("hash table total bucket items ar %d\n", hash_table->total_bucket_items);
-    //printPatientList(list);
-    // free(patient.firstName);
-    // free(patient.lastName);
-    // free(patient.diseaseID);
-    // free(patient.country);
+        insert_to_hash_table(&hash_table, patient_attributes.country, new_patient_node);
 
+
+    }
+    print_hash_table(&hash_table);
+    //printf("hash table total bucket items ar %d\n", hash_table->total_bucket_items);
+    destroyHashTable(&hash_table);
+    freePatientList(list);
+    free(list);
     free(line);
     fclose(fp);
 
@@ -121,22 +122,22 @@ Patient string_tokenize(char *line, Patient patient )
         //printf("_%d_\n", patient.recordID);
 
         token = strtok(NULL, " ");
-        patient.firstName = malloc(sizeof(char)*strlen(token)+1);
+        //patient.firstName = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.firstName, token);
         //printf("_%s_\n", patient.firstName);
 
         token = strtok(NULL, " ");
-        patient.lastName = malloc(sizeof(char)*strlen(token)+1);
+        //patient.lastName = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.lastName, token);
         //printf("_%s_\n", patient.lastName);
 
         token = strtok(NULL, " ");
-        patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
+        //patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.diseaseID, token);
         //printf("_%s_\n", patient.diseaseID);
 
         token = strtok(NULL, " ");
-        patient.country = malloc(sizeof(char)*strlen(token)+1);
+        //patient.country = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.country, token);
         //printf("_%s_\n", patient.country);
 

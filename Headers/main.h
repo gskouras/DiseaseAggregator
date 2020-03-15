@@ -17,6 +17,6 @@ int digitValidate( char * );
 
 Params inputValidate ( int , char * argv[]);
 
-int readPatientRecordsFile ( Params , HashTable * , Patient_list *);
+int readPatientRecordsFile ( Params  );
 
 Patient string_tokenize(char *line, Patient);

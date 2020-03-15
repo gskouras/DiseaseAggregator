@@ -12,7 +12,7 @@ Patient_list * initPatientList()
 	Patient_list *this_list = malloc(sizeof(Patient_list));
 	Patient_Node *head = NULL;
 	Patient_Node *tail = NULL;
-	int counter = 0;
+	this_list->counter = 0;
 	return this_list;
 }
 
@@ -49,7 +49,7 @@ void printPatientList(Patient_list * list )
 
 void printPatientData(Patient patient)
 {
-	printf("%d %s %s %s %s %d %d %d %d %d %d", patient.recordID, patient.firstName, patient.lastName,
+	printf("%d %s %s %s %s %d-%d-%d %d-%d-%d\n", patient.recordID, patient.firstName, patient.lastName,
 	patient.diseaseID, patient.country, patient.entryDate.day, patient.entryDate.month, patient.entryDate.year,
 	patient.exitDate.day, patient.exitDate.month, patient.exitDate.year);
 }
@@ -57,11 +57,11 @@ void printPatientData(Patient patient)
 void freePatientList(Patient_list * list )
 {
 	Patient_Node *temp = list->head;
-	while (list->head != NULL)
+	while (list->counter != 0)
 	{
 		temp = list->head;
 		list->head = list->head->next;
+		list->counter--;
 		free(temp);
 	}
-	free(list);
 }
