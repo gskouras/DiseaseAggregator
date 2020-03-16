@@ -56,10 +56,8 @@ void freeDateList(Date_List * list )
 	Date_Node *temp = list->head;
 	while (list->head != NULL)
 	{
-
 		temp = list->head;
 		list->head = list->head->next;
 		free(temp);
 	}
-	free(list);
 }

@@ -123,6 +123,16 @@ void tree_preorder_print(Tree_Node* root)
 } 
 
 
+void tree_destroy(Tree_Node *tree)
+{
+	if(tree == NULL)
+		return;	
+
+	tree_destroy(tree->left);
+	tree_destroy(tree->right);
+	freeDateList(&tree->date_list);
+	free(tree);
+}
 /*******************/
 
 /*** Other Functions ***/

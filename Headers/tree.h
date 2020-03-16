@@ -34,6 +34,7 @@ Tree_Node *leftRotate( Tree_Node * );
 
 void tree_preorder_print(Tree_Node* root);
 
+void tree_destroy(Tree_Node *tree);
 
 /*******************/
 

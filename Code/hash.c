@@ -189,11 +189,14 @@ void print_bucket_list(Bucket_List * this_list)
 void freeBucketNodes(Bucket_List * this_list)
 {
 	Bucket_Node *temp = this_list->head;
-	while (this_list->counter != 0)
+	while (this_list->head != NULL)
 	{
 		temp = this_list->head;
 		this_list->head = this_list->head->next;
-		this_list->counter--;
+		for (int i = 0; i < temp->slot_counter; ++i)
+		{
+			tree_destroy(temp->bucket_item[i].root);	
+		}
 		free(temp->bucket_item);
 		free(temp);
 	}
