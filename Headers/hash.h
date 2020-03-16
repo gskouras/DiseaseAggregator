@@ -8,6 +8,8 @@
 
 typedef struct {
 	char string [20]; /* string to hold the information we want */
+	int total_patients;
+	int patients_hospitalized;
 	Tree_Node * root; /* Pointer to the root of the AVL tree */
 } BucketItem;
 
@@ -75,6 +77,8 @@ int insert_to_bucket(Bucket_Node * , char * string, Patient_Node * );
 
 /* Returns 1 if a Record excist in the bucket list thus the recorded is inserted only to the avl tree. Return 0 if requested records didnt found*/
 int isExist( Bucket_List * , char * , Patient_Node * );
+
+int getBucketSlotRecords(BucketItem *);
 
 void print_bucket_list(Bucket_List * );
 

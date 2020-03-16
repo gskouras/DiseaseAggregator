@@ -34,6 +34,22 @@ Patient_Node* insertNewPatient(Patient_list * list, Patient patient)
 }
 
 
+int id_exist(Patient_list *list, int id)
+{
+	Patient_Node *temp = list->head;
+
+	if(list->counter == 0)
+		return 0;
+
+	while(temp != NULL)
+	{	
+		if(temp->patient.recordID == id)
+			return 1;
+		temp = temp->next;
+	}
+	return 0;
+}
+
 void printPatientList(Patient_list * list )
 {
 	Patient_Node *temp = list->head;
@@ -45,6 +61,19 @@ void printPatientList(Patient_list * list )
 	}
 }
 
+Patient_Node* list_date_modify( Patient_list *list, Date date, int id)
+{
+	Patient_Node *temp = list->head;
+	while(temp != NULL)
+	{
+		if(temp->patient.recordID == id)
+		{
+			temp->patient.exitDate = date;
+			return temp;
+		}
+		temp = temp->next;
+	}
+}
 
 void printPatientData(Patient patient)
 {
@@ -61,6 +90,10 @@ void freePatientList(Patient_list * list )
 		temp = list->head;
 		list->head = list->head->next;
 		list->counter--;
+		free(temp->patient.firstName);
+		free(temp->patient.lastName);
+		free(temp->patient.diseaseID);
+		free(temp->patient.country);
 		free(temp);
 	}
 }

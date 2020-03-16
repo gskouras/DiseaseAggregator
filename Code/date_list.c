@@ -10,7 +10,6 @@ Date_Node *createDateNode()
 	return new_node;
 }
 
-
 void initDateList(Date_List * this_list)
 {
 	this_list->head = NULL;

@@ -1,5 +1,7 @@
 #include "../Headers/main.h"
 
+void cli(HashTable * , HashTable *, Patient_list* );
+
 int main(int argc, char *argv[])
 {
     Params params = inputValidate(argc, argv);
@@ -15,14 +17,20 @@ int main(int argc, char *argv[])
 
     initPatientList(&patient_list);
 
+    printf("\nProccesing Input...\n");
+
 	readPatientRecordsFile ( params, &disease_HT, &country_HT, &patient_list);
 
+    printf("Parse of file Completed Succesfully!\n\n");
+
+    print_hash_table(&disease_HT);
+    //print_hash_table(&country_HT);
+
+    cli(&disease_HT, &country_HT, &patient_list);
 
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
-
-
 }
 
 
@@ -50,15 +58,23 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
     {   
 
         patient_attributes = string_tokenize(line, patient_attributes);
-        new_patient_node =  insertNewPatient(list, patient_attributes);
-        insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
-        insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
-
-
+        
+        if (id_exist(list, patient_attributes.recordID))
+        {
+            printf("Patient with Record ID %d has been already inserted, thus it ommited\n", patient_attributes.recordID);
+            free(patient_attributes.firstName);
+            free(patient_attributes.lastName);
+            free(patient_attributes.diseaseID);
+            free(patient_attributes.country);
+   
+        }
+        else
+        {
+            new_patient_node =  insertNewPatient(list, patient_attributes);
+            insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
+            //insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
+        }
     }
-    //print_hash_table(disease_HT);
-    //print_hash_table(country_HT);
-    //printPatientList(list);
     free(line);
     fclose(fp);
 
@@ -83,9 +99,9 @@ Params inputValidate (int argc, char *argv[])
     if(argc==1)
     {
         params.fileName = "sample";
-        params.disHashSize = 5;
+        params.disHashSize = 10;
         params.countryHashSize= 50;
-        params.bucketsize = 128;
+        params.bucketsize = 256;
         return params;
     }
     else
@@ -132,22 +148,22 @@ Patient string_tokenize(char *line, Patient patient )
         //printf("_%d_\n", patient.recordID);
 
         token = strtok(NULL, " ");
-        //patient.firstName = malloc(sizeof(char)*strlen(token)+1);
+        patient.firstName = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.firstName, token);
         //printf("_%s_\n", patient.firstName);
 
         token = strtok(NULL, " ");
-        //patient.lastName = malloc(sizeof(char)*strlen(token)+1);
+        patient.lastName = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.lastName, token);
         //printf("_%s_\n", patient.lastName);
 
         token = strtok(NULL, " ");
-        //patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
+        patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.diseaseID, token);
         //printf("_%s_\n", patient.diseaseID);
 
         token = strtok(NULL, " ");
-        //patient.country = malloc(sizeof(char)*strlen(token)+1);
+        patient.country = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.country, token);
         //printf("_%s_\n", patient.country);
 

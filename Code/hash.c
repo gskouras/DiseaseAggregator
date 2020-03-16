@@ -36,7 +36,9 @@ Bucket_Node * createNewBucketNode( int capacity )
 	for (int i = 0; i < capacity; ++i)
 	{
 		//init avl tree of each bucket_slot
-		bucket->bucket_item->root == NULL;
+		bucket->bucket_item[i].root == NULL;
+		bucket->bucket_item[i].total_patients = 0;
+		bucket->bucket_item[i].patients_hospitalized = 0;
 	}
 	return bucket;
 }
@@ -91,6 +93,7 @@ void destroyHashTable(HashTable * this_ht)
 
 int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node * this_patient)
 {	
+
 	if (this_list->head == NULL) //if the record is the first to enter the Hash Table
 	{
 		Bucket_Node * new_bucket = createNewBucketNode(this_list->capacity);
@@ -127,9 +130,14 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
 	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string); //insert the record to the correct position of the bucket
-	this_bucket->bucket_item[this_bucket->slot_counter].root = 
-	tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
+	this_bucket->bucket_item[this_bucket->slot_counter].root = \
+		tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
+	
+	this_bucket->bucket_item[this_bucket->slot_counter].total_patients++;
 	this_bucket->slot_counter++;
+	if(this_patient->patient.exitDate.year > 1)
+		this_bucket->bucket_item[this_bucket->slot_counter].patients_hospitalized++;
+
 	if (this_bucket->slot_counter == this_bucket->capacity)
 	{
 		this_bucket->next = createNewBucketNode(this_bucket->capacity);
@@ -141,22 +149,32 @@ int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * thi
 
 int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patient)
 {
+
 	Bucket_Node *temp = this_list->head;
 	while(temp != NULL)
 	{
 		for (int i = 0; i < temp->slot_counter; ++i)
 		{
-			if(!strcmp( string, temp->bucket_item[i].string)) //Records arlready exsist, so we only insert the record to the avl tree
+			if(!strcmp( string, temp->bucket_item[i].string)) //Records arlready excist, so we only insert the record to the avl tree
 			{
 				//insert to avl
 				temp->bucket_item[i].root =
 				tree_insert( temp->bucket_item[i].root , this_patient->patient.entryDate, this_patient);//insert to avl tree
+				temp->bucket_item[i].total_patients++;
+				if(this_patient->patient.exitDate.year > 1)
+					temp->bucket_item[i].patients_hospitalized++;
 				return 1;
 			}
 		}
 		temp= temp->next;
 	}
 	return 0;
+}
+
+
+int getBucketSlotRecords(BucketItem * this)
+{
+	return this->total_patients;
 }
 
 void print_bucket_list(Bucket_List * this_list)

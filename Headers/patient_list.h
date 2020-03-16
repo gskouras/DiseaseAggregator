@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 typedef struct
 {
 	int day;
@@ -15,10 +16,10 @@ typedef struct
 typedef struct
 {
 	int recordID;
-	char firstName[20];
-	char lastName[20];
-	char diseaseID[20];
-	char country[20];
+	char *firstName;
+	char *lastName;
+	char *diseaseID;
+	char * country;
 	Date entryDate;
 	Date exitDate; //date is set to 1 if a patients haven't take discharge from hospital yet
 } Patient;
@@ -47,6 +48,10 @@ void initPatientList(Patient_list *);
 
 /**** Date List Functions *****/
 Patient_Node * insertNewPatient( Patient_list * , Patient );
+
+Patient_Node* list_date_modify( Patient_list *, Date , int );
+
+int id_exist( Patient_list *, int );
 
 void printPatientList( Patient_list * );
 
