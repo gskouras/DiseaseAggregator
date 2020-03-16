@@ -1,5 +1,6 @@
 #include "../Headers/patient_list.h"
 
+
 Patient_Node *createPatientNode(Patient patient)
 {
 	Patient_Node *new_patient_node = malloc(sizeof(Patient_Node));
@@ -7,13 +8,11 @@ Patient_Node *createPatientNode(Patient patient)
 	return new_patient_node;
 }
 
-Patient_list * initPatientList()
+void initPatientList(Patient_list *this_list)
 {
-	Patient_list *this_list = malloc(sizeof(Patient_list));
 	Patient_Node *head = NULL;
 	Patient_Node *tail = NULL;
 	this_list->counter = 0;
-	return this_list;
 }
 
 Patient_Node* insertNewPatient(Patient_list * list, Patient patient)

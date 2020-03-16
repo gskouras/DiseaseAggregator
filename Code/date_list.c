@@ -10,12 +10,14 @@ Date_Node *createDateNode()
 	return new_node;
 }
 
+
 void initDateList(Date_List * this_list)
 {
 	this_list->head = NULL;
 	this_list->tail = NULL;
 	int counter = 0;
 }
+
 
 void insertNewDate(Date_List * list, Patient_Node * patient_node)
 {
@@ -26,9 +28,6 @@ void insertNewDate(Date_List * list, Patient_Node * patient_node)
 		list->head = new_date;
 		list->tail = new_date;
 		list->counter++;
-
-		//printPatientData(list->head->patient_node->patient);
-		//printPatientData(list->tail->patient_node->patient);
 		return;
 	}
 	list->counter++;

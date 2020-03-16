@@ -19,15 +19,23 @@ typedef struct
 }Date_List;
 
 
+/*** Constructors ***/
+
 Date_Node *createDateNode();
 
 void initDateList( Date_List * );
+
+/****************************/
+
+/**** Utilty Functions of Date List ***/
 
 void insertNewDate( Date_List * , Patient_Node * );
 
 void printDatetList( Date_List * );
 
 void freeDateList( Date_List *  );
+
+/****************************/
 
 
 #endif

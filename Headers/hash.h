@@ -85,7 +85,7 @@ void freeBucketNodes(Bucket_List *);
 
 /*** Others ***/
 
-int hash_fun( char * string, int max_size);
+int hash_fun( char * string, int max_size); /* A simple Hash Function that assigns a string to a posision of the Hash Table */ 
 
 void bucket_print(Bucket_Node *bucket);
 

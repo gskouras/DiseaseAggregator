@@ -7,7 +7,7 @@ void  initHashTable( HashTable * ht, int size , int bucket_size)
 	ht->lists_of_buckets = malloc(sizeof(Bucket_List) * size);
 	ht->size = size;
 	ht->bucket_capacity = (bucket_size - (sizeof(int)+sizeof(Bucket_Node*)+sizeof(BucketItem))) / sizeof(BucketItem);
-	printf("Hash Table Buckets Capacity is %d\n",ht->bucket_capacity);
+	//printf("Hash Table Buckets Capacity is %d\n",ht->bucket_capacity);
 	ht->total_bucket_items = 0;
 
 	initBucketLists(ht->lists_of_buckets, size, ht->bucket_capacity);
@@ -47,13 +47,10 @@ Bucket_Node * createNewBucketNode( int capacity )
 
 void insert_to_hash_table(HashTable *ht, char * string, Patient_Node * this_patient)
 {
-	int index = hash_fun(string, ht->size);
-	//printf("index of %s is %d\n", string, index );
-	Bucket_List * target_list = &ht->lists_of_buckets[index];
+	int index = hash_fun(string, ht->size); //find the index of the record through hash functions
+	Bucket_List * target_list = &ht->lists_of_buckets[index]; //assign that index to the correct list of the Hash Table
 
-	//printPatientData(this_patient->patient);		
-	//printf("insert to hash table in insert hash table\n");
-	insert_to_bucket_list(target_list, string, this_patient);
+	insert_to_bucket_list(target_list, string, this_patient); // Insert that Record to the corresponding list
 	ht->total_bucket_items++;		
 }
 
@@ -93,25 +90,20 @@ void destroyHashTable(HashTable * this_ht)
 /**** Hash Table List Functions ****/
 
 int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node * this_patient)
-{
-	//printf("This list Memory is %p\n\n", this_list );
-	
-	
-	if (this_list->head == NULL)
+{	
+	if (this_list->head == NULL) //if the record is the first to enter the Hash Table
 	{
-		//printf("this list counter == 0\n");
 		Bucket_Node * new_bucket = createNewBucketNode(this_list->capacity);
 		insert_to_bucket(new_bucket, string, this_patient);
 		this_list->head = new_bucket;
 		this_list->tail = new_bucket;
 	}	
-	else if(this_list->counter == 0)
+	else if(this_list->counter == 0) //if the records is to inserted in the first bucket of the bucket list
 	{
 		if(isExist(this_list, string, this_patient))
 			return 0;
 		if (insert_to_bucket(this_list->head, string, this_patient))
 		{
-			//printf("insert to bucket list\n");
 			this_list->tail= this_list->tail->next;
 			this_list->counter++;
 		}
@@ -119,33 +111,27 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 	}
 
 
-	if(isExist(this_list, string, this_patient)) //de xriastike na kano insert afou i eggrafi iparxei idi, apla ekana to record eisagogi sto dentro
+	if(isExist(this_list, string, this_patient)) //if th records exist there is no need to insert it to the hash table, only to the avl tree
 	{
-		//printf("is isExist\n");
 		return 0;
 	}
 
-	if (insert_to_bucket(this_list->tail, string, this_patient))
+	if (insert_to_bucket(this_list->tail, string, this_patient)) //if not, the insert the ne record to the Hash Table
 	{
-		//printf("insert_to_bucket\n");
 		this_list->tail= this_list->tail->next;
 		this_list->counter++;
 	}
 }
 
 
-int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) //
+int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
-	//printf("Memory of this bucket is  %p \n", this_bucket);
-	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string);
-	//printPatientData(this_patient->patient);
-	//printf("%s and slot is %d\n", this_bucket->bucket_item[this_bucket->slot_counter].string, this_bucket->slot_counter);
+	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string); //insert the record to the correct position of the bucket
 	this_bucket->bucket_item[this_bucket->slot_counter].root = 
-	tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert to avl tree
+	tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
 	this_bucket->slot_counter++;
 	if (this_bucket->slot_counter == this_bucket->capacity)
 	{
-		//printf("beno?\n");
 		this_bucket->next = createNewBucketNode(this_bucket->capacity);
 		return 1;
 	}
@@ -160,7 +146,7 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 	{
 		for (int i = 0; i < temp->slot_counter; ++i)
 		{
-			if(!strcmp( string, temp->bucket_item[i].string)) //vrethike i eggrafi
+			if(!strcmp( string, temp->bucket_item[i].string)) //Records arlready exsist, so we only insert the record to the avl tree
 			{
 				//insert to avl
 				temp->bucket_item[i].root =
@@ -221,8 +207,6 @@ int hash_fun( char * string, int max_size)
 
 void bucket_print(Bucket_Node *bucket)
 {
-	//printf("Bucket slot_counter is %d\n",  bucket->slot_counter);
-	//printf(" this bucket slot_counter is %d \n", bucket->slot_counter);
 	for (int i = 0; i < bucket->slot_counter; ++i)
 	{
 		printf("%s and patients record are : \n", bucket->bucket_item[i].string);

@@ -2,29 +2,31 @@
 
 int main(int argc, char *argv[])
 {
-    Params params;
-    if(argc==1)
-    {
-        params.fileName = "sample";
-        params.disHashSize = 5;
-        params.countryHashSize= 50;
-        params.bucketsize = 128;
-    }
-	else
-    { 
-        params = inputValidate(argc, argv);
-    }
+    Params params = inputValidate(argc, argv);
 
-  
+    Patient_list patient_list;
 
-	if(readPatientRecordsFile ( params))
-		return 0;
+    HashTable disease_HT;
+    HashTable country_HT;
+
+
+    initHashTable(&disease_HT, params.disHashSize, params.bucketsize); 
+    initHashTable(&country_HT, params.countryHashSize, params.bucketsize); 
+
+    initPatientList(&patient_list);
+
+	readPatientRecordsFile ( params, &disease_HT, &country_HT, &patient_list);
+
+
+    destroyHashTable(&disease_HT);
+    destroyHashTable(&country_HT);
+    freePatientList(&patient_list);
 
 
 }
 
 
-int readPatientRecordsFile ( Params params)
+int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 {
     FILE *fp = fopen(params.fileName, "r");
 
@@ -39,28 +41,24 @@ int readPatientRecordsFile ( Params params)
     ssize_t nread;
     int line_pos;
 
-    Patient patient_attributes;
-    HashTable hash_table;  
+    Patient patient_attributes; 
 
     Patient_Node * new_patient_node = NULL;
-    Patient_list *list = initPatientList();
 
-    initHashTable(&hash_table, params.disHashSize, params.bucketsize);   
 
     while ((nread = getline(&line, &len, fp)) != -1) 
     {   
 
         patient_attributes = string_tokenize(line, patient_attributes);
         new_patient_node =  insertNewPatient(list, patient_attributes);
-        insert_to_hash_table(&hash_table, patient_attributes.country, new_patient_node);
+        insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
+        insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
 
 
     }
-    print_hash_table(&hash_table);
-    //printf("hash table total bucket items ar %d\n", hash_table->total_bucket_items);
-    destroyHashTable(&hash_table);
-    freePatientList(list);
-    free(list);
+    //print_hash_table(disease_HT);
+    //print_hash_table(country_HT);
+    //printPatientList(list);
     free(line);
     fclose(fp);
 
@@ -80,36 +78,48 @@ int digitValidate(char *a)
 
 Params inputValidate (int argc, char *argv[])
 {
-	if ( argc != 9 )
-	{
-		printf("Error. Arguement related error: Got %d, expectetd 9\n", argc);
-		exit(0);
-	}
+    Params params;
+    
+    if(argc==1)
+    {
+        params.fileName = "sample";
+        params.disHashSize = 5;
+        params.countryHashSize= 50;
+        params.bucketsize = 128;
+        return params;
+    }
+    else
+    { 
 
-	Params params;
+    	if ( argc != 9 )
+    	{
+    		printf("Error. Arguement related error: Got %d, expectetd 9\n", argc);
+    		exit(0);
+    	}
 
-	if ( (strcmp(argv[1], "-p") == 0 && strcmp(argv[3], "-h1") == 0 && strcmp(argv[5], "-h2") == 0 && strcmp(argv[7], "-b") == 0)
-	&& !digitValidate(argv[4]) && !digitValidate(argv[6]) && !digitValidate(argv[8]))
-	{
-        if(atoi(argv[8]) > 30)
-        {
-    		params.fileName = argv[2];
-    		params.disHashSize = atoi(argv[4]);
-    		params.countryHashSize = atoi(argv[6]);
-    		params.bucketsize = atoi(argv[8]);
-        }
-        else
-        {
-            printf("Bucket size must be greater than 30\n");
-            exit(0);
-        }
-	} 
-	else 
-	{
-		printf("Error. Arguement related error.\n");
-		exit(0);
-	}
-	return params;
+    	if ( (strcmp(argv[1], "-p") == 0 && strcmp(argv[3], "-h1") == 0 && strcmp(argv[5], "-h2") == 0 && strcmp(argv[7], "-b") == 0)
+    	&& !digitValidate(argv[4]) && !digitValidate(argv[6]) && !digitValidate(argv[8]))
+    	{
+            if(atoi(argv[8]) >= 128)
+            {
+        		params.fileName = argv[2];
+        		params.disHashSize = atoi(argv[4]);
+        		params.countryHashSize = atoi(argv[6]);
+        		params.bucketsize = atoi(argv[8]);
+            }
+            else
+            {
+                printf("Bucket size must be greater than 128 bytes\n");
+                exit(0);
+            }
+    	} 
+    	else 
+    	{
+    		printf("Error. Arguement related error.\n");
+    		exit(0);
+    	}
+    	return params;
+    }
 }
 
 

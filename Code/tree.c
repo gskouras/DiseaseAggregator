@@ -1,5 +1,10 @@
 #include "../Headers/tree.h"
 
+/*** The Following Code for Insertion and Right/Left Rotate and othe utility fucntions needed have been taken
+from https://www.geeksforgeeks.org/avl-tree-set-1-insertion/ and modified for the needs of the project ***/
+
+
+
 /**** Tree Constructors ****/
 
 
@@ -51,6 +56,7 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 
 	int balance = getBalance(tree_node);
 
+	/*** Rotate Nodes in the right way in order to keep Properties of AVL Trees ***/
 	if(balance > 1 && (date_cmp(date , tree_node->date)==0))
 		return rightRotate(tree_node);
 

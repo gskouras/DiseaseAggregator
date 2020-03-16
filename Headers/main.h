@@ -15,8 +15,8 @@ typedef struct
 
 int digitValidate( char * );
 
-Params inputValidate ( int , char * argv[]);
+Params inputValidate ( int , char * argv[] );
 
-int readPatientRecordsFile ( Params  );
+int readPatientRecordsFile ( Params ,  HashTable * , HashTable *, Patient_list * );
 
-Patient string_tokenize(char *line, Patient);
+Patient string_tokenize( char * , Patient);
