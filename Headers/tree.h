@@ -33,13 +33,15 @@ Tree_Node *leftRotate( Tree_Node * );
 
 void tree_preorder_print(Tree_Node* root);
 
+void tree_search_dateRange( Tree_Node * , Date , Date, int *);
+
 void tree_destroy(Tree_Node *tree);
 
 /*******************/
 
 /*** Other Functions ***/
 
-int date_cmp( Date , Date ); /*Compare two given dates. Return 2 if the given Dates are equal*/
+int date_cmp( Date , Date ); /*Compare two given dates. Return 2 if the given Dates are equal, return 1 if date 1 is bigger than date 2*/
 
 void print_date(Date date);
 

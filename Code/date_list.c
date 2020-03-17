@@ -44,6 +44,7 @@ void printDatetList(Date_List * list )
 	while(temp != NULL)
 	{
 		printPatientData(temp->patient_node->patient);
+		printf("\n");
 		temp = temp->next;
 	}
 }

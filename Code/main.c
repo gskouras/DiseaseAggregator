@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
+
 }
 
 
@@ -183,9 +184,9 @@ Patient string_tokenize(char *line, Patient patient )
 
         if (atoi(token) == 0 ) //this means that current patient hasnt take discharge from hospital
         {
-            patient.exitDate.day = 1;
-            patient.exitDate.month = 1;
-            patient.exitDate.year = 1;
+            patient.exitDate.day = -1;
+            patient.exitDate.month = -1;
+            patient.exitDate.year = -1;
             return patient;
         }
         else

@@ -28,6 +28,7 @@ typedef struct Patient_Node
 {
 	Patient patient;
 	struct Patient_Node *next;
+
 } Patient_Node;
 
 typedef struct 

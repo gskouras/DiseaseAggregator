@@ -1,5 +1,6 @@
 #include "../Headers/cli.h"
 
+
 void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 {
 	int fd;
@@ -45,7 +46,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    	}
 		    	else
 		    	{
-		        	globalDiseaseStats(input, disease_HT);
+		        	globalDiseaseStats(input, disease_HT); //done
 		    	}
 		    } 
 		    else if (strcmp(cmd, "./topk-Diseases") == 0 || strcmp(cmd, "./tkc") == 0) 
@@ -63,13 +64,13 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    else if (strcmp(cmd, "./recordPatientExit") == 0 || strcmp(cmd, "./rpe") == 0) 
 		    {
 
-		        recordPatientExit(input, list);
+		        recordPatientExit(input, list); //done
 
 		    } 
 		    else if (strcmp(cmd, "./numCurrentPatients") == 0 || strcmp(cmd, "./ncp") == 0) 
 		    {
 
-		        numCurrentPAtients(input, disease_HT);
+		        numCurrentPAtients(input, disease_HT); //done
 
 		    } 
 		    else if (strcmp(cmd, "./diseaseFrequency") == 0 || strcmp(cmd, "./df") == 0) 
@@ -81,12 +82,12 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    else if (strcmp(cmd, "./insertPatientRecord") == 0 || strcmp(cmd, "./ipr") == 0) 
 		    {
 
-		        insertPAtientRecord(input, disease_HT, country_HT, list);
+		        insertPatientRecord(input, disease_HT, country_HT, list); //done
 
 		    } 
 		    else if (strcmp(cmd, "./exit") == 0) 
 		    {
-		    	printf("\nExiting Programm...\n\n");
+		    	printf("\nExiting Programm...\n\n"); //done
 		    	free(line);
 		    	return;
 		    } 
@@ -109,13 +110,40 @@ void globalDiseaseStats( char * input, HashTable * disease_HT )
 {
 	if(input != NULL)
 	{
+		int current_counter = 0; // counter to keep track of this bucket slot diseases
+		int counter = 0;
+ 		int prev_counter = 0;
 		Date d1, d2;
+		if(date_cmp(d1, d2) == 1) //date 2 is bigger
+			printf("First Date must be bigger than second Date\n");
+			return;
+
 		dateTokenize(input, &d1, &d2);
+		for (int i = 0; i < disease_HT->size; ++i)
+		{	
+			if( disease_HT->lists_of_buckets[i].head != NULL)
+			{
+				Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
+				while(temp !=NULL)
+				{					 
+					for (int j = 0; j < temp->slot_counter; ++j)
+					{
+						tree_search_dateRange( temp->bucket_item[j].root, d1, d2, &counter);
+						current_counter = counter - prev_counter;
+						prev_counter = counter;
+						printf("Disease %s has a total of %d incidents between [", temp->bucket_item[j].string, current_counter);
+						print_date(d1); print_date(d2); printf("]\n");
+						int counter = 0;
+						int current_counter = 0; // counter to keep track of this bucket slot diseases
+						int prev_counter = 0; //counter to keep track of the amount of previus diseases
+					}
+					temp = temp->next;
+				}
+			}
+		}
 	}
 	else
 	{
-		int counter;
-
 		for (int i = 0; i < disease_HT->size; ++i)
 		{	
 			if( disease_HT->lists_of_buckets[i].head != NULL)
@@ -174,6 +202,7 @@ void numCurrentPAtients( char * input, HashTable * disease_HT)
 {
 	if(input != NULL)
 	{
+		int found = 0;
 		char *token;
 		token = strtok(input, "\n");
 		int index = hash_fun(input, disease_HT->size);
@@ -183,12 +212,21 @@ void numCurrentPAtients( char * input, HashTable * disease_HT)
 			for (int i = 0; i < temp->slot_counter; ++i)
 			{
 				if(strcmp(temp->bucket_item[i].string, token))
-					printf("%s\n",token);
+				{
+					continue;
+				}
+				else
+				{
 					printf("Disease %s has a total of %d patients still hospitalized \n", temp->bucket_item[i].string, temp->bucket_item[i].patients_hospitalized);
+					found = 1;
+					break;
+				}
 			}
 			temp = temp->next;
 
 		}
+		if(!found)
+			printf("No Patient with %s disease found in our hospital records \n", token);
 	}
 	else
 	{
@@ -201,7 +239,7 @@ void numCurrentPAtients( char * input, HashTable * disease_HT)
 				while(temp !=NULL)
 				{
 					for (int i = 0; i < temp->slot_counter; ++i)
-					{
+					{	
 						printf("Disease %s has a total of %d patients still hospitalized \n", temp->bucket_item[i].string, temp->bucket_item[i].patients_hospitalized);
 					}
 					temp = temp->next;
@@ -215,28 +253,35 @@ void numCurrentPAtients( char * input, HashTable * disease_HT)
 
 void diseaseFrequency( char * input )
 {
+
 }
 
-void insertPAtientRecord( char * input, HashTable * disease_HT, HashTable *country_HT, Patient_list *list)
+void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *country_HT, Patient_list *list)
 {
 	Patient patient_attributes;
 	Patient_Node * new_patient_node = NULL;
 
 	patient_attributes = string_tokenize(input, patient_attributes);
 
+	if(date_cmp(patient_attributes.entryDate, patient_attributes.exitDate) == 1) //date 2 is bigger
+	{
+		printf("First Date must be bigger than second Date\n");
+		return;
+	}	
 
-    if (id_exist(list, patient_attributes.recordID))
+    if (id_exist(list, patient_attributes.recordID) )
     {
-        printf("Patient with Record ID %d has been already inserted, thus it ommited\n", patient_attributes.recordID);
-   
+        printf("Patient with Record ID %d has been already inserted\n", patient_attributes.recordID);
+        return;
     }
-    else
-    {
-        new_patient_node =  insertNewPatient(list, patient_attributes);
-        insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
-        insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
-    }
-    printf("New with given record  succesfulluy inserted: ");
+
+    new_patient_node =  insertNewPatient(list, patient_attributes);
+    insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
+    insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
+
+    printf("New with given Record "); 
+    printPatientData(new_patient_node->patient);
+    printf(" Succesfully Inserted!\n");
 }
 
 /********************/

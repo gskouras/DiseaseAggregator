@@ -18,7 +18,7 @@ void numCurrentPAtients( char * , HashTable * );
 
 void diseaseFrequency( char * );
 
-void insertPAtientRecord( char * , HashTable * , HashTable * , Patient_list * );
+void insertPatientRecord( char * , HashTable * , HashTable * , Patient_list * );
 
 /********************/
 

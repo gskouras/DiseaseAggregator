@@ -4,10 +4,7 @@
 from https://www.geeksforgeeks.org/avl-tree-set-1-insertion/ and modified for the needs of the project ***/
 
 
-
 /**** Tree Constructors ****/
-
-
 Tree_Node * createTreeNode(Date date)
 {
 	Tree_Node * new_node = malloc(sizeof(Tree_Node));
@@ -41,7 +38,13 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 	{
 		if (date_cmp(date,tree_node->date) == 2) // equal dates
 		{
-			tree_node->date_list.counter++;
+			Date_Node *temp = tree_node->date_list.head;
+			while(temp != NULL)
+			{	
+				if(temp->patient_node->patient.recordID != this_patient->patient.recordID)
+					insertNewDate(&tree_node->date_list , this_patient);
+				temp = temp->next;
+			}
 		}
 
 
@@ -119,8 +122,31 @@ Tree_Node *leftRotate(Tree_Node * this_node)
     return right_child; 
 }
 
+void tree_search_dateRange (Tree_Node * this, Date d1, Date d2, int *counter)
+{
+	/* base case */
+	if(this == NULL)
+		return;
+
+	/* Since the desired o/p is sorted, recurse for left subtree first 
+    If root->data is greater than k1, then only we can get o/p keys 
+    in left subtree */
+	if (date_cmp(d1 , this->date) == 0)
+		tree_search_dateRange(this->left, d1, d2, counter);
+
+	/* if root's data lies in range, then prints root's data */
+	if(((date_cmp(d1, this->date) == 0) || (date_cmp(d1, this->date) == 2)) && ((date_cmp(d2, this->date) ==1) || (date_cmp(d2, this->date) == 2)))
+	{
+		*counter = *counter + 1;
+	}
 
 
+  	/* If root->data is smaller than k2, then only we can get o/p keys 
+      in right subtree */
+	if(date_cmp(d2 , this->date) == 1)
+		tree_search_dateRange(this->right, d1, d2, counter);
+}
+ 
 void tree_preorder_print(Tree_Node* root) 
 { 
     if (root != NULL) {    	
@@ -161,7 +187,7 @@ int date_cmp(Date d1, Date d2)
 
 void print_date(Date date)
 {
-	printf(" %d-%d-%d,  ", date.day, date.month, date.year);
+	printf(" %d-%d-%d ", date.day, date.month, date.year);
 }
 
 int max(int height1, int height2) 
