@@ -27,5 +27,7 @@ void insertPatientRecord( char * , HashTable * , HashTable * , Patient_list * );
 
 void dateTokenize( char *, Date *, Date *);
 
+void open_manual();
+
 /*********************/
 #endif

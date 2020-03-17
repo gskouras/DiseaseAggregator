@@ -1,6 +1,8 @@
 #include "../Headers/main.h"
 
+
 void cli(HashTable * , HashTable *, Patient_list* );
+void open_manual();
 
 int main(int argc, char *argv[])
 {
@@ -11,19 +13,13 @@ int main(int argc, char *argv[])
     HashTable disease_HT;
     HashTable country_HT;
 
-
-    initHashTable(&disease_HT, params.disHashSize, params.bucketsize); 
-    initHashTable(&country_HT, params.countryHashSize, params.bucketsize); 
-
-    initPatientList(&patient_list);
-
     printf("\nProccesing Input...\n");
 
 	readPatientRecordsFile ( params, &disease_HT, &country_HT, &patient_list);
 
     printf("Parse of file Completed Succesfully!\n\n");
 
-    print_hash_table(&disease_HT);
+    //print_hash_table(&disease_HT);
     //print_hash_table(&country_HT);
 
     cli(&disease_HT, &country_HT, &patient_list);
@@ -31,11 +27,10 @@ int main(int argc, char *argv[])
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
-
 }
 
 
-int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
+int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *patient_list)
 {
     FILE *fp = fopen(params.fileName, "r");
 
@@ -54,13 +49,17 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
 
     Patient_Node * new_patient_node = NULL;
 
+    initHashTable(disease_HT, params.disHashSize, params.bucketsize); 
+    initHashTable(country_HT, params.countryHashSize, params.bucketsize); 
+
+    initPatientList(patient_list);
 
     while ((nread = getline(&line, &len, fp)) != -1) 
     {   
 
         patient_attributes = string_tokenize(line, patient_attributes);
         
-        if (id_exist(list, patient_attributes.recordID))
+        if (id_exist(patient_list, patient_attributes.recordID))
         {
             printf("Patient with Record ID %d has been already inserted, thus it ommited\n", patient_attributes.recordID);
             free(patient_attributes.firstName);
@@ -71,9 +70,9 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
         }
         else
         {
-            new_patient_node =  insertNewPatient(list, patient_attributes);
+            new_patient_node =  insertNewPatient(patient_list, patient_attributes);
             insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
-            //insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
+            insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
         }
     }
     free(line);

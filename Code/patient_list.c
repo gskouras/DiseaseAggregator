@@ -67,11 +67,15 @@ Patient_Node* list_date_modify( Patient_list *list, Date date, int id)
 	while(temp != NULL)
 	{
 		if(temp->patient.recordID == id)
-		{
+		{	
 			temp->patient.exitDate = date;
 			return temp;
 		}
 		temp = temp->next;
+	}
+	if (temp == NULL)
+	{
+	    printf("Error. No patients with id %d found!", id);
 	}
 }
 

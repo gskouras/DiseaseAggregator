@@ -1,6 +1,7 @@
 #include "../Headers/cli.h"
 
 
+
 void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 {
 	int fd;
@@ -8,24 +9,8 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
     size_t len = 0;
     ssize_t read;
 
-	printf("##########  WELCOME TO DISEASE MONITOR COMMAND LINE INTERFACE  ##########\n\n"); 
-
-	printf("You can use the available commands from the list above, or type ./exit to quit\n\n");
-
-	printf("• ./globalDiseaseStats(./gl) [date1 date2]\t\t-->\t Print for every disease the total incidents in range of [date1, date2].\n\n"\
-
-           "• ./topk-Diseases(./tkc) k country  [date1 date2]\t--> \t Print, for a given country, top k diseases in range [date1, date2].\n\n"\
-
-           "• ./topk-Countries(./tkcd) k disease [date1 date2](tkcd) -->\t Print, for a given diseases, countries that top l incidents have apperead.\n\n"\
-
-           "• ./recordPatientExit(./rpe) recordID exitDate\t\t-->\t Insert an exit Date to the patient with the given id.\n\n"\
-
-           "• ./numCurrentPatients(./ncp) [disease]\t\t-->\t\t Print for a given disease the total patients that are still in the hospital. \n\n"\
-
-           "• ./diseaseFrequency(./df) virusName [country] date1 date2 -->   Printf total incidents of a [country] in range date1, date2.\n\n"\
-
-           "• ./insertPatientRecord(./ipr) recordID patientFirstName patientLastName diseaseID country entryDate [exitDate]--> Insert a new Record in the System with the given attributes.\n\n");
-
+	printf("\t\t\t\\\t\t\t##########  WELCOME TO DISEASE MONITOR COMMAND LINE INTERFACE  ##########\n\n"); 
+	printf("You can use the available commands listed in the manual page. Type ./man to see the manual page or type ./exit to quit\n\n");
     putchar('>');
 
 	while ((read = getline(&line, &len, stdin)) != EOF) 
@@ -63,9 +48,16 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    } 
 		    else if (strcmp(cmd, "./recordPatientExit") == 0 || strcmp(cmd, "./rpe") == 0) 
 		    {
-
-		        recordPatientExit(input, list); //done
-
+		    	if (input != NULL && strlen(input) < 10)
+		    	{
+		    		printf("If you Enter a Date you must also enter another \n");
+		    		putchar('>');
+		    		continue;
+		    	}
+		    	else
+		    	{
+		    		recordPatientExit(input, list); //done
+		    	}
 		    } 
 		    else if (strcmp(cmd, "./numCurrentPatients") == 0 || strcmp(cmd, "./ncp") == 0) 
 		    {
@@ -81,13 +73,26 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    } 
 		    else if (strcmp(cmd, "./insertPatientRecord") == 0 || strcmp(cmd, "./ipr") == 0) 
 		    {
-
-		        insertPatientRecord(input, disease_HT, country_HT, list); //done
+		    	if (input != NULL && strlen(input) < 40)
+		    	{
+		    		insertPatientRecord(input, disease_HT, country_HT, list); //done
+		    	}
+		    	else 
+		    	{
+		    		printf("Please Insert valid Data\n");
+		    		putchar('>');
+		    		continue;
+		    	}
+		        
 
 		    } 
+		    else if (strcmp(cmd, "./man") == 0)
+		    {
+		    	open_manual();
+		    }
 		    else if (strcmp(cmd, "./exit") == 0) 
 		    {
-		    	printf("\nExiting Programm...\n\n"); //done
+		    	printf("\nExiting Monitor Disease..\n\n"); //done
 		    	free(line);
 		    	return;
 		    } 
@@ -106,6 +111,35 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 
 /*** CLI commands ***/
 
+void open_manual()
+{
+	FILE *fptr; 
+  
+    char filename[100], c; 
+  
+    // Open file 
+    fptr = fopen("manual.txt", "r"); 
+    if (fptr == NULL) 
+    { 
+        printf("Cannot open file at this time \n"); 
+        return;
+    } 
+  
+    // Read contents from file 
+    c = fgetc(fptr); 
+    while (c != EOF) 
+    { 
+      /* no timeout */
+        printf ("%c", c); 
+       	c = fgetc(fptr); 
+    } 
+
+    printf("\n\n");
+    printf("\t\t\t\t\tPress ENTER to Continue\n");  
+    getchar(); 
+    return;  
+}
+
 void globalDiseaseStats( char * input, HashTable * disease_HT )
 {
 	if(input != NULL)
@@ -114,13 +148,17 @@ void globalDiseaseStats( char * input, HashTable * disease_HT )
 		int counter = 0;
  		int prev_counter = 0;
 		Date d1, d2;
-		if(date_cmp(d1, d2) == 1) //date 2 is bigger
-			printf("First Date must be bigger than second Date\n");
-			return;
-
 		dateTokenize(input, &d1, &d2);
+
+		if(date_cmp(d1, d2) == 1) //date 2 is bigger	
+		{
+			printf("First Date must be smaller than second Date\n");
+			return;
+		}
+
 		for (int i = 0; i < disease_HT->size; ++i)
 		{	
+			
 			if( disease_HT->lists_of_buckets[i].head != NULL)
 			{
 				Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
@@ -151,9 +189,9 @@ void globalDiseaseStats( char * input, HashTable * disease_HT )
 				Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
 				while(temp !=NULL)
 				{
-					for (int i = 0; i < temp->slot_counter; ++i)
+					for (int j = 0; j < temp->slot_counter; ++j)
 					{
-						printf("Disease %s has a total of %d incidents \n", temp->bucket_item[i].string, getBucketSlotRecords(&temp->bucket_item[i]));
+						printf("Disease %s has a total of %d incidents \n", temp->bucket_item[j].string, getBucketSlotRecords(&temp->bucket_item[j]));
 					}
 					temp = temp->next;
 
@@ -176,27 +214,45 @@ void topCountries( char * input )
 
 void recordPatientExit( char * input , Patient_list *list)
 {
-	Date date;
-	char * token = NULL;
+	if(input != NULL)
+	{
+		Date date;
+		char * token = NULL;
 
-	token = strtok(input, " ");
-	int id = atoi(token);
+		token = strtok(input, " ");
+		int id = atoi(token);
 
- 	token = strtok(NULL, "-");
-    date.day = atoi (token);
-    printf("_%d_\n", date.day);
+	 	token = strtok(NULL, "-");
+	    date.day = atoi (token);
+	    //printf("_%d_\n", date.day);
 
-    token = strtok(NULL, "-");
-    date.month = atoi (token);
-    printf("_%d_\n", date.month);
+	    token = strtok(NULL, "-");
+	    date.month = atoi (token);
+	    //printf("_%d_\n", date.month);
 
-    token = strtok(NULL, "\n");
-    date.year = atoi (token);
-    Patient_Node * this = list_date_modify(list, date,  id);
-    printf("Exit date of Patient with recordID %d updated. ", id );
-    printf("New patient details are : ");
-    printPatientData(this->patient);
+	    token = strtok(NULL, "\n");
+	    date.year = atoi (token);
+	    if(id_exist(list, id))
+	    {
+			Patient_Node * this = list_date_modify(list, date,  id);
+		    printf("Exit date of Patient with recordID %d updated!", id );
+		    printf(" New patient details are : ");
+		    printPatientData(this->patient);
+		    printf("\n");
+	    }
+	    else
+	    	printf("No patient with id %d found!\n",id );
+	    {
+	    }
+
+	}
+
+	else
+	{
+		printf("Enter valid data\n");
+	}
 }
+
 
 void numCurrentPAtients( char * input, HashTable * disease_HT)
 {
@@ -271,7 +327,7 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
 
     if (id_exist(list, patient_attributes.recordID) )
     {
-        printf("Patient with Record ID %d has been already inserted\n", patient_attributes.recordID);
+        printf("Patient Record ID %d already exist!\n", patient_attributes.recordID);
         return;
     }
 
@@ -279,9 +335,21 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
     insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
     insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
 
-    printf("New with given Record "); 
-    printPatientData(new_patient_node->patient);
-    printf(" Succesfully Inserted!\n");
+    printf("New patient with following attributes succesfully inserted"); 
+    printf("recordID : %d\n", patient_attributes.recordID);
+    printf("FirstName : %s\n", patient_attributes.firstName);
+    printf("LastName : %s\n", patient_attributes.lastName);
+    printf("diseaseID : %s\n", patient_attributes.diseaseID);
+    printf("Country : %s\n", patient_attributes.country);
+    printf("Entry date :");
+    print_date(patient_attributes.entryDate);
+    printf("\n");
+
+    if(patient_attributes.exitDate.year > 1)
+    {
+    	printf("exitDate: ");
+    	print_date(patient_attributes.exitDate);
+    }
 }
 
 /********************/
