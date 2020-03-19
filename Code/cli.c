@@ -23,7 +23,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		{
 		    if (strcmp(cmd, "./globalDiseaseStats") == 0 || strcmp(cmd, "./gl") == 0) 
 		    {
-		    	if (input != NULL && strlen(input) < 25)
+		    	if (input != NULL && strlen(input) < 19)
 		    	{
 		    		printf("If you Enter a Date you must also enter another \n");
 		    		putchar('>');
@@ -75,7 +75,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    	}
 		    	else 
 		    	{
-		        	diseaseFrequency(input, disease_HT, country_HT, list);
+		        	diseaseFrequency(input, disease_HT, list);
 		    	}
 
 		    } 
@@ -315,7 +315,7 @@ void numCurrentPAtients( char * input, HashTable * disease_HT)
 }
 
 
-void diseaseFrequency( char * input, HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
+void diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *list)
 {
 	if (input == NULL)
 	{
@@ -373,9 +373,12 @@ void diseaseFrequency( char * input, HashTable * disease_HT, HashTable * country
 	else
 	{
 		printf("No such disease found in our records!\n");
+		free(disease);
+		free(country);
 		return;
 	}
-
+	free(disease);
+	free(country);
 }
 
 

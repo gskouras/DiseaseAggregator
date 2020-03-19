@@ -20,18 +20,9 @@ int main(int argc, char *argv[])
     printf("Parse of file Completed Succesfully!\n\n");
 
     //print_hash_table(&disease_HT);
-    print_hash_table(&country_HT);
+    //print_hash_table(&country_HT);
 
     cli(&disease_HT, &country_HT, &patient_list);
-    // Date d1, d2;
-    // d1.day = 1;
-    // d1.month = 9;
-    // d1.year = 2002;
-    // d2.day = 4;
-    // d2.month = 8;
-    // d2.year = 2010;
-    // if(date_cmp(d1, d2) == 0)
-    //     printf("d1 is smaller than d2\n");
 
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);

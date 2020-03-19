@@ -31,7 +31,7 @@ Tree_Node *rightRotate( Tree_Node * );
 
 Tree_Node *leftRotate( Tree_Node * ); 
 
-void tree_preorder_print(Tree_Node* root);
+void tree_preorder_print(Tree_Node* );
 
 void tree_search_dateRange( Tree_Node * , Date , Date, int *);
 
