@@ -98,7 +98,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.fileName = "sample";
+        params.fileName = "./resources/sample";
         params.disHashSize = 10;
         params.countryHashSize= 50;
         params.bucketsize = 256;

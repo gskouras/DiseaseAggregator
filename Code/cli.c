@@ -126,7 +126,7 @@ void open_manual()
     char filename[100], c; 
   
     // Open file 
-    fptr = fopen("manual.txt", "r"); 
+    fptr = fopen("./resources/manual.txt", "r"); 
     if (fptr == NULL) 
     { 
         printf("Cannot open file at this time \n"); 

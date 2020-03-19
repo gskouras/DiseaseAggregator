@@ -1,0 +1,17 @@
+				##########  WELCOME TO DISEASE MONITOR MANUAL PAGE  ##########
+
+The available commands are lista above:
+
+• ./globalDiseaseStats(./gl) [date1 date2] :  Print for every disease the total incidents in range of  [date1, date2] . If no date specified the command prints total diseases for every disease in all dates 
+
+• ./topk-Diseases(./tkc) k country  [date1 date2] :  Print, for a given country, top k diseases in range [date1, date2].
+
+• ./topk-Countries(./tkcd) k disease [date1 date2] : Print, for a given diseases, countries that top l incidents have apperead.
+
+• ./recordPatientExit(./rpe) recordID exitDate : Insert an exit Date to the patient with the given id.
+
+• ./numCurrentPatients(./ncp) [disease] :  Print for a given disease the total patients that are still in the hospital. 
+
+• ./diseaseFrequency(./df) virusName [country] date1 date2 : Printf total incidents of a [country] in range [date1, date2]
+
+• ./insertPatientRecord(./ipr) recordID patientFirstName patientLastName diseaseID country entryDate [exitDate]--> Insert a new Record in the System with the given attributes.
