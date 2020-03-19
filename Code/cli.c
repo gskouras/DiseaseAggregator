@@ -428,20 +428,20 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
 		printf("Please Insert Valid Data\n");
 		return;
 	}
-
+	printf("strlen of input is %ld\n",strlen(input) );
 	Patient patient_attributes;
 
-	if (strlen(input) < 40)
+	if (strlen(input) < 45)
 		patient_attributes = line_tokenize_without_exitDate(input);
 	else
 		patient_attributes = line_tokenize(input, patient_attributes);
 
 	Patient_Node * new_patient_node = NULL;
 
-	if(date_cmp(patient_attributes.entryDate, patient_attributes.exitDate) == 1) //date 1 is bigger
+	id(patient_attributes.day == 0)
 	{
-		printf("First Date must be smaller than second Date\n");
-		return;
+	 	printf("First Date must be smaller than second Date\n");
+	 	return;
 	}	
 
     if (id_exist(list, patient_attributes.recordID) )
@@ -513,39 +513,39 @@ Patient line_tokenize_without_exitDate(char * input)
 
     token = strtok(input, " ");
     patient.recordID = atoi(token);
-    //printf("_%d_\n", patient.recordID);
+    printf("_%d_\n", patient.recordID);
 
     token = strtok(NULL, " ");
     patient.firstName = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.firstName, token);
-    //printf("_%s_\n", patient.firstName);
+    printf("_%s_\n", patient.firstName);
 
     token = strtok(NULL, " ");
     patient.lastName = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.lastName, token);
-    //printf("_%s_\n", patient.lastName);
+    printf("_%s_\n", patient.lastName);
 
     token = strtok(NULL, " ");
     patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.diseaseID, token);
-    //printf("_%s_\n", patient.diseaseID);
+    printf("_%s_\n", patient.diseaseID);
 
     token = strtok(NULL, " ");
     patient.country = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.country, token);
-    //printf("_%s_\n", patient.country);
+    printf("_%s_\n", patient.country);
 
     token = strtok(NULL, "-");
     patient.entryDate.day = atoi (token);
-    //printf("_%d_\n", patient.entryDate.day);
+    printf("_%d_\n", patient.entryDate.day);
 
     token = strtok(NULL, "-");
     patient.entryDate.month = atoi (token);
-    //printf("_%d_\n", patient.entryDate.month);
+    printf("_%d_\n", patient.entryDate.month);
 
     token = strtok(NULL, "\n");
     patient.entryDate.year = atoi (token);
-    //printf("_%d_\n", patient.entryDate.year);
+    // printf("_%d_\n", patient.entryDate.year);
     
 	patient.exitDate.day = 0;
     patient.exitDate.month = 0;
