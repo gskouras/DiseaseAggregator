@@ -21,7 +21,7 @@ typedef struct
 	char *diseaseID;
 	char * country;
 	Date entryDate;
-	Date exitDate; //date is set to 1 if a patients haven't take discharge from hospital yet
+	Date exitDate; //date is set to 0 if a patients haven't take discharge from hospital yet
 } Patient;
 
 typedef struct Patient_Node

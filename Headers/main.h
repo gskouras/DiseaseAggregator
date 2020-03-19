@@ -19,4 +19,4 @@ Params inputValidate ( int , char * argv[] );
 
 int readPatientRecordsFile ( Params ,  HashTable * , HashTable *, Patient_list * );
 
-Patient string_tokenize( char * , Patient);
+Patient line_tokenize( char * , Patient);

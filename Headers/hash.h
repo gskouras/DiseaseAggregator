@@ -59,6 +59,8 @@ void insert_to_hash_table(HashTable *, char * , Patient_Node * );
 
 void print_hash_table(HashTable *);
 
+int record_exist(char *, HashTable *);
+
 void destroyHashTable(HashTable *);
 
 /***************************/

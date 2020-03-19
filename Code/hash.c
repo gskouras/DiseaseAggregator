@@ -86,6 +86,32 @@ void destroyHashTable(HashTable * this_ht)
 	free(this_ht->lists_of_buckets);
 }
 
+int record_exist(char * record, HashTable * this_ht)
+{
+	int found = 0;
+	int index = hash_fun(record, this_ht->size);
+	Bucket_Node *temp = this_ht->lists_of_buckets[index].head;
+	while(temp !=NULL)
+	{
+		for (int i = 0; i < temp->slot_counter; ++i)
+		{
+			if(strcmp(temp->bucket_item[i].string, record))
+			{
+				continue;
+			}
+			else
+			{
+				
+				found = 1;
+				return found;
+				break;
+			}
+		}
+		temp = temp->next;
+		return found;
+	}
+}
+
 /*****************************************/
 
 

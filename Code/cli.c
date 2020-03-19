@@ -9,7 +9,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
     size_t len = 0;
     ssize_t read;
 
-	printf("\t\t\t\\\t\t\t##########  WELCOME TO DISEASE MONITOR COMMAND LINE INTERFACE  ##########\n\n"); 
+	printf("\t\t\t##########  WELCOME TO DISEASE MONITOR COMMAND LINE INTERFACE  ##########\n\n"); 
 	printf("You can use the available commands listed in the manual page. Type ./man to see the manual page or type ./exit to quit\n\n");
     putchar('>');
 
@@ -23,7 +23,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		{
 		    if (strcmp(cmd, "./globalDiseaseStats") == 0 || strcmp(cmd, "./gl") == 0) 
 		    {
-		    	if (input != NULL && strlen(input) < 10)
+		    	if (input != NULL && strlen(input) < 25)
 		    	{
 		    		printf("If you Enter a Date you must also enter another \n");
 		    		putchar('>');
@@ -67,21 +67,29 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    } 
 		    else if (strcmp(cmd, "./diseaseFrequency") == 0 || strcmp(cmd, "./df") == 0) 
 		    {
-
-		        diseaseFrequency(input);
-
-		    } 
-		    else if (strcmp(cmd, "./insertPatientRecord") == 0 || strcmp(cmd, "./ipr") == 0) 
-		    {
-		    	if (input != NULL && strlen(input) < 40)
-		    	{
-		    		insertPatientRecord(input, disease_HT, country_HT, list); //done
-		    	}
-		    	else 
+				if (input != NULL && strlen(input) < 10)
 		    	{
 		    		printf("Please Insert valid Data\n");
 		    		putchar('>');
 		    		continue;
+		    	}
+		    	else 
+		    	{
+		        	diseaseFrequency(input, disease_HT, country_HT, list);
+		    	}
+
+		    } 
+		    else if (strcmp(cmd, "./insertPatientRecord") == 0 || strcmp(cmd, "./ipr") == 0) 
+		    {	
+		    	if (input != NULL && strlen(input) < 30)
+		    	{
+		    		printf("Please Insert valid Data\n");
+		    		putchar('>');
+		    		continue;
+		    	}
+		    	else 
+		    	{
+		    		insertPatientRecord(input, disease_HT, country_HT, list); //done
 		    	}
 		        
 
@@ -92,7 +100,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    }
 		    else if (strcmp(cmd, "./exit") == 0) 
 		    {
-		    	printf("\nExiting Monitor Disease..\n\n"); //done
+		    	printf("\nExiting Monitor Disease..\n\n"); //Done
 		    	free(line);
 		    	return;
 		    } 
@@ -135,7 +143,7 @@ void open_manual()
     } 
 
     printf("\n\n");
-    printf("\t\t\t\t\tPress ENTER to Continue\n");  
+    printf("\t\t\t\t\t\t\tPress ENTER to Continue\n");  
     getchar(); 
     return;  
 }
@@ -169,8 +177,8 @@ void globalDiseaseStats( char * input, HashTable * disease_HT )
 						tree_search_dateRange( temp->bucket_item[j].root, d1, d2, &counter);
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
-						printf("Disease %s has a total of %d incidents between [", temp->bucket_item[j].string, current_counter);
-						print_date(d1); print_date(d2); printf("]\n");
+						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[j].string, current_counter);
+						print_date(d1); print_date(d2); printf("\n");
 						int counter = 0;
 						int current_counter = 0; // counter to keep track of this bucket slot diseases
 						int prev_counter = 0; //counter to keep track of the amount of previus diseases
@@ -241,15 +249,15 @@ void recordPatientExit( char * input , Patient_list *list)
 		    printf("\n");
 	    }
 	    else
-	    	printf("No patient with id %d found!\n",id );
 	    {
+	    	printf("No patient with id %d found!\n",id );
 	    }
 
 	}
 
 	else
 	{
-		printf("Enter valid data\n");
+		printf("Enter Valid Data\n");
 	}
 }
 
@@ -307,21 +315,90 @@ void numCurrentPAtients( char * input, HashTable * disease_HT)
 }
 
 
-void diseaseFrequency( char * input )
+void diseaseFrequency( char * input, HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 {
+	if (input == NULL)
+	{
+		printf("Please Insert Valid Data\n");
+		return;
+	}
+
+	Date d1, d2;
+	char * disease;
+	char * country;
+
+	df_tokenize(input, &disease, &country, &d1, &d2 );
+
+	if(date_cmp(d1, d2)== 1)
+	{
+		printf("First Date must be smaller than second Date\n");
+		return;
+	}
+
+
+	if(record_exist(disease, disease_HT)) //find if given disease exist
+	{			
+		int counter = 0;
+		int index = hash_fun(disease, disease_HT->size);
+		Bucket_Node *temp = disease_HT->lists_of_buckets[index].head;
+		while(temp !=NULL)
+		{
+			for (int i = 0; i < temp->slot_counter; ++i)
+			{
+				if(strcmp(temp->bucket_item[i].string, disease))
+				{
+					continue;
+				}
+				else
+				{
+					if(country == NULL)
+					{
+						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter);
+						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						print_date(d1); print_date(d2); printf("\n");
+						break;
+					}
+					else
+					{
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter);
+						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						print_date(d1); print_date(d2); printf(" in Country %s\n", country);
+						break;
+					}
+				}
+			}
+		temp = temp->next;
+		}
+	}
+	else
+	{
+		printf("No such disease found in our records!\n");
+		return;
+	}
 
 }
 
+
 void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *country_HT, Patient_list *list)
-{
+{	
+	if (input == NULL)
+	{
+		printf("Please Insert Valid Data\n");
+		return;
+	}
+
 	Patient patient_attributes;
+
+	if (strlen(input) < 40)
+		patient_attributes = line_tokenize_without_exitDate(input);
+	else
+		patient_attributes = line_tokenize(input, patient_attributes);
+
 	Patient_Node * new_patient_node = NULL;
 
-	patient_attributes = string_tokenize(input, patient_attributes);
-
-	if(date_cmp(patient_attributes.entryDate, patient_attributes.exitDate) == 1) //date 2 is bigger
+	if(date_cmp(patient_attributes.entryDate, patient_attributes.exitDate) == 1) //date 1 is bigger
 	{
-		printf("First Date must be bigger than second Date\n");
+		printf("First Date must be smaller than second Date\n");
 		return;
 	}	
 
@@ -335,13 +412,13 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
     insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
     insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
 
-    printf("New patient with following attributes succesfully inserted"); 
+    printf("New patient with following attributes succesfully inserted\n"); 
     printf("recordID : %d\n", patient_attributes.recordID);
     printf("FirstName : %s\n", patient_attributes.firstName);
     printf("LastName : %s\n", patient_attributes.lastName);
     printf("diseaseID : %s\n", patient_attributes.diseaseID);
     printf("Country : %s\n", patient_attributes.country);
-    printf("Entry date :");
+    printf("Entry date : ");
     print_date(patient_attributes.entryDate);
     printf("\n");
 
@@ -349,6 +426,7 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
     {
     	printf("exitDate: ");
     	print_date(patient_attributes.exitDate);
+    	printf("\n");
     }
 }
 
@@ -358,7 +436,7 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
 /***** Utillity Functions ****/
 
 void dateTokenize( char * input, Date *d1, Date *d2)
-{
+{	
 	char * token = NULL;
 
  	token = strtok(input, "-");
@@ -386,5 +464,100 @@ void dateTokenize( char * input, Date *d1, Date *d2)
     //printf("_%d_\n", d2.year);    
 }
 
+Patient line_tokenize_without_exitDate(char * input)
+{
+	Patient patient;
+	char * token;
+
+    token = strtok(input, " ");
+    patient.recordID = atoi(token);
+    //printf("_%d_\n", patient.recordID);
+
+    token = strtok(NULL, " ");
+    patient.firstName = malloc(sizeof(char)*strlen(token)+1);
+    strcpy( patient.firstName, token);
+    //printf("_%s_\n", patient.firstName);
+
+    token = strtok(NULL, " ");
+    patient.lastName = malloc(sizeof(char)*strlen(token)+1);
+    strcpy( patient.lastName, token);
+    //printf("_%s_\n", patient.lastName);
+
+    token = strtok(NULL, " ");
+    patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
+    strcpy( patient.diseaseID, token);
+    //printf("_%s_\n", patient.diseaseID);
+
+    token = strtok(NULL, " ");
+    patient.country = malloc(sizeof(char)*strlen(token)+1);
+    strcpy( patient.country, token);
+    //printf("_%s_\n", patient.country);
+
+    token = strtok(NULL, "-");
+    patient.entryDate.day = atoi (token);
+    //printf("_%d_\n", patient.entryDate.day);
+
+    token = strtok(NULL, "-");
+    patient.entryDate.month = atoi (token);
+    //printf("_%d_\n", patient.entryDate.month);
+
+    token = strtok(NULL, "\n");
+    patient.entryDate.year = atoi (token);
+    //printf("_%d_\n", patient.entryDate.year);
+    
+	patient.exitDate.day = 0;
+    patient.exitDate.month = 0;
+    patient.exitDate.year = 0;
+    return patient;
+}
+
+
+void df_tokenize (char *input, char ** disease_holder, char ** country_holder, Date *d1, Date *d2)	//printf(" disease holder is%s\n", *disease_holder );
+{	
+	if (strlen(input) <= 30) //tokenize without country name
+	{
+		char *token = strtok( input, " ");
+	
+ 		*disease_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(*disease_holder, token);
+		token = strtok( NULL, "\n");	
+		char *date_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(date_holder, token);
+		dateTokenize(date_holder , d1, d2);	
+		*country_holder = NULL;
+	}
+ 	else
+	{
+		char *token = strtok( input, " ");
+	
+ 		*disease_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(*disease_holder, token);
+		token = strtok(NULL, "-");
+        d1->day = atoi (token);
+        //printf("_%d_\n", patient.entryDate.day);
+
+        token = strtok(NULL, "-");
+        d1->month = atoi (token);
+        //printf("_%d_\n", patient.entryDate.month);
+
+        token = strtok(NULL, " ");
+        d1->year = atoi (token);
+
+        token = strtok(NULL, "-");
+        d2->day = atoi (token);
+        //printf("_%d_\n", patient.entryDate.day);
+
+        token = strtok(NULL, "-");
+        d2->month = atoi (token);
+        //printf("_%d_\n", patient.entryDate.month);
+
+        token = strtok(NULL, " ");
+        d2->year = atoi (token);
+
+        token = strtok(NULL, "\n");
+        *country_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(*country_holder, token);
+ 	}
+}
 
 /*********************/

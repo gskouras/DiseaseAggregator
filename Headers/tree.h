@@ -35,6 +35,8 @@ void tree_preorder_print(Tree_Node* root);
 
 void tree_search_dateRange( Tree_Node * , Date , Date, int *);
 
+void tree_search_Country_dateRange( Tree_Node * , Date , Date, char *, int *);
+
 void tree_destroy(Tree_Node *tree);
 
 /*******************/

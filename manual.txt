@@ -1,4 +1,4 @@
-					        ##########  WELCOME TO DISEASE MONITOR MANUAL PAGE  ##########
+					 ##########  WELCOME TO DISEASE MONITOR MANUAL PAGE  ##########
 
 The available commands are lista above:
 

@@ -20,9 +20,18 @@ int main(int argc, char *argv[])
     printf("Parse of file Completed Succesfully!\n\n");
 
     //print_hash_table(&disease_HT);
-    //print_hash_table(&country_HT);
+    print_hash_table(&country_HT);
 
     cli(&disease_HT, &country_HT, &patient_list);
+    // Date d1, d2;
+    // d1.day = 1;
+    // d1.month = 9;
+    // d1.year = 2002;
+    // d2.day = 4;
+    // d2.month = 8;
+    // d2.year = 2010;
+    // if(date_cmp(d1, d2) == 0)
+    //     printf("d1 is smaller than d2\n");
 
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
@@ -57,7 +66,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
     while ((nread = getline(&line, &len, fp)) != -1) 
     {   
 
-        patient_attributes = string_tokenize(line, patient_attributes);
+        patient_attributes = line_tokenize(line, patient_attributes);
         
         if (id_exist(patient_list, patient_attributes.recordID))
         {
@@ -139,7 +148,7 @@ Params inputValidate (int argc, char *argv[])
 }
 
 
-Patient string_tokenize(char *line, Patient patient )
+Patient line_tokenize(char *line, Patient patient )
 {
         char * token;
 
@@ -183,9 +192,9 @@ Patient string_tokenize(char *line, Patient patient )
 
         if (atoi(token) == 0 ) //this means that current patient hasnt take discharge from hospital
         {
-            patient.exitDate.day = -1;
-            patient.exitDate.month = -1;
-            patient.exitDate.year = -1;
+            patient.exitDate.day = 0;
+            patient.exitDate.month = 0;
+            patient.exitDate.year = 0;
             return patient;
         }
         else

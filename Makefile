@@ -1,5 +1,5 @@
 all: cli.o main.o patient_list.o hash.o tree.o date_list.o 
-	gcc -o  diseaseMonitor  cli.o main.o patient_list.o date_list.o hash.o tree.o  -g
+	gcc -o  diseaseMonitor  cli.o main.o patient_list.o date_list.o hash.o tree.o  -g 
 
 main.o: Code/main.c
 	gcc -g -c Code/main.c
