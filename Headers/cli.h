@@ -8,9 +8,9 @@
 
 void globalDiseaseStats( char *, HashTable * );
 
-void topDiseases( char * );
+void topDiseases( char *, HashTable *, Patient_list *);
 
-void topCountries( char * );
+void topCountries( char *, HashTable *, Patient_list * );
 
 void recordPatientExit( char * , Patient_list * );
 
@@ -32,6 +32,8 @@ void open_manual();
 Patient line_tokenize_without_exitDate( char * );
 
 void df_tokenize ( char *, char **, char **, Date *, Date *);
+
+void topK_tokenize(char * , char ** , Date * , Date *, int *);
 
 /*********************/
 #endif

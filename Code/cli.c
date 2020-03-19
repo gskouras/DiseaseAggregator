@@ -34,16 +34,24 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		        	globalDiseaseStats(input, disease_HT); //done
 		    	}
 		    } 
-		    else if (strcmp(cmd, "./topk-Diseases") == 0 || strcmp(cmd, "./tkc") == 0) 
+		    else if (strcmp(cmd, "./topk-Diseases") == 0 || strcmp(cmd, "./tkd") == 0) 
 		    {
-
-		        topDiseases(input);
+		    	if (input != NULL && (strlen(input) < 24  && strlen(input) > 12))
+		    	{
+		    		printf("If you Enter a Date you must also enter another \n");
+		    		putchar('>');
+		    		continue;
+		    	}
+		    	else
+		    	{
+		        	topDiseases(input, disease_HT, list);	        	
+		    	}
 
 		    } 
-		    else if (strcmp(cmd, "./topk-Countries") == 0 || strcmp(cmd, "./tkcd") == 0 ) 
+		    else if (strcmp(cmd, "./topk-Countries") == 0 || strcmp(cmd, "./tkc") == 0 ) 
 		    {
 
-		        topCountries(input);
+		        topCountries(input, country_HT, list);
 
 		    } 
 		    else if (strcmp(cmd, "./recordPatientExit") == 0 || strcmp(cmd, "./rpe") == 0) 
@@ -210,14 +218,45 @@ void globalDiseaseStats( char * input, HashTable * disease_HT )
 
 }
 
-void topDiseases( char * input )
+void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 {
+	Date d1, d2;
+	char * country;
+	int k;
+	topK_tokenize(input, &country, &d1, &d2, &k); //if no dates required d1 is set to zero.
+
+	if (d1.year ==0)
+	{
+		for (int i = 0; i < disease_HT->size; ++i)
+		{	
+			if( disease_HT->lists_of_buckets[i].head != NULL)
+			{
+				Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
+				while(temp !=NULL)
+				{
+					for (int j = 0; j < temp->slot_counter; ++j)
+					{
+							
+					}
+					temp = temp->next;
+
+				}
+			}
+		}
+	}
+	else
+	{
+
+	}
 
 }
 
-void topCountries( char * input )
+void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 {
-
+	Date d1, d2;
+	char * disease;
+	int k;
+	topK_tokenize(input, &disease, &d1, &d2, &k);
 }
 
 void recordPatientExit( char * input , Patient_list *list)
@@ -561,6 +600,42 @@ void df_tokenize (char *input, char ** disease_holder, char ** country_holder, D
         *country_holder = malloc(sizeof(char)*strlen(token)+1);
 		strcpy(*country_holder, token);
  	}
+}
+
+
+void topK_tokenize(char * input, char ** string, Date * d1, Date *d2, int *k)
+{
+	char *token;
+	if(input != NULL)
+	{
+		if ( strlen(input)< 15)
+		{
+			token = strtok(input, " ");
+			*k = atoi(token); // number of incidents
+
+			token = strtok(NULL, "\n");
+			*string = malloc(sizeof(char)*strlen(token)+1);
+			strcpy(*string, token);
+			d1->day = 0;
+			d1->month = 0;
+			d1->year = 0;
+		}
+		else
+		{
+			token = strtok(input, " ");
+			*k = atoi(token); // number of incidents
+
+			token = strtok(NULL, " ");
+			*string = malloc(sizeof(char)*strlen(token)+1);
+			strcpy(*string, token);
+			token = strtok( NULL , "\n");
+			dateTokenize(token, d1, d2);
+		}
+	}
+	else
+	{
+		printf("Please Enter Valid Data");
+	}	
 }
 
 /*********************/
