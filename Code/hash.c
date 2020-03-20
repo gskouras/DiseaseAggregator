@@ -156,11 +156,13 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
 	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string); //insert the record to the correct position of the bucket
+	
 	this_bucket->bucket_item[this_bucket->slot_counter].root = \
 		tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
 	
 	this_bucket->bucket_item[this_bucket->slot_counter].total_patients++;
 	this_bucket->slot_counter++;
+	
 	if(this_patient->patient.exitDate.year > 1)
 		this_bucket->bucket_item[this_bucket->slot_counter].patients_hospitalized++;
 
@@ -187,14 +189,16 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 				temp->bucket_item[i].root =
 				tree_insert( temp->bucket_item[i].root , this_patient->patient.entryDate, this_patient);//insert to avl tree
 				temp->bucket_item[i].total_patients++;
+				
 				if(this_patient->patient.exitDate.year > 1)
 					temp->bucket_item[i].patients_hospitalized++;
-				return 1;
+				
+				return 1; //succesfuly inserted to AVL
 			}
 		}
 		temp= temp->next;
 	}
-	return 0;
+	return 0; //if anything goew wrong return 0
 }
 
 

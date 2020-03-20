@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
 
     printf("Parse of file Completed Succesfully!\n\n");
 
-    //print_hash_table(&disease_HT);
-    //print_hash_table(&country_HT);
+    print_hash_table(&disease_HT);
+    print_hash_table(&country_HT);
 
     cli(&disease_HT, &country_HT, &patient_list);
 

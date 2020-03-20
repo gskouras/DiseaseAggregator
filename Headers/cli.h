@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "../Headers/main.h"
+#include "../Headers/heap.h"
 
 /*** CLI commands ***/
 

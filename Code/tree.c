@@ -177,15 +177,30 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
 		tree_search_dateRange(this->right, d1, d2, counter);
 }
  
-
+void tree_country_search( Tree_Node * this , char * country, int * counter)
+{
+	if (this != NULL)
+	{
+		Date_Node *temp = this->date_list.head;
+		while(temp != NULL)
+		{	
+			if (strcmp(temp->patient_node->patient.country, country) == 0)
+				*counter = *counter+1;
+			temp = temp->next;			
+		}
+		tree_country_search(this->left, country, counter);
+		tree_country_search(this->right, country, counter);
+	}
+}
  
-void tree_preorder_print(Tree_Node* root) 
+void tree_preorder_print(Tree_Node* this) 
 { 
-    if (root != NULL) {    	
-        print_date(root->date);
-		printDatetList(&root->date_list );
-        tree_preorder_print(root->left); 
-        tree_preorder_print(root->right); 
+    if (this != NULL) 
+    {    	
+        print_date(this->date);
+		printDatetList(&this->date_list );
+        tree_preorder_print(this->left); 
+        tree_preorder_print(this->right); 
     } 
 } 
 

@@ -1,5 +1,5 @@
-all: cli.o main.o patient_list.o hash.o tree.o date_list.o 
-	gcc -o  diseaseMonitor  cli.o main.o patient_list.o date_list.o hash.o tree.o  -g 
+all: cli.o main.o patient_list.o hash.o tree.o date_list.o heap.o
+	gcc -o  diseaseMonitor  cli.o main.o patient_list.o date_list.o hash.o tree.o heap.o -g 
 
 main.o: Code/main.c
 	gcc -g -c Code/main.c
@@ -15,6 +15,9 @@ hash.o: Code/hash.c
 
 tree.o: Code/tree.c
 	gcc -g -c Code/tree.c
+
+heap.o: Code/heap.c
+	gcc -g -c Code/heap.c
 
 cli.o: Code/cli.c
 	gcc -g -c Code/cli.c

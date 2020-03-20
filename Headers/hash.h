@@ -75,7 +75,7 @@ void destroyHashTable(HashTable *);
 int  insert_to_bucket_list (Bucket_List * , char * , Patient_Node * );
 
 /*Returns 0 if a Record successfully inserted a record to a bucket. Return 1 if it this record was te last record a bucket can hold thus a new a new bucket created*/
-int insert_to_bucket(Bucket_Node * , char * string, Patient_Node * );
+int insert_to_bucket(Bucket_Node * , char * , Patient_Node * );
 
 /* Returns 1 if a Record excist in the bucket list thus the recorded is inserted only to the avl tree. Return 0 if requested records didnt found*/
 int isExist( Bucket_List * , char * , Patient_Node * );

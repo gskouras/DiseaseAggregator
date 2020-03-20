@@ -223,7 +223,13 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 	Date d1, d2;
 	char * country;
 	int k;
-	topK_tokenize(input, &country, &d1, &d2, &k); //if no dates required d1 is set to zero.
+	topK_tokenize(input, &country, &d1, &d2, &k); //if no dates required, d1 is set to zero.
+
+	int current_counter = 0; // counter to keep track of this bucket slot diseases
+	int counter = 0;
+ 	int prev_counter = 0;
+ 	Max_Heap max_heap;
+ 	initMaxHeap(&max_heap);
 
 	if (d1.year ==0)
 	{
@@ -236,19 +242,21 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 				{
 					for (int j = 0; j < temp->slot_counter; ++j)
 					{
-							
+						tree_country_search(temp->bucket_item[j].root, country, &counter);
+						current_counter = counter - prev_counter;
+						prev_counter = counter;
+						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
+						counter = 0;
+						current_counter = 0; // counter to keep track of this bucket slot diseases
+						prev_counter = 0; //counter to keep track of the amount of previus diseases
 					}
 					temp = temp->next;
-
 				}
 			}
 		}
 	}
-	else
-	{
-
-	}
-
+	heap_print(max_heap.root);
 }
 
 void topCountries( char * input , HashTable* country_HT, Patient_list *list)
@@ -438,7 +446,7 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
 
 	Patient_Node * new_patient_node = NULL;
 
-	id(patient_attributes.day == 0)
+	if(patient_attributes.entryDate.day == 0)
 	{
 	 	printf("First Date must be smaller than second Date\n");
 	 	return;
