@@ -255,8 +255,63 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 				}
 			}
 		}
+	
+		if (k > max_heap.total_records)
+		{
+			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			return;
+		}
+
+		printf("%s's most %d diseases are \n", country, k);
+		for (int i = 0; i < k; ++i)
+		{	
+			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
+			heap_root_delete(&max_heap);
+		}
 	}
-	heap_print(max_heap.root);
+	else
+	{
+		for (int i = 0; i < disease_HT->size; ++i)
+		{	
+			if( disease_HT->lists_of_buckets[i].head != NULL)
+			{
+				Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
+				while(temp !=NULL)
+				{
+					for (int j = 0; j < temp->slot_counter; ++j)
+					{
+						tree_search_Country_dateRange(temp->bucket_item[j].root, d1, d2, country, &counter);
+						current_counter = counter - prev_counter;
+						prev_counter = counter;
+						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
+						counter = 0;
+						current_counter = 0; // counter to keep track of this bucket slot diseases
+						prev_counter = 0; //counter to keep track of the amount of previus diseases
+					}
+					temp = temp->next;
+				}
+			}
+		}
+	
+		if (k > max_heap.total_records)
+		{
+			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			return;
+		}
+
+		printf("%s's most %d diseases in Date Range between", country, k);
+		print_date(d1); print_date(d2); printf(" are\n");
+
+		for (int i = 0; i < k; ++i)
+		{	
+			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
+			heap_root_delete(&max_heap);
+		}
+
+	}
+	heap_destroy(max_heap.root);
+	free(country);
 }
 
 void topCountries( char * input , HashTable* country_HT, Patient_list *list)
@@ -265,6 +320,94 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 	char * disease;
 	int k;
 	topK_tokenize(input, &disease, &d1, &d2, &k);
+
+
+	int current_counter = 0; // counter to keep track of this bucket slot diseases
+	int counter = 0;
+ 	int prev_counter = 0;
+ 	Max_Heap max_heap;
+ 	initMaxHeap(&max_heap);
+
+	if (d1.year ==0)
+	{
+		for (int i = 0; i < country_HT->size; ++i)
+		{	
+			if( country_HT->lists_of_buckets[i].head != NULL)
+			{
+				Bucket_Node *temp = country_HT->lists_of_buckets[i].head;
+				while(temp !=NULL)
+				{
+					for (int j = 0; j < temp->slot_counter; ++j)
+					{
+						tree_disease_search(temp->bucket_item[j].root, disease, &counter);
+						current_counter = counter - prev_counter;
+						prev_counter = counter;
+						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
+						counter = 0;
+						current_counter = 0; // counter to keep track of this bucket slot diseases
+						prev_counter = 0; //counter to keep track of the amount of previus diseases
+					}
+					temp = temp->next;
+				}
+			}
+		}
+	
+		if (k > max_heap.total_records)
+		{
+			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			return;
+		}
+
+		printf("%s's most %d countries infected are \n", disease, k);
+		for (int i = 0; i < k; ++i)
+		{	
+			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
+			heap_root_delete(&max_heap);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < country_HT->size; ++i)
+		{	
+			if( country_HT->lists_of_buckets[i].head != NULL)
+			{
+				Bucket_Node *temp = country_HT->lists_of_buckets[i].head;
+				while(temp !=NULL)
+				{
+					for (int j = 0; j < temp->slot_counter; ++j)
+					{
+						tree_search_Disease_dateRange(temp->bucket_item[j].root, d1, d2, disease, &counter);
+						current_counter = counter - prev_counter;
+						prev_counter = counter;
+						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
+						counter = 0;
+						current_counter = 0; // counter to keep track of this bucket slot diseases
+						prev_counter = 0; //counter to keep track of the amount of previus diseases
+					}
+					temp = temp->next;
+				}
+			}
+		}
+	
+		if (k > max_heap.total_records)
+		{
+			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			return;
+		}
+
+		printf("%s's most %d infected countries in Date Range between", disease, k);
+		print_date(d1); print_date(d2); printf(" are\n");
+
+		for (int i = 0; i < k; ++i)
+		{	
+			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
+			heap_root_delete(&max_heap);
+		}
+	}
+	heap_destroy(max_heap.root);
+	free(disease);
 }
 
 void recordPatientExit( char * input , Patient_list *list)

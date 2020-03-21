@@ -157,7 +157,7 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
     If root->data is greater than k1, then only we can get o/p keys 
     in left subtree */
 	if (date_cmp(d1 , this->date) == 0)
-		tree_search_dateRange(this->left, d1, d2, counter);
+		tree_search_Country_dateRange(this->left, d1, d2, country,  counter);
 
 	/* if root's data lies in range, then prints root's data */
 	if(((date_cmp(d1, this->date) == 0) || (date_cmp(d1, this->date) == 2)) && ((date_cmp(d2, this->date) ==1) || (date_cmp(d2, this->date) == 2)))
@@ -174,7 +174,37 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
   	/* If root->data is smaller than k2, then only we can get o/p keys 
       in right subtree */
 	if(date_cmp(d2 , this->date) == 1)
-		tree_search_dateRange(this->right, d1, d2, counter);
+		tree_search_Country_dateRange(this->right, d1, d2, country,  counter);
+}
+
+void tree_search_Disease_dateRange (Tree_Node * this, Date d1, Date d2, char * disease, int *counter)
+{
+	/* base case */
+	if(this == NULL)
+		return;
+
+	/* Since the desired o/p is sorted, recurse for left subtree first 
+    If root->data is greater than k1, then only we can get o/p keys 
+    in left subtree */
+	if (date_cmp(d1 , this->date) == 0)
+		tree_search_Disease_dateRange(this->left, d1, d2, disease, counter);
+
+	/* if root's data lies in range, then prints root's data */
+	if(((date_cmp(d1, this->date) == 0) || (date_cmp(d1, this->date) == 2)) && ((date_cmp(d2, this->date) ==1) || (date_cmp(d2, this->date) == 2)))
+	{	
+		Date_Node *temp = this->date_list.head;
+		while(temp != NULL)
+		{
+			if(strcmp(temp->patient_node->patient.diseaseID, disease)== 0)
+				*counter = *counter + 1;
+			temp = temp->next;
+		}
+	}
+	
+  	/* If root->data is smaller than k2, then only we can get o/p keys 
+      in right subtree */
+	if(date_cmp(d2 , this->date) == 1)
+		tree_search_Disease_dateRange(this->right, d1, d2, disease, counter);
 }
  
 void tree_country_search( Tree_Node * this , char * country, int * counter)
@@ -192,6 +222,23 @@ void tree_country_search( Tree_Node * this , char * country, int * counter)
 		tree_country_search(this->right, country, counter);
 	}
 }
+
+void tree_disease_search( Tree_Node * this , char * disease, int * counter)
+{
+	if (this != NULL)
+	{
+		Date_Node *temp = this->date_list.head;
+		while(temp != NULL)
+		{	
+			if (strcmp(temp->patient_node->patient.diseaseID, disease) == 0)
+				*counter = *counter+1;
+			temp = temp->next;			
+		}
+		tree_disease_search(this->left, disease, counter);
+		tree_disease_search(this->right, disease, counter);
+	}
+}
+
  
 void tree_preorder_print(Tree_Node* this) 
 { 

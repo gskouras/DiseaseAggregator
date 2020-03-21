@@ -51,6 +51,43 @@ void heap_insert(Max_Heap * heap,  int counter, char * record )
 	heap->total_records++;
 }
 
+void heap_root_delete(Max_Heap *heap)
+{
+	if( heap->root == NULL)
+	{
+		printf("Heap is already empty\n");
+		return;
+	}
+
+	if(heap->tail == heap->root)
+	{
+		heap->tail = NULL;
+		heap->root = NULL;
+	}
+	else
+	{
+		if (heap->tail->right != NULL)
+		{
+			swapHeapNodeData(heap->tail->right, heap->root);
+			heap->tail->right = NULL;
+			revMaxHeapify(heap->root);
+		}
+		else if(heap->tail->left != NULL)
+		{
+			swapHeapNodeData(heap->tail->left, heap->root);
+			heap->tail->left = NULL;
+			revMaxHeapify(heap->root);
+		}
+		else
+		{
+			heap->tail = heap->tail->prevTail;
+			heap_root_delete(heap);
+			heap->total_records++;
+		}
+	}
+	heap->total_records--;
+}
+
 void maxHeapify(Heap_Node * this_node )
 {
 	if(this_node->parent != NULL)
@@ -63,6 +100,25 @@ void maxHeapify(Heap_Node * this_node )
 	}
 }  
 
+
+void revMaxHeapify( Heap_Node * this_node)
+{
+	if(this_node == NULL || this_node->left == NULL)
+		return;
+
+	Heap_Node * new_max = this_node->left;
+
+	if (this_node->right != NULL && new_max->counter < this_node->right->counter)
+		new_max = this_node->right;
+
+	if(new_max->counter > this_node->counter)
+	{
+		swapHeapNodeData(this_node, new_max);
+		revMaxHeapify(new_max);
+	}
+}
+
+
 void heap_print(Heap_Node * root)
 {
 	if (root != NULL) 
@@ -72,6 +128,19 @@ void heap_print(Heap_Node * root)
         heap_print(root->right); 
     } 
 }
+
+
+
+void heap_destroy(Heap_Node * root)
+{
+	if(root == NULL)
+		return;	
+
+	heap_destroy(root->left);
+	heap_destroy(root->right);
+	free(root);
+}
+
 /********************/
 
 /*** Utillity Functions ***/
@@ -110,9 +179,15 @@ void setTail(Max_Heap *heap, Heap_Node *this_node)
 
 void  swapHeapNodeData(Heap_Node *a, Heap_Node *b)
 {
-	int temp = a->counter;
+	int temp_counter = a->counter;
 	a->counter = b->counter;
-	b->counter = temp;
+	b->counter = temp_counter;
+
+	char temp_record [20];
+	strcpy(temp_record, a->record);
+	strcpy(a->record, b->record);
+	strcpy(b->record, temp_record);
+
 }
 
 
@@ -120,5 +195,6 @@ int getMaximum(Max_Heap *this_heap)
 {
     return this_heap->root->counter;
 }
+
 
 

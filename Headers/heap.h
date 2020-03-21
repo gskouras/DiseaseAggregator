@@ -33,9 +33,15 @@ Heap_Node * createHeapNode( int , char * );
 
 void heap_insert( Max_Heap *,  int , char * );
 
+void heap_root_delete( Max_Heap * );
+
 void maxHeapify( Heap_Node * );
 
+void revMaxHeapify( Heap_Node * );
+
 void heap_print( Heap_Node * );
+
+void heap_destroy( Heap_Node * );
 
 /***********************/
 
@@ -46,5 +52,6 @@ void setTail( Max_Heap *, Heap_Node * );
 void swapHeapNodeData( Heap_Node * , Heap_Node * );
 
 int getMaximum( Max_Heap * );
+
 
 /*****************************/
