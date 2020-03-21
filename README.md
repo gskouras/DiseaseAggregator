@@ -14,7 +14,7 @@ Compile
 ```bash
 make
 ```
-Execute woth default parameters
+Execute with default parameters
 ```bash 
 make run 
 ```
