@@ -58,7 +58,7 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 			tree_node->right = tree_insert(tree_node->right, date, this_patient);
 		}
 
-		tree_node->height = max(height(tree_node->left), height(tree_node->right)) + 1;
+		tree_node->height = max(get_height(tree_node->left), get_height(tree_node->right)) + 1;
 
 		int balance = getBalance(tree_node);
 
@@ -87,7 +87,7 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 
 
 
-Tree_Node *rightRotate(Tree_Node * this_node) 
+Tree_Node * rightRotate(Tree_Node * this_node) 
 { 
     Tree_Node *left_child = this_node->left; 
     Tree_Node *lefts_child_right_child = left_child->right; 
@@ -97,15 +97,15 @@ Tree_Node *rightRotate(Tree_Node * this_node)
     this_node->left = lefts_child_right_child; 
   
     // Update heights 
-    this_node->height = max(height(this_node->left), height(this_node->right))+1; 
-    left_child ->height = max(height(left_child->left), height(left_child->right))+1; 
+    this_node->height = max(get_height(this_node->left), get_height(this_node->right))+1; 
+    left_child ->height = max(get_height(left_child->left), get_height(left_child->right))+1; 
   
     // Return new root 
     return left_child; 
 }
 
 
-Tree_Node *leftRotate(Tree_Node * this_node) 
+Tree_Node * leftRotate(Tree_Node * this_node) 
 {
 	Tree_Node *right_child = this_node->right; 
     Tree_Node *rights_child_left_child = right_child->left; 
@@ -115,8 +115,8 @@ Tree_Node *leftRotate(Tree_Node * this_node)
     this_node->right = rights_child_left_child; 
   
     // Update heights 
-    this_node->height = max(height(this_node->left), height(this_node->right))+1; 
-    right_child->height = max(height(right_child->left), height(right_child->right))+1; 
+    this_node->height = max(get_height(this_node->left), get_height(this_node->right))+1; 
+    right_child->height = max(get_height(right_child->left), get_height(right_child->right))+1; 
   
     // Return new root 
     return right_child; 
@@ -269,7 +269,7 @@ void tree_destroy(Tree_Node *tree)
 int date_cmp(Date d1, Date d2)
 {
 	if (d1.day == d2.day && d1.month == d2.month && d1.year ==d2.year) 
-       return 2; //if two dates are equal
+    	return 2; //if two dates are equal
 
    	else if (d1.year > d2.year || d1.year == d2.year && d1.month > d2.month
    	 		|| d1.year == d2.year && d1.month == d2.month && d1.day > d2.day) 
@@ -289,7 +289,7 @@ int max(int height1, int height2)
     return (height1 > height2) ? height1 : height2; 
 } 
 
-int height(Tree_Node *this_node) 
+int get_height(Tree_Node *this_node) 
 { 
     if (this_node == NULL) 
         return 0; 
@@ -303,7 +303,7 @@ int getBalance(Tree_Node * this_node)
     if (this_node == NULL) 
         return 0; 
 
-    return height(this_node->left) - height(this_node->right); 
+    return get_height(this_node->left) - get_height(this_node->right); 
 }
 
 /******************/

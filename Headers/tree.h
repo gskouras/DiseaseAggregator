@@ -27,9 +27,9 @@ Tree_Node * createTreeNode( Date );
 
 Tree_Node * tree_insert( Tree_Node * , Date , Patient_Node * ); 
 
-Tree_Node *rightRotate( Tree_Node * );
+Tree_Node * rightRotate( Tree_Node * );
 
-Tree_Node *leftRotate( Tree_Node * ); 
+Tree_Node * leftRotate( Tree_Node * ); 
 
 void tree_preorder_print(Tree_Node* );
 
@@ -53,7 +53,7 @@ int date_cmp( Date , Date ); /*Compare two given dates. Return 2 if the given Da
 
 void print_date(Date date);
 
-int height( Tree_Node * ); /*Get the height of a given TreeNode */
+int get_height( Tree_Node * ); /*Get the height of a given TreeNode */
 
 int getBalance(Tree_Node * ); /* Get the Balance of a TreeNode */
 

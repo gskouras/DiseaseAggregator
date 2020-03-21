@@ -25,3 +25,6 @@ cli.o: Code/cli.c
 clean: 
 	rm  *.o
 	rm diseaseMonitor
+
+run:
+	./diseaseMonitor

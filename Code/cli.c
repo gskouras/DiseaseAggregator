@@ -51,7 +51,17 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    else if (strcmp(cmd, "./topk-Countries") == 0 || strcmp(cmd, "./tkc") == 0 ) 
 		    {
 
-		        topCountries(input, country_HT, list);
+		    	if (input != NULL && (strlen(input) < 24  && strlen(input) > 12))
+		    	{
+					printf("If you Enter a Date you must also enter another \n");
+					putchar('>');
+					continue;
+		    	}
+		    	else
+		    	{
+					topCountries(input, country_HT, list);
+		    	}
+
 
 		    } 
 		    else if (strcmp(cmd, "./recordPatientExit") == 0 || strcmp(cmd, "./rpe") == 0) 
@@ -134,10 +144,10 @@ void open_manual()
     char filename[100], c; 
   
     // Open file 
-    fptr = fopen("./resources/manual.txt", "r"); 
+    fptr = fopen("./Resources/manual.txt", "r"); 
     if (fptr == NULL) 
     { 
-        printf("Cannot open file at this time \n"); 
+        printf("Cannot open file manual \n"); 
         return;
     } 
   
@@ -151,7 +161,7 @@ void open_manual()
     } 
 
     printf("\n\n");
-    printf("\t\t\t\t\t\t\tPress ENTER to Continue\n");  
+    printf("\t\t\t\t\t\tPress ENTER to Continue\n");  
     getchar(); 
     return;  
 }
@@ -265,7 +275,7 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 		printf("%s's most %d diseases are \n", country, k);
 		for (int i = 0; i < k; ++i)
 		{	
-			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
+			printf("%s with %d infections\n", max_heap.root->record, max_heap.root->counter );
 			heap_root_delete(&max_heap);
 		}
 	}
@@ -300,12 +310,12 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 			return;
 		}
 
-		printf("%s's most %d diseases in Date Range between", country, k);
+		printf("%s's most %d diseases between", country, k);
 		print_date(d1); print_date(d2); printf(" are\n");
 
 		for (int i = 0; i < k; ++i)
 		{	
-			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
+			printf("%s with %d infections\n", max_heap.root->record, max_heap.root->counter );
 			heap_root_delete(&max_heap);
 		}
 
@@ -359,7 +369,7 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 			return;
 		}
 
-		printf("%s's most %d countries infected are \n", disease, k);
+		printf("%s's most %d infected countries  are \n", disease, k);
 		for (int i = 0; i < k; ++i)
 		{	
 			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
@@ -397,7 +407,7 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 			return;
 		}
 
-		printf("%s's most %d infected countries in Date Range between", disease, k);
+		printf("%s's most %d infected countries between", disease, k);
 		print_date(d1); print_date(d2); printf(" are\n");
 
 		for (int i = 0; i < k; ++i)
@@ -579,10 +589,10 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
 		printf("Please Insert Valid Data\n");
 		return;
 	}
-	printf("strlen of input is %ld\n",strlen(input) );
+
 	Patient patient_attributes;
 
-	if (strlen(input) < 45)
+	if (strlen(input) < 48)
 		patient_attributes = line_tokenize_without_exitDate(input);
 	else
 		patient_attributes = line_tokenize(input, patient_attributes);
@@ -664,35 +674,40 @@ Patient line_tokenize_without_exitDate(char * input)
 
     token = strtok(input, " ");
     patient.recordID = atoi(token);
-    printf("_%d_\n", patient.recordID);
+    if(atoi(token) == 0)
+    {
+    	printf("Please insert a Patient ID\n");
+    	return patient;
+    }
+    //printf("_%d_\n", patient.recordID);
 
     token = strtok(NULL, " ");
     patient.firstName = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.firstName, token);
-    printf("_%s_\n", patient.firstName);
+    //printf("_%s_\n", patient.firstName);
 
     token = strtok(NULL, " ");
     patient.lastName = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.lastName, token);
-    printf("_%s_\n", patient.lastName);
+    //printf("_%s_\n", patient.lastName);
 
     token = strtok(NULL, " ");
     patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.diseaseID, token);
-    printf("_%s_\n", patient.diseaseID);
+   //printf("_%s_\n", patient.diseaseID);
 
     token = strtok(NULL, " ");
     patient.country = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.country, token);
-    printf("_%s_\n", patient.country);
+    //printf("_%s_\n", patient.country);
 
     token = strtok(NULL, "-");
     patient.entryDate.day = atoi (token);
-    printf("_%d_\n", patient.entryDate.day);
+    //printf("_%d_\n", patient.entryDate.day);
 
     token = strtok(NULL, "-");
     patient.entryDate.month = atoi (token);
-    printf("_%d_\n", patient.entryDate.month);
+    //printf("_%d_\n", patient.entryDate.month);
 
     token = strtok(NULL, "\n");
     patient.entryDate.year = atoi (token);

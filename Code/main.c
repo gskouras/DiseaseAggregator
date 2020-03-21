@@ -15,12 +15,17 @@ int main(int argc, char *argv[])
 
     printf("\nProccesing Input...\n");
 
-	readPatientRecordsFile ( params, &disease_HT, &country_HT, &patient_list);
+    if(readPatientRecordsFile ( params, &disease_HT, &country_HT, &patient_list)==0)
+    {
+        printf("\nAn Error Occured While Proccesing Input\n\n");
+        exit(0);
+    }
+
 
     printf("Parse of file Completed Succesfully!\n\n");
 
-    print_hash_table(&disease_HT);
-    print_hash_table(&country_HT);
+    //print_hash_table(&disease_HT);
+    //print_hash_table(&country_HT);
 
     cli(&disease_HT, &country_HT, &patient_list);
 
@@ -98,10 +103,10 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.fileName = "./resources/sample";
-        params.disHashSize = 10;
+        params.fileName = "./Resources/sample";
+        params.disHashSize = 50;
         params.countryHashSize= 50;
-        params.bucketsize = 256;
+        params.bucketsize = 512;
         return params;
     }
     else

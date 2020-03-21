@@ -1,5 +1,9 @@
 #include "../Headers/heap.h"
 
+/* The following code is a modified version of this 
+https://github.com/hariuserx/MinHeap/blob/master/src/MinHeapWithoutArrays.java?fbclid=IwAR1HjssxLIgzHlWUobjAZg5491m52Ei47CkF2tYQcd4s1hSqH96nOFNveZk
+source code for the need of this project
+*/
 
 /*** Constructors ***/
 
@@ -28,12 +32,12 @@ Heap_Node * createHeapNode(int counter, char * record)
 
 void heap_insert(Max_Heap * heap,  int counter, char * record )
 {
-	if(heap->root == NULL)
+	if(heap->root == NULL) //if heap is empty new record becomes thes root
 	{
 		heap->root = createHeapNode(counter, record);
 		heap->tail = heap->root;
 	}
-	else if( heap->tail->left == NULL)
+	else if( heap->tail->left == NULL) //left and right childs must have a record in order to keep heap properties
 	{
 		heap->tail->left = createHeapNode(counter, record);
 		heap->tail->left->parent = heap->tail;
@@ -45,11 +49,13 @@ void heap_insert(Max_Heap * heap,  int counter, char * record )
 		heap->tail->right->parent = heap->tail;
 		maxHeapify(heap->tail->right);
 		Heap_Node * prevTail = heap->tail;
-		setTail(heap, heap->tail);
+		setTail(heap, heap->tail); //set new tail for max_heap
 		heap->tail->prevTail = prevTail;
 	}
+
 	heap->total_records++;
 }
+
 
 void heap_root_delete(Max_Heap *heap)
 {
@@ -88,13 +94,14 @@ void heap_root_delete(Max_Heap *heap)
 	heap->total_records--;
 }
 
-void maxHeapify(Heap_Node * this_node )
+
+void maxHeapify(Heap_Node * this_node ) // Keep Heap Properties By Recursively exchange child not data with parent's when neccesary
 {
-	if(this_node->parent != NULL)
+	if(this_node->parent != NULL) //Base Case (when this becomes true it means we arrived at the root of the heap)
 	{
-		if(this_node->parent->counter < this_node->counter)
+		if(this_node->parent->counter < this_node->counter) //if parent is smaller than the child swap their data
 		{
-			swapHeapNodeData(this_node->parent, this_node);
+			swapHeapNodeData(this_node->parent, this_node); 
 			maxHeapify(this_node->parent);
 		}
 	}
@@ -108,16 +115,15 @@ void revMaxHeapify( Heap_Node * this_node)
 
 	Heap_Node * new_max = this_node->left;
 
-	if (this_node->right != NULL && new_max->counter < this_node->right->counter)
+	if (this_node->right != NULL && new_max->counter < this_node->right->counter) //find the new max of the heap after current max deleted
 		new_max = this_node->right;
 
-	if(new_max->counter > this_node->counter)
+	if(new_max->counter > this_node->counter) 
 	{
 		swapHeapNodeData(this_node, new_max);
 		revMaxHeapify(new_max);
 	}
 }
-
 
 void heap_print(Heap_Node * root)
 {
@@ -128,8 +134,6 @@ void heap_print(Heap_Node * root)
         heap_print(root->right); 
     } 
 }
-
-
 
 void heap_destroy(Heap_Node * root)
 {

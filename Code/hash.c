@@ -186,8 +186,8 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 			if(!strcmp( string, temp->bucket_item[i].string)) //Records arlready excist, so we only insert the record to the avl tree
 			{
 				//insert to avl
-				temp->bucket_item[i].root =
-				tree_insert( temp->bucket_item[i].root , this_patient->patient.entryDate, this_patient);//insert to avl tree
+				temp->bucket_item[i].root = \
+					tree_insert( temp->bucket_item[i].root , this_patient->patient.entryDate, this_patient);//insert to avl tree
 				temp->bucket_item[i].total_patients++;
 				
 				if(this_patient->patient.exitDate.year > 1)
