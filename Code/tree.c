@@ -26,7 +26,6 @@ Tree_Node * createTreeNode(Date date)
 
 Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this_patient )
 {	
-
 	if(tree_node == NULL)
 	{
 		Tree_Node * new_node = createTreeNode(date);
@@ -34,55 +33,55 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 		insertNewDate(&tree_node->date_list , this_patient);
 		return tree_node;
 	}
-	else
+
+	if (date_cmp(date,tree_node->date) == 2) // equal dates
 	{
-		if (date_cmp(date,tree_node->date) == 2) // equal dates
-		{
-			Date_Node *temp = tree_node->date_list.head;
-			while(temp != NULL)
-			{	
-				if(temp->patient_node->patient.recordID != this_patient->patient.recordID)
-					insertNewDate(&tree_node->date_list , this_patient);
-				temp = temp->next;
-			}
-		}
-
-
-		/**** Recursive Insert ****/
-		if (date_cmp(date, tree_node->date) == 0) //date 2 is bigger
-		{
-			tree_node->left = tree_insert(tree_node->left, date, this_patient);
-		}
-		else if(date_cmp(date, tree_node->date) == 1) //date 1 is bigger
-		{
-			tree_node->right = tree_insert(tree_node->right, date, this_patient);
-		}
-
-		tree_node->height = max(get_height(tree_node->left), get_height(tree_node->right)) + 1;
-
-		int balance = getBalance(tree_node);
-
-		/*** Rotate Nodes in the right way in order to keep Properties of AVL Trees ***/
-		if(balance > 1 && (date_cmp(date , tree_node->date)==0))
-			return rightRotate(tree_node);
-
-		if (balance < -1 && (date_cmp(date, tree_node->date)==1))
-			return leftRotate(tree_node);
-
-		if(balance > 1 && (date_cmp(date , tree_node->date)==1))
-		{
-			tree_node->left = leftRotate(tree_node->left);
-			return rightRotate(tree_node);
-		}
-
-		if (balance < -1 && (date_cmp(date, tree_node->date)==0))
-		{
-			tree_node->right = rightRotate(tree_node->right);
-			return leftRotate(tree_node);
+		Date_Node *temp = tree_node->date_list.head;
+		while(temp != NULL)
+		{	
+			if(temp->patient_node->patient.recordID != this_patient->patient.recordID)
+				insertNewDate(&tree_node->date_list , this_patient);
+			temp = temp->next;
 		}
 		return tree_node;
 	}
-	
+
+
+	// /**** Recursive Insert ****/
+	if (date_cmp(date, tree_node->date) == 0) //date 2 is bigger
+	{
+		//printf("insert left\n");
+		tree_node->left = tree_insert(tree_node->left, date, this_patient);
+	}
+	else if(date_cmp(date, tree_node->date) == 1) //date 1 is bigger
+	{
+		//printf("insert right\n");
+		tree_node->right = tree_insert(tree_node->right, date, this_patient);
+	}
+ 
+	tree_node->height = max(get_height(tree_node->left), get_height(tree_node->right)) + 1;
+
+	int balance = getBalance(tree_node);
+
+	/** Rotate Nodes in the right way in order to keep Properties of AVL Trees **/
+	// if((tree_node->left != NULL) && balance > 1 && (date_cmp(date , tree_node->left->date)==0))
+	// 	return rightRotate(tree_node);
+
+	// if ((tree_node->right != NULL) && balance < -1 && (date_cmp(date, tree_node->right->date)==1))
+	// 	return leftRotate(tree_node);
+
+	// if((tree_node->left != NULL) && balance > 1 && (date_cmp(date , tree_node->left->date)==1))
+	// {
+	// 	tree_node->left = leftRotate(tree_node->left);
+	// 	return rightRotate(tree_node);
+	// }
+
+	// if ((tree_node->right != NULL) && balance < -1 && (date_cmp(date, tree_node->right->date)==0))
+	// {
+	// 	tree_node->right = rightRotate(tree_node->right);
+	// 	return leftRotate(tree_node);
+	// }
+	return tree_node;	
 }
 
 
@@ -91,14 +90,14 @@ Tree_Node * rightRotate(Tree_Node * this_node)
 { 
     Tree_Node *left_child = this_node->left; 
     Tree_Node *lefts_child_right_child = left_child->right; 
-  
+
     // Perform rotation 
     left_child->right = this_node; 
     this_node->left = lefts_child_right_child; 
   
     // Update heights 
-    this_node->height = max(get_height(this_node->left), get_height(this_node->right))+1; 
-    left_child ->height = max(get_height(left_child->left), get_height(left_child->right))+1; 
+    this_node->height = max(get_height(this_node->left), get_height(this_node->right)) + 1; 
+    left_child ->height = max(get_height(left_child->left), get_height(left_child->right)) + 1; 
   
     // Return new root 
     return left_child; 
@@ -109,7 +108,7 @@ Tree_Node * leftRotate(Tree_Node * this_node)
 {
 	Tree_Node *right_child = this_node->right; 
     Tree_Node *rights_child_left_child = right_child->left; 
-  
+
     // Perform rotation 
     right_child->left = this_node; 
     this_node->right = rights_child_left_child; 
@@ -271,8 +270,8 @@ int date_cmp(Date d1, Date d2)
 	if (d1.day == d2.day && d1.month == d2.month && d1.year ==d2.year) 
     	return 2; //if two dates are equal
 
-   	else if (d1.year > d2.year || d1.year == d2.year && d1.month > d2.month
-   	 		|| d1.year == d2.year && d1.month == d2.month && d1.day > d2.day) 
+   	else if (d1.year > d2.year || (d1.year == d2.year && d1.month > d2.month)
+   	 		|| (d1.year == d2.year && d1.month == d2.month && d1.day > d2.day)) 
    		return 1; //if date 1 is bigger than date 2
 
    	else

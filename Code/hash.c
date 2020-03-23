@@ -6,7 +6,8 @@ void  initHashTable( HashTable * ht, int size , int bucket_size)
 {
 	ht->lists_of_buckets = malloc(sizeof(Bucket_List) * size);
 	ht->size = size;
-	ht->bucket_capacity = (bucket_size - (sizeof(int)+sizeof(Bucket_Node*)+sizeof(BucketItem))) / sizeof(BucketItem);
+	ht->bucket_capacity = bucket_size / sizeof(BucketItem);
+	//(bucket_size - (sizeof(int)+sizeof(Bucket_Node*)+sizeof(BucketItem*))+sizeof(int))/ sizeof(BucketItem);
 	//printf("Hash Table Buckets Capacity is %d\n",ht->bucket_capacity);
 	ht->total_bucket_items = 0;
 
@@ -36,7 +37,7 @@ Bucket_Node * createNewBucketNode( int capacity )
 	for (int i = 0; i < capacity; ++i)
 	{
 		//init avl tree of each bucket_slot
-		bucket->bucket_item[i].root == NULL;
+		bucket->bucket_item[i].root = NULL;
 		bucket->bucket_item[i].total_patients = 0;
 		bucket->bucket_item[i].patients_hospitalized = 0;
 	}
@@ -126,10 +127,12 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 		insert_to_bucket(new_bucket, string, this_patient);
 		this_list->head = new_bucket;
 		this_list->tail = new_bucket;
+		return 1;
 	}	
 	else if(this_list->counter == 0) //if the records is to inserted in the first bucket of the bucket list
 	{
 		if(isExist(this_list, string, this_patient))
+			//printf("adress of the root its %p\n",this_list->head->bucket_item[0].root );
 			return 0;
 		if (insert_to_bucket(this_list->head, string, this_patient))
 		{
@@ -156,10 +159,11 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
 	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string); //insert the record to the correct position of the bucket
-	
+	//printf("adress of the root in insert_to_bucket before is %p\n", this_bucket->bucket_item[this_bucket->slot_counter].root );
+
 	this_bucket->bucket_item[this_bucket->slot_counter].root = \
 		tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
-	
+	//printf("adress of the root in insert_to_bucket after is %p\n", this_bucket->bucket_item[this_bucket->slot_counter].root );
 	this_bucket->bucket_item[this_bucket->slot_counter].total_patients++;
 	this_bucket->slot_counter++;
 	
@@ -186,8 +190,10 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 			if(!strcmp( string, temp->bucket_item[i].string)) //Records arlready excist, so we only insert the record to the avl tree
 			{
 				//insert to avl
+				//printf("adress of the root is %p\n", temp->bucket_item[i].root );
 				temp->bucket_item[i].root = \
 					tree_insert( temp->bucket_item[i].root , this_patient->patient.entryDate, this_patient);//insert to avl tree
+				//printf("adresss of the root in isExist is %p\n", temp->bucket_item[0].root );
 				temp->bucket_item[i].total_patients++;
 				
 				if(this_patient->patient.exitDate.year > 1)

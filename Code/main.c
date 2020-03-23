@@ -103,10 +103,10 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.fileName = "./Resources/sample";
-        params.disHashSize = 50;
+        params.fileName = "./Resources/large.txt";
+        params.disHashSize = 10;
         params.countryHashSize= 50;
-        params.bucketsize = 512;
+        params.bucketsize = 256;
         return params;
     }
     else

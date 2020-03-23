@@ -5,13 +5,14 @@ Patient_Node *createPatientNode(Patient patient)
 {
 	Patient_Node *new_patient_node = malloc(sizeof(Patient_Node));
 	new_patient_node->patient = patient;
+	new_patient_node->next = NULL;
 	return new_patient_node;
 }
 
 void initPatientList(Patient_list *this_list)
 {
-	Patient_Node *head = NULL;
-	Patient_Node *tail = NULL;
+	this_list->head = NULL;
+	this_list->tail = NULL;
 	this_list->counter = 0;
 }
 
@@ -20,7 +21,6 @@ Patient_Node* insertNewPatient(Patient_list * list, Patient patient)
 	Patient_Node *new_patient = createPatientNode(patient);
 	if (list->counter == 0)
 	{
-
 		list->head = new_patient;
 		list->tail = new_patient;
 		list->counter = 1;
