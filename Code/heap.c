@@ -2,7 +2,7 @@
 
 /* The following code is a modified version of this 
 https://github.com/hariuserx/MinHeap/blob/master/src/MinHeapWithoutArrays.java?fbclid=IwAR1HjssxLIgzHlWUobjAZg5491m52Ei47CkF2tYQcd4s1hSqH96nOFNveZk
-source code for the need of this project
+source code for the needs of this project
 */
 
 /*** Constructors ***/
@@ -65,32 +65,26 @@ void heap_root_delete(Max_Heap *heap)
 		return;
 	}
 
-	if(heap->tail == heap->root)
+
+	if (heap->tail->right != NULL)
 	{
-		heap->tail = NULL;
-		heap->root = NULL;
+		swapHeapNodeData(heap->tail->right, heap->root);
+		heap->tail->right = NULL;
+		revMaxHeapify(heap->root);
+	}
+	else if(heap->tail->left != NULL)
+	{
+		swapHeapNodeData(heap->tail->left, heap->root);
+		heap->tail->left = NULL;
+		revMaxHeapify(heap->root);
 	}
 	else
 	{
-		if (heap->tail->right != NULL)
-		{
-			swapHeapNodeData(heap->tail->right, heap->root);
-			heap->tail->right = NULL;
-			revMaxHeapify(heap->root);
-		}
-		else if(heap->tail->left != NULL)
-		{
-			swapHeapNodeData(heap->tail->left, heap->root);
-			heap->tail->left = NULL;
-			revMaxHeapify(heap->root);
-		}
-		else
-		{
-			heap->tail = heap->tail->prevTail;
-			heap_root_delete(heap);
-			heap->total_records++;
-		}
+		heap->tail = heap->tail->prevTail;
+		heap_root_delete(heap);
+		//heap->total_records++;
 	}
+
 	heap->total_records--;
 }
 
@@ -129,7 +123,7 @@ void heap_print(Heap_Node * root)
 {
 	if (root != NULL) 
     {    	
-        printf("Bla %d Bla %s\n", root->counter, root->record );
+        printf("Disease %s %d\n",root->record, root->counter );
         heap_print(root->left); 
         heap_print(root->right); 
     } 

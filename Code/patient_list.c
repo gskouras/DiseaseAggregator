@@ -34,7 +34,7 @@ Patient_Node* insertNewPatient(Patient_list * list, Patient patient)
 }
 
 
-int id_exist(Patient_list *list, int id)
+int id_exist(Patient_list *list, char * id)
 {
 	Patient_Node *temp = list->head;
 
@@ -43,7 +43,7 @@ int id_exist(Patient_list *list, int id)
 
 	while(temp != NULL)
 	{	
-		if(temp->patient.recordID == id)
+		if(strcmp(temp->patient.recordID, id)==0)
 			return 1;
 		temp = temp->next;
 	}
@@ -61,12 +61,12 @@ void printPatientList(Patient_list * list )
 	}
 }
 
-Patient_Node* list_date_modify( Patient_list *list, Date date, int id)
+Patient_Node* list_date_modify( Patient_list *list, Date date, char * id)
 {
 	Patient_Node *temp = list->head;
 	while(temp != NULL)
 	{
-		if(temp->patient.recordID == id)
+		if(strcmp(temp->patient.recordID, id)==0)
 		{	
 			temp->patient.exitDate = date;
 			return temp;
@@ -75,13 +75,13 @@ Patient_Node* list_date_modify( Patient_list *list, Date date, int id)
 	}
 	if (temp == NULL)
 	{
-	    printf("Error. No patients with id %d found!", id);
+	    printf("Error. No patients with id %s found!", id);
 	}
 }
 
 void printPatientData(Patient patient)
 {
-	printf(" %d %s %s %s %s %d-%d-%d %d-%d-%d", patient.recordID, patient.firstName, patient.lastName,
+	printf(" %s %s %s %s %s %d-%d-%d %d-%d-%d", patient.recordID, patient.firstName, patient.lastName,
 	patient.diseaseID, patient.country, patient.entryDate.day, patient.entryDate.month, patient.entryDate.year,
 	patient.exitDate.day, patient.exitDate.month, patient.exitDate.year);
 }
@@ -94,6 +94,7 @@ void freePatientList(Patient_list * list )
 		temp = list->head;
 		list->head = list->head->next;
 		list->counter--;
+		free(temp->patient.recordID);
 		free(temp->patient.firstName);
 		free(temp->patient.lastName);
 		free(temp->patient.diseaseID);

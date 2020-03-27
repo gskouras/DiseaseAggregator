@@ -15,10 +15,10 @@ typedef struct
 
 typedef struct
 {
-	int recordID;
-	char *firstName;
-	char *lastName;
-	char *diseaseID;
+	char * recordID;
+	char * firstName;
+	char * lastName;
+	char * diseaseID;
 	char * country;
 	Date entryDate;
 	Date exitDate; //date is set to 0 if a patients haven't take discharge from hospital yet
@@ -50,9 +50,9 @@ void initPatientList(Patient_list *);
 /**** Date List Functions *****/
 Patient_Node * insertNewPatient( Patient_list * , Patient );
 
-Patient_Node* list_date_modify( Patient_list *, Date , int );
+Patient_Node* list_date_modify( Patient_list *, Date , char * );
 
-int id_exist( Patient_list *, int );
+int id_exist( Patient_list *, char * );
 
 void printPatientList( Patient_list * );
 

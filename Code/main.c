@@ -66,7 +66,8 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
         
         if (id_exist(patient_list, patient_attributes.recordID))
         {
-            printf("Patient with Record ID %d has been already inserted, thus it ommited\n", patient_attributes.recordID);
+            printf("Patient with Record ID %s has been already inserted, thus it ommited\n", patient_attributes.recordID);
+            free(patient_attributes.recordID);
             free(patient_attributes.firstName);
             free(patient_attributes.lastName);
             free(patient_attributes.diseaseID);
@@ -121,7 +122,7 @@ Params inputValidate (int argc, char *argv[])
     	if ( (strcmp(argv[1], "-p") == 0 && strcmp(argv[3], "-h1") == 0 && strcmp(argv[5], "-h2") == 0 && strcmp(argv[7], "-b") == 0)
     	&& !digitValidate(argv[4]) && !digitValidate(argv[6]) && !digitValidate(argv[8]))
     	{
-            if(atoi(argv[8]) >= 128)
+            if(atoi(argv[8]) >= 240)
             {
         		params.fileName = argv[2];
         		params.disHashSize = atoi(argv[4]);
@@ -130,7 +131,7 @@ Params inputValidate (int argc, char *argv[])
             }
             else
             {
-                printf("Bucket size must be greater than 128 bytes\n");
+                printf("Bucket size must be greater than 239 bytes\n");
                 exit(0);
             }
     	} 
@@ -149,42 +150,36 @@ Patient line_tokenize(char *line, Patient patient )
         char * token;
 
         token = strtok(line, " ");
-        patient.recordID = atoi(token);
-        //printf("_%d_\n", patient.recordID);
+        patient.recordID = malloc(sizeof(char)* strlen(token)+1);
+        strcpy(patient.recordID, token);
 
         token = strtok(NULL, " ");
         patient.firstName = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.firstName, token);
-        //printf("_%s_\n", patient.firstName);
 
         token = strtok(NULL, " ");
         patient.lastName = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.lastName, token);
-        //printf("_%s_\n", patient.lastName);
 
         token = strtok(NULL, " ");
         patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.diseaseID, token);
-        //printf("_%s_\n", patient.diseaseID);
 
         token = strtok(NULL, " ");
         patient.country = malloc(sizeof(char)*strlen(token)+1);
         strcpy( patient.country, token);
-        //printf("_%s_\n", patient.country);
 
         token = strtok(NULL, "-");
         patient.entryDate.day = atoi (token);
-        //printf("_%d_\n", patient.entryDate.day);
 
         token = strtok(NULL, "-");
         patient.entryDate.month = atoi (token);
-        //printf("_%d_\n", patient.entryDate.month);
 
         token = strtok(NULL, " ");
         patient.entryDate.year = atoi (token);
-        //printf("_%d_\n", patient.entryDate.year);
         token = strtok(NULL, "- ");
         
+
 
         if (atoi(token) == 0 ) //this means that current patient hasnt take discharge from hospital
         {
@@ -196,15 +191,12 @@ Patient line_tokenize(char *line, Patient patient )
         else
         {
             patient.exitDate.day = atoi (token);
-            //printf("_%d_\n", patient.exitDate.day);
         
             token = strtok(NULL, "-");
             patient.exitDate.month = atoi (token);
-            //printf("_%d_\n", patient.exitDate.month);
 
             token = strtok(NULL, "\n");
             patient.exitDate.year = atoi (token);
-            //printf("_%d_\n", patient.exitDate.year);
         }
 
     return patient;

@@ -1,13 +1,15 @@
 #include "../Headers/tree.h"
 
-/*** The Following Code for Insertion and Right/Left Rotate and othe utility fucntions needed have been taken
-from https://www.geeksforgeeks.org/avl-tree-set-1-insertion/ and modified for the needs of the project ***/
+/* The Following Code for Insertion, Right/Left Rotate and other utility fucntions  have been taken
+from https://www.geeksforgeeks.org/avl-tree-set-1-insertion/ and modified for the needs of the project 
+*/
 
 
 /**** Tree Constructors ****/
+
 Tree_Node * createTreeNode(Date date)
 {
-	Tree_Node * new_node = malloc(sizeof(Tree_Node));
+	Tree_Node * new_node = calloc(1, sizeof(Tree_Node));
 	int height = 1;
 	int total_patients_hospitalized = 0;
 	new_node->date = date;
@@ -17,12 +19,11 @@ Tree_Node * createTreeNode(Date date)
 	return new_node;
 }
 
-
+ 
 /*****************/
 
 
 /*** Tree Functions ***/
-
 
 Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this_patient )
 {	
@@ -50,12 +51,10 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 	// /**** Recursive Insert ****/
 	if (date_cmp(date, tree_node->date) == 0) //date 2 is bigger
 	{
-		//printf("insert left\n");
 		tree_node->left = tree_insert(tree_node->left, date, this_patient);
 	}
 	else if(date_cmp(date, tree_node->date) == 1) //date 1 is bigger
 	{
-		//printf("insert right\n");
 		tree_node->right = tree_insert(tree_node->right, date, this_patient);
 	}
  
@@ -64,23 +63,34 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 	int balance = getBalance(tree_node);
 
 	/** Rotate Nodes in the right way in order to keep Properties of AVL Trees **/
-	// if((tree_node->left != NULL) && balance > 1 && (date_cmp(date , tree_node->left->date)==0))
-	// 	return rightRotate(tree_node);
+	if((tree_node->left != NULL) && balance > 1 && (date_cmp(date , tree_node->left->date)==0))
+		if ((tree_node->left->right != NULL))
+			return rightRotate(tree_node);
 
-	// if ((tree_node->right != NULL) && balance < -1 && (date_cmp(date, tree_node->right->date)==1))
-	// 	return leftRotate(tree_node);
+	if ((tree_node->right != NULL) && (tree_node->right->left != NULL) && balance < -1 && (date_cmp(date, tree_node->right->date)==1))
+		if((tree_node->right->left != NULL))
+			return leftRotate(tree_node);
 
-	// if((tree_node->left != NULL) && balance > 1 && (date_cmp(date , tree_node->left->date)==1))
-	// {
-	// 	tree_node->left = leftRotate(tree_node->left);
-	// 	return rightRotate(tree_node);
-	// }
+	if((tree_node->left != NULL) &&  (tree_node->left->right  != NULL) && balance > 1 && (date_cmp(date , tree_node->left->date)==1))
+	{
+		if((tree_node->right != NULL))
+		{
+			tree_node->left = leftRotate(tree_node->left);
+			if(tree_node->left->right != NULL)
+				return rightRotate(tree_node);
 
-	// if ((tree_node->right != NULL) && balance < -1 && (date_cmp(date, tree_node->right->date)==0))
-	// {
-	// 	tree_node->right = rightRotate(tree_node->right);
-	// 	return leftRotate(tree_node);
-	// }
+		}
+	}
+
+	if ((tree_node->right != NULL) && (tree_node->right->left != NULL) && balance < -1 && (date_cmp(date, tree_node->right->date)==0))
+	{
+		if((tree_node->left != NULL))		
+		{
+			tree_node->right = rightRotate(tree_node->right);
+			if(tree_node->right->left != NULL)
+				return leftRotate(tree_node);
+		}
+	}
 	return tree_node;	
 }
 
@@ -200,7 +210,7 @@ void tree_search_Disease_dateRange (Tree_Node * this, Date d1, Date d2, char * d
 		}
 	}
 	
-  	/* If root->data is smaller than k2, then only we can get o/p keys 
+  	/* If root->data is smaller then only we can get o/p keys 
       in right subtree */
 	if(date_cmp(d2 , this->date) == 1)
 		tree_search_Disease_dateRange(this->right, d1, d2, disease, counter);

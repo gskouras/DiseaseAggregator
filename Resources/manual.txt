@@ -1,17 +1,19 @@
 				##########  WELCOME TO DISEASE MONITOR MANUAL PAGE  ##########
 
-The available commands are listed above:
+The available commands are listed above: 
 
-• ./globalDiseaseStats(./gl) [date1 date2] :  Print for every disease the total infections between [date1, date2] . If no date specified the command prints total diseases for every disease in all dates 
+/**** Arguments in Parentheses can be ommited ***/
 
-• ./topk-Diseases(./tkd) k country  [date1 date2] :  Print, for a given country, top k diseases in range [date1, date2].
+• /globalDiseaseStats(/gl) [date1 date2] :  Print for every disease the total infections between [date1, date2] . If no date specified the command prints total diseases for every disease in all dates 
 
-• ./topk-Countries(./tkc) k disease [date1 date2] : Print, for a given diseases, countries that top l infections have apperead.
+• /topk-Diseases(/tkd) k country  [date1 date2] :  Print, for a given country, top k diseases in range [date1, date2].
 
-• ./recordPatientExit(./rpe) recordID exitDate : Insert an exit Date to the patient with the given id.
+• /topk-Countries(/tkc) k disease [date1 date2] : Print, for a given diseases, countries that top l infections have apperead.
 
-• ./numCurrentPatients(./ncp) [disease] :  Print for a given disease the total patients that are still in the hospital. 
+• /recordPatientExit(/rpe) recordID exitDate : Insert an exit Date to the patient with the given id.
 
-• ./diseaseFrequency(./df) virusName [country] date1 date2 : Printf total infections of a [country] in range [date1, date2]
+• /numCurrentPatients(/ncp) [disease] :  Print for a given disease the total patients that are still in the hospital. 
 
-• ./insertPatientRecord(./ipr) recordID patientFirstName patientLastName diseaseID country entryDate [exitDate]--> Insert a new Record in the System with the given attributes.
+• /diseaseFrequency(/df) virusName date1 date2 [country]  : Printf total infections of a [country] in range [date1, date2]
+
+• /insertPatientRecord(/ipr) recordID patientFirstName patientLastName diseaseID country entryDate [exitDate]--> Insert a new Record in the System with the given attributes.

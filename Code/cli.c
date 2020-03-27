@@ -10,7 +10,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
     ssize_t read;
 
 	printf("\t\t\t##########  WELCOME TO DISEASE MONITOR COMMAND LINE INTERFACE  ##########\n\n"); 
-	printf("You can use the available commands listed in the manual page. Type ./man to see the manual page or type ./exit to quit\n\n");
+	printf("You can use the available commands listed in the manual page. Type /man to see the manual page or type /exit to quit\n\n");
     putchar('>');
 
 	while ((read = getline(&line, &len, stdin)) != EOF) 
@@ -21,7 +21,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 
 		if (cmd != NULL) 
 		{
-		    if (strcmp(cmd, "./globalDiseaseStats") == 0 || strcmp(cmd, "./gl") == 0) 
+		    if (strcmp(cmd, "/globalDiseaseStats") == 0 || strcmp(cmd, "/gl") == 0) 
 		    {
 		    	if (input != NULL && strlen(input) < 19)
 		    	{
@@ -34,7 +34,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		        	globalDiseaseStats(input, disease_HT); //done
 		    	}
 		    } 
-		    else if (strcmp(cmd, "./topk-Diseases") == 0 || strcmp(cmd, "./tkd") == 0) 
+		    else if (strcmp(cmd, "/topk-Diseases") == 0 || strcmp(cmd, "/tkd") == 0) 
 		    {
 		    	if (input != NULL && (strlen(input) < 24  && strlen(input) > 12))
 		    	{
@@ -48,10 +48,10 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    	}
 
 		    } 
-		    else if (strcmp(cmd, "./topk-Countries") == 0 || strcmp(cmd, "./tkc") == 0 ) 
+		    else if (strcmp(cmd, "/topk-Countries") == 0 || strcmp(cmd, "/tkc") == 0 ) 
 		    {
 
-		    	if (input != NULL && (strlen(input) < 24  && strlen(input) > 12))
+		    	if (input != NULL && (strlen(input) < 24  && strlen(input) > 15))
 		    	{
 					printf("If you Enter a Date you must also enter another \n");
 					putchar('>');
@@ -64,7 +64,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 
 
 		    } 
-		    else if (strcmp(cmd, "./recordPatientExit") == 0 || strcmp(cmd, "./rpe") == 0) 
+		    else if (strcmp(cmd, "/recordPatientExit") == 0 || strcmp(cmd, "/rpe") == 0) 
 		    {
 		    	if (input != NULL && strlen(input) < 10)
 		    	{
@@ -77,13 +77,13 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    		recordPatientExit(input, list); //done
 		    	}
 		    } 
-		    else if (strcmp(cmd, "./numCurrentPatients") == 0 || strcmp(cmd, "./ncp") == 0) 
+		    else if (strcmp(cmd, "/numCurrentPatients") == 0 || strcmp(cmd, "/ncp") == 0) 
 		    {
 
 		        numCurrentPAtients(input, disease_HT); //done
 
 		    } 
-		    else if (strcmp(cmd, "./diseaseFrequency") == 0 || strcmp(cmd, "./df") == 0) 
+		    else if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
 		    {
 				if (input != NULL && strlen(input) < 10)
 		    	{
@@ -97,7 +97,7 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		    	}
 
 		    } 
-		    else if (strcmp(cmd, "./insertPatientRecord") == 0 || strcmp(cmd, "./ipr") == 0) 
+		    else if (strcmp(cmd, "/insertPatientRecord") == 0 || strcmp(cmd, "/ipr") == 0) 
 		    {	
 		    	if (input != NULL && strlen(input) < 30)
 		    	{
@@ -112,11 +112,11 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		        
 
 		    } 
-		    else if (strcmp(cmd, "./man") == 0)
+		    else if (strcmp(cmd, "/man") == 0)
 		    {
 		    	open_manual();
 		    }
-		    else if (strcmp(cmd, "./exit") == 0) 
+		    else if (strcmp(cmd, "/exit") == 0) 
 		    {
 		    	printf("\nExiting Monitor Disease..\n\n"); //Done
 		    	free(line);
@@ -133,7 +133,6 @@ void cli(HashTable * disease_HT, HashTable * country_HT, Patient_list *list)
 		putchar(' ');
 	}
 }
-
 
 /*** CLI commands ***/
 
@@ -256,7 +255,6 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
 						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
-						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
 						counter = 0;
 						current_counter = 0; // counter to keep track of this bucket slot diseases
 						prev_counter = 0; //counter to keep track of the amount of previus diseases
@@ -265,13 +263,12 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 				}
 			}
 		}
-	
+		
 		if (k > max_heap.total_records)
 		{
-			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			printf("Please enter a k between 1 and %d \n", max_heap.total_records);
 			return;
 		}
-
 		printf("%s's most %d diseases are \n", country, k);
 		for (int i = 0; i < k; ++i)
 		{	
@@ -363,16 +360,16 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 			}
 		}
 	
-		if (k > max_heap.total_records)
+		if (k > max_heap.total_records -1)
 		{
-			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			printf("Please enter a k between 0 and %d \n", max_heap.total_records-1);
 			return;
 		}
 
-		printf("%s's most %d infected countries  are \n", disease, k);
+		printf("%s's most %d infected countries are \n", disease, k);
 		for (int i = 0; i < k; ++i)
 		{	
-			printf("%s with %d incidents\n", max_heap.root->record, max_heap.root->counter );
+			printf("%s with %d infections\n", max_heap.root->record, max_heap.root->counter );
 			heap_root_delete(&max_heap);
 		}
 	}
@@ -428,7 +425,9 @@ void recordPatientExit( char * input , Patient_list *list)
 		char * token = NULL;
 
 		token = strtok(input, " ");
-		int id = atoi(token);
+		char * id = malloc(sizeof(char)* strlen(token)+1);
+        strcpy(id, token);
+
 
 	 	token = strtok(NULL, "-");
 	    date.day = atoi (token);
@@ -443,18 +442,18 @@ void recordPatientExit( char * input , Patient_list *list)
 	    if(id_exist(list, id))
 	    {
 			Patient_Node * this = list_date_modify(list, date,  id);
-		    printf("Exit date of Patient with recordID %d updated!", id );
+		    printf("Exit date of Patient with recordID %s updated!", id );
 		    printf(" New patient details are : ");
 		    printPatientData(this->patient);
 		    printf("\n");
 	    }
 	    else
 	    {
-	    	printf("No patient with id %d found!\n",id );
+	    	printf("No patient with id %s found!\n",id );
 	    }
 
+	free(id);
 	}
-
 	else
 	{
 		printf("Enter Valid Data\n");
@@ -490,7 +489,7 @@ void numCurrentPAtients( char * input, HashTable * disease_HT)
 
 		}
 		if(!found)
-			printf("No Patient with %s disease found in our hospital records \n", token);
+			printf("No Patients with %s disease found in our hospital records \n", token);
 	}
 	else
 	{
@@ -607,7 +606,7 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
 
     if (id_exist(list, patient_attributes.recordID) )
     {
-        printf("Patient Record ID %d already exist!\n", patient_attributes.recordID);
+        printf("Patient Record ID %s already exist!\n", patient_attributes.recordID);
         return;
     }
 
@@ -616,7 +615,7 @@ void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *count
     insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
 
     printf("New patient with following attributes succesfully inserted\n"); 
-    printf("recordID : %d\n", patient_attributes.recordID);
+    printf("recordID : %s\n", patient_attributes.recordID);
     printf("FirstName : %s\n", patient_attributes.firstName);
     printf("LastName : %s\n", patient_attributes.lastName);
     printf("diseaseID : %s\n", patient_attributes.diseaseID);
@@ -644,27 +643,25 @@ void dateTokenize( char * input, Date *d1, Date *d2)
 
  	token = strtok(input, "-");
     d1->day = atoi (token);
-    //printf("_%d_\n", d1->day);
 
     token = strtok(NULL, "-");
     d1->month = atoi (token);
-    //printf("_%d_\n", d1->month);
+
 
     token = strtok(NULL, " ");
     d1->year = atoi (token);
-    //printf("_%d_\n", d1->year);
+
 
     token = strtok(NULL, "-");
     d2->day = atoi (token);
-    //printf("_%d_\n", d2.day);
+
 
     token = strtok(NULL, "-");
     d2->month = atoi (token);
-    //printf("_%d_\n", d2.month);
+
 
     token = strtok(NULL, "\n");
-    d2->year = atoi (token);
-    //printf("_%d_\n", d2.year);    
+    d2->year = atoi (token);  
 }
 
 Patient line_tokenize_without_exitDate(char * input)
@@ -673,45 +670,38 @@ Patient line_tokenize_without_exitDate(char * input)
 	char * token;
 
     token = strtok(input, " ");
-    patient.recordID = atoi(token);
+	patient.recordID = malloc(sizeof(char)* strlen(token)+1);
+	strcpy(patient.recordID, token);
     if(atoi(token) == 0)
     {
     	printf("Please insert a Patient ID\n");
     	return patient;
     }
-    //printf("_%d_\n", patient.recordID);
 
     token = strtok(NULL, " ");
     patient.firstName = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.firstName, token);
-    //printf("_%s_\n", patient.firstName);
 
     token = strtok(NULL, " ");
     patient.lastName = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.lastName, token);
-    //printf("_%s_\n", patient.lastName);
 
     token = strtok(NULL, " ");
     patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.diseaseID, token);
-   //printf("_%s_\n", patient.diseaseID);
 
     token = strtok(NULL, " ");
     patient.country = malloc(sizeof(char)*strlen(token)+1);
     strcpy( patient.country, token);
-    //printf("_%s_\n", patient.country);
 
     token = strtok(NULL, "-");
     patient.entryDate.day = atoi (token);
-    //printf("_%d_\n", patient.entryDate.day);
 
     token = strtok(NULL, "-");
     patient.entryDate.month = atoi (token);
-    //printf("_%d_\n", patient.entryDate.month);
 
     token = strtok(NULL, "\n");
     patient.entryDate.year = atoi (token);
-    // printf("_%d_\n", patient.entryDate.year);
     
 	patient.exitDate.day = 0;
     patient.exitDate.month = 0;
@@ -742,22 +732,18 @@ void df_tokenize (char *input, char ** disease_holder, char ** country_holder, D
 		strcpy(*disease_holder, token);
 		token = strtok(NULL, "-");
         d1->day = atoi (token);
-        //printf("_%d_\n", patient.entryDate.day);
 
         token = strtok(NULL, "-");
         d1->month = atoi (token);
-        //printf("_%d_\n", patient.entryDate.month);
 
         token = strtok(NULL, " ");
         d1->year = atoi (token);
 
         token = strtok(NULL, "-");
         d2->day = atoi (token);
-        //printf("_%d_\n", patient.entryDate.day);
 
         token = strtok(NULL, "-");
         d2->month = atoi (token);
-        //printf("_%d_\n", patient.entryDate.month);
 
         token = strtok(NULL, " ");
         d2->year = atoi (token);
