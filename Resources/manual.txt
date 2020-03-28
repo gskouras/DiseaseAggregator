@@ -2,7 +2,7 @@
 
 The available commands are listed above: 
 
-/**** Arguments in Parentheses can be ommited ***/
+/**** Arguments in [..] can be ommited ***/
 
 • /globalDiseaseStats(/gl) [date1 date2] :  Print for every disease the total infections between [date1, date2] . If no date specified the command prints total diseases for every disease in all dates 
 

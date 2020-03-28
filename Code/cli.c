@@ -267,8 +267,11 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 		if (k > max_heap.total_records)
 		{
 			printf("Please enter a k between 1 and %d \n", max_heap.total_records);
+			heap_destroy(max_heap.root);
+			free(country);
 			return;
 		}
+
 		printf("%s's most %d diseases are \n", country, k);
 		for (int i = 0; i < k; ++i)
 		{	
@@ -304,6 +307,8 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 		if (k > max_heap.total_records)
 		{
 			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			heap_destroy(max_heap.root);
+			free(country);
 			return;
 		}
 
@@ -350,8 +355,6 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
 						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
-						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
-						counter = 0;
 						current_counter = 0; // counter to keep track of this bucket slot diseases
 						prev_counter = 0; //counter to keep track of the amount of previus diseases
 					}
@@ -363,6 +366,8 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 		if (k > max_heap.total_records -1)
 		{
 			printf("Please enter a k between 0 and %d \n", max_heap.total_records-1);
+			heap_destroy(max_heap.root);
+			free(disease);
 			return;
 		}
 
@@ -388,7 +393,6 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
 						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
-						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
 						counter = 0;
 						current_counter = 0; // counter to keep track of this bucket slot diseases
 						prev_counter = 0; //counter to keep track of the amount of previus diseases
@@ -401,6 +405,8 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 		if (k > max_heap.total_records)
 		{
 			printf("Please enter a k between 0 and %d \n", max_heap.total_records);
+			heap_destroy(max_heap.root);
+			free(disease);
 			return;
 		}
 

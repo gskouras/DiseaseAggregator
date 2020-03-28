@@ -65,16 +65,17 @@ void heap_root_delete(Max_Heap *heap)
 		return;
 	}
 
-
 	if (heap->tail->right != NULL)
 	{
 		swapHeapNodeData(heap->tail->right, heap->root);
+		free(heap->tail->right);
 		heap->tail->right = NULL;
 		revMaxHeapify(heap->root);
 	}
 	else if(heap->tail->left != NULL)
 	{
 		swapHeapNodeData(heap->tail->left, heap->root);
+		free(heap->tail->left);
 		heap->tail->left = NULL;
 		revMaxHeapify(heap->root);
 	}
