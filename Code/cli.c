@@ -254,7 +254,10 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 						tree_country_search(temp->bucket_item[j].root, country, &counter);
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
-						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+
+						if (counter > 0)
+							heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+
 						counter = 0;
 						current_counter = 0; // counter to keep track of this bucket slot diseases
 						prev_counter = 0; //counter to keep track of the amount of previus diseases
@@ -293,8 +296,10 @@ void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 						tree_search_Country_dateRange(temp->bucket_item[j].root, d1, d2, country, &counter);
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
-						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
-						//printf("Disease %s had a total of %d incidents in country %s\n", temp->bucket_item[j].string, counter, country);
+
+						if (counter > 0)
+							heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+
 						counter = 0;
 						current_counter = 0; // counter to keep track of this bucket slot diseases
 						prev_counter = 0; //counter to keep track of the amount of previus diseases
@@ -354,7 +359,10 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 						tree_disease_search(temp->bucket_item[j].root, disease, &counter);
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
-						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+
+						if (counter > 0)
+							heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+						
 						current_counter = 0; // counter to keep track of this bucket slot diseases
 						prev_counter = 0; //counter to keep track of the amount of previus diseases
 					}
@@ -392,7 +400,10 @@ void topCountries( char * input , HashTable* country_HT, Patient_list *list)
 						tree_search_Disease_dateRange(temp->bucket_item[j].root, d1, d2, disease, &counter);
 						current_counter = counter - prev_counter;
 						prev_counter = counter;
-						heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+
+						if (counter > 0)
+							heap_insert(&max_heap, counter,  temp->bucket_item[j].string);
+						
 						counter = 0;
 						current_counter = 0; // counter to keep track of this bucket slot diseases
 						prev_counter = 0; //counter to keep track of the amount of previus diseases
