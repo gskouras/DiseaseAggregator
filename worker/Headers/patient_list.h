@@ -20,8 +20,10 @@ typedef struct
 	char * lastName;
 	char * diseaseID;
 	char * country;
+	char status[5];
 	Date entryDate;
-	Date exitDate; //date is set to 0 if a patients haven't take discharge from hospital yet
+	Date exitDate; //date is set to 0 if a patient haven't take discharge from hospital yet
+	int age;
 } Patient;
 
 typedef struct Patient_Node

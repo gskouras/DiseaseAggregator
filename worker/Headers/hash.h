@@ -8,6 +8,7 @@
 
 typedef struct {
 	char string [20]; /* string to hold the information we want */
+	int * age_ranges;
 	int total_patients;
 	int patients_hospitalized;
 	Tree_Node * root; /* Pointer to the root of the AVL tree */

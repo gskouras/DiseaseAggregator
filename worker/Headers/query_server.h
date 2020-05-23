@@ -1,13 +1,13 @@
-#ifndef CLI_H_
-#define CLI_H_
+#ifndef QUERY_SERVER_H_
+#define QUERY_SERVER_H_
 #include <stdio.h>
 
-#include "../Headers/main.h"
+#include "../Headers/worker.h"
 #include "../Headers/heap.h"
 
-/*** CLI commands ***/
+/*** Queries ***/
 
-void globalDiseaseStats( char *, HashTable * );
+char * listCountries();
 
 void topDiseases( char *, HashTable *, Patient_list *);
 
@@ -24,7 +24,7 @@ void insertPatientRecord( char * , HashTable * , HashTable * , Patient_list * );
 /********************/
 
 
-/***** Utillity Functions ****/
+/***** Queries Functions ****/
 
 void dateTokenize( char *, Date *, Date *);
 

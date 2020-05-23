@@ -290,7 +290,7 @@ int date_cmp(Date d1, Date d2)
 
 void print_date(Date date)
 {
-	printf(" %d-%d-%d", date.day, date.month, date.year);
+	printf("%d-%d-%d", date.day, date.month, date.year);
 }
 
 int max(int height1, int height2) 

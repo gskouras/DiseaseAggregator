@@ -81,9 +81,9 @@ Patient_Node* list_date_modify( Patient_list *list, Date date, char * id)
 
 void printPatientData(Patient patient)
 {
-	printf(" %s %s %s %s %s %d-%d-%d %d-%d-%d", patient.recordID, patient.firstName, patient.lastName,
-	patient.diseaseID, patient.country, patient.entryDate.day, patient.entryDate.month, patient.entryDate.year,
-	patient.exitDate.day, patient.exitDate.month, patient.exitDate.year);
+	printf(" %s %s %s %s %s %s %d-%d-%d %d-%d-%d %d\n", patient.recordID, patient.status, patient.firstName, patient.lastName,
+	patient.country, patient.diseaseID, patient.entryDate.day, patient.entryDate.month, patient.entryDate.year,
+	patient.exitDate.day, patient.exitDate.month, patient.exitDate.year, patient.age );
 }
 
 void freePatientList(Patient_list * list )

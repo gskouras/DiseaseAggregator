@@ -1,90 +1,193 @@
-#include "../Headers/main.h"
+#include "../headers/main.h"
 
 
-void cli(HashTable * , HashTable *, Patient_list* );
-void open_manual();
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    Params params = inputValidate(argc, argv);
 
-    Patient_list patient_list;
 
-    HashTable disease_HT;
-    HashTable country_HT;
+	Params params = inputValidate(argc, argv);
 
-    printf("\nProccesing Input...\n");
+	Directory_list d_list;
 
-    if(readPatientRecordsFile ( params, &disease_HT, &country_HT, &patient_list)==0)
+	readInputDirectory(&d_list, params.input_dir);
+	//printDirectoryList(&d_list);
+	
+	pid_t pid;
+	int status;
+	char ** parentPipes;
+	char ** workerPipes;
+
+
+	//initAllPipes(parentPipes, workerPipes, params.numWorkers);
+
+	parentPipes = malloc(params.numWorkers *sizeof(char*));
+	workerPipes = malloc(params.numWorkers *sizeof(char*));
+
+	struct stat st;
+	for (int i = 0; i < params.numWorkers; ++i)
+	{
+		parentPipes[i] = malloc(50* sizeof(char));
+		workerPipes[i] = malloc(50*  sizeof(char));
+		snprintf(parentPipes[i], strlen("/tmp/parent_fifo%d\0"), "/tmp/parent_fifo%d", i);
+		snprintf(workerPipes[i], strlen("/tmp/worker_fifo%d\0"), "/tmp/worker_fifo%d", i);
+		if(stat(parentPipes[i],&st)==-1)
+		{
+			if(mkfifo(parentPipes[i], PERMISSIONS)<0){
+				perror("Error creating the named pipe \n");
+				exit(1);
+			}
+		}
+		if(stat(workerPipes[i],&st)==-1)
+		{
+			if(mkfifo(workerPipes[i], PERMISSIONS)<0){
+				perror("Error creating the named pipe \n");
+				exit(1);
+			}
+		}
+	}
+
+	Worker_info workers_array[params.numWorkers];	
+
+	int id_counter = 0;
+
+
+	for (int i = 0; i < params.numWorkers; ++i)
+	{
+		pid = fork();
+		if (pid == 0)
+		{
+			worker(parentPipes[i], workerPipes[i], params.bufferSize);
+		}
+		else
+		{
+			workers_array[i].pid = pid;
+			//printf("%s %s\n", parentPipes[i], workerPipes[i]);
+			workers_array[i].write_fifo = malloc(strlen(parentPipes[i])+1);
+			workers_array[i].read_fifo = malloc(strlen(workerPipes[i])+1);
+			initDirectorytList(&workers_array[i].country_list); 
+			strcpy( workers_array[i].write_fifo, parentPipes[i]);
+			strcpy (workers_array[i].read_fifo, workerPipes[i]);					 
+		}
+	}
+
+	//printf("Worker arrays info data..\n");
+
+	initialize_dirPaths(&d_list, workers_array, parentPipes, workerPipes, params.numWorkers);
+
+	read_from_workers(workers_array, params);
+
+
+	printf("Parse of file Completed Succesfully!\n");
+	printf("\nWelcome to diseaseAggregator CLI\n");
+
+    cli(workers_array, params.numWorkers);
+
+
+	//1.getline
+	//2.grapse sta fifos tin entoli(na tsekaro an iparxei country. an iparxei tha stelno se 1)
+	//3. kalo tin read from workers // i tin sketi read an esteila se 1
+
+	//4.auto ginetai mexri na lavo exit.
+
+	for (int i = 0; i < params.numWorkers; ++i)
+	{
+	 	unlink(parentPipes[i]);
+		unlink(workerPipes[i]);
+	}
+    for (int i = 0; i < params.numWorkers; ++i)
     {
-        printf("\nAn Error Occured While Proccesing Input\n\n");
-        exit(0);
+    	pid = wait(&status);
+    	//printf("%d\n", status);
     }
+	
+	return 0;
+}
 
+void read_from_workers( Worker_info * workers, Params params)
+{
+	struct pollfd fdarray[params.numWorkers];
+	int i;
+	initAllFlags(workers, params.numWorkers);
 
-    printf("Parse of file Completed Succesfully!\n\n");
+	char * message;
 
-    //print_hash_table(&disease_HT);
-    //print_hash_table(&country_HT);
+    while(checkAllFlags(workers, params.numWorkers))
+    {
+     	for (i = 0; i < params.numWorkers; i++)
+     	{
+     		fdarray[i].fd = workers[i].read_fd;
+     		fdarray[i].events = POLLIN;
+     	}
 
-    cli(&disease_HT, &country_HT, &patient_list);
+     	poll(fdarray,params.numWorkers, 10);
 
-    destroyHashTable(&disease_HT);
-    destroyHashTable(&country_HT);
-    freePatientList(&patient_list);
+     	for (i = 0; i < params.numWorkers; i++)
+     	{
+     		
+     		if((fdarray[i].revents & POLLIN))
+     		{
+	            if(fdarray[i].fd == workers[i].read_fd)
+	            {
+	               	message = read_from_fifo( workers[i].read_fd , params.bufferSize);
+	               	//printf("\n%s\n",message );
+	               	free(message);               		
+	               	//printf("message is over\n");
+	               	workers[i].flag = 0;	               	
+	            }	            
+        	}
+        	else if((fdarray[i].revents & POLLHUP)) // exei kleisei to pipe apo to allo meros
+                workers[i].flag = 1;
+     	}
+    }
+}
+
+int checkAllFlags(Worker_info * workers, int numWorkers) //return 1 oso kati den exei diavastei
+{
+	for (int i = 0; i < numWorkers; ++i)
+	{
+		if(workers[i].flag)
+			return 1;
+	}
+	return 0;
+}
+
+void initAllFlags(Worker_info * workers, int numWorkers)
+{
+	for (int i = 0; i < numWorkers; ++i)
+	{
+		workers[i].flag = 1; //1 simainei oti den exei diavastei
+	}
 }
 
 
-int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *patient_list)
+
+Directory_list* readInputDirectory(Directory_list *d_list, char * input)
 {
-    FILE *fp = fopen(params.fileName, "r");
+	struct dirent *de;
+	char temp[100];
+	strcpy(temp, input);
 
-    if (fp == NULL) //error handling when opening the file
+ 	initDirectorytList(d_list);
+
+	DIR *dr = opendir(input);
+
+	//printf("To directory einai %s\n",input );
+
+	if (dr == NULL)  // opendir returns NULL if couldn't open directory 
+    { 
+        perror("Error");
+        exit(0);
+    } 
+    strcat(input, "/");
+    while ((de = readdir(dr)) != NULL)
     {
-        perror(" Requested file failed to open");
-        return 0;
+    	strcpy(temp, input);
+    	if(strcmp(de->d_name, ".") && strcmp(de->d_name, ".."))
+            insertNewDirectory( d_list, strcat(temp, de->d_name));
     }
-
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
-    int line_pos;
-
-    Patient patient_attributes; 
-
-    Patient_Node * new_patient_node = NULL;
-
-    initHashTable(disease_HT, params.disHashSize, params.bucketsize); 
-    initHashTable(country_HT, params.countryHashSize, params.bucketsize); 
-
-    initPatientList(patient_list);
-
-    while ((nread = getline(&line, &len, fp)) != -1) 
-    {   
-
-        patient_attributes = line_tokenize(line, patient_attributes);
-        
-        if (id_exist(patient_list, patient_attributes.recordID))
-        {
-            printf("Patient with Record ID %s has been already inserted, thus it ommited\n", patient_attributes.recordID);
-            free(patient_attributes.recordID);
-            free(patient_attributes.firstName);
-            free(patient_attributes.lastName);
-            free(patient_attributes.diseaseID);
-            free(patient_attributes.country);
-   
-        }
-        else
-        {
-            new_patient_node =  insertNewPatient(patient_list, patient_attributes);
-            insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
-            insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
-        }
-    }
-    free(line);
-    fclose(fp);
-
-    return 1;
+  
+    closedir(dr);   
+    return d_list; 
 }
 
 
@@ -98,106 +201,51 @@ int digitValidate(char *a)
 	return 0;
 }
 
+
 Params inputValidate (int argc, char *argv[])
 {
     Params params;
     
     if(argc==1)
     {
-        params.fileName = "./Resources/large.txt";
-        params.disHashSize = 10;
-        params.countryHashSize= 50;
-        params.bucketsize = 256;
+        params.numWorkers = 8;
+        params.bufferSize = 124;
+        params.input_dir = malloc(sizeof(50));
+        strcpy(params.input_dir, "./resources/input_dir");
         return params;
     }
+
     else
     { 
-
-    	if ( argc != 9 )
+    	if ( argc != 7 )
     	{
-    		printf("Error. Arguement related error: Got %d, expectetd 9\n", argc);
+    		printf("Error. Arguement related error: Got %d, expectetd 7\n", argc);
     		exit(0);
     	}
 
-    	if ( (strcmp(argv[1], "-p") == 0 && strcmp(argv[3], "-h1") == 0 && strcmp(argv[5], "-h2") == 0 && strcmp(argv[7], "-b") == 0)
-    	&& !digitValidate(argv[4]) && !digitValidate(argv[6]) && !digitValidate(argv[8]))
+    	if ( (strcmp(argv[1], "-w") == 0 && strcmp(argv[3], "-b") == 0 && strcmp(argv[5], "-i") == 0)
+    	&& !digitValidate(argv[2]) && !digitValidate(argv[4]) )
     	{
-            if(atoi(argv[8]) >= 240)
-            {
-        		params.fileName = argv[2];
-        		params.disHashSize = atoi(argv[4]);
-        		params.countryHashSize = atoi(argv[6]);
-        		params.bucketsize = atoi(argv[8]);
-            }
-            else
-            {
-                printf("Bucket size must be greater than 239 bytes\n");
-                exit(0);
-            }
-    	} 
+    		params.numWorkers = atoi(argv[2]);
+        	params.bufferSize = atoi(argv[4]);
+        	params.input_dir = argv[6];
+        	return params;
+    	}
     	else 
     	{
     		printf("Error. Arguement related error.\n");
     		exit(0);
     	}
-    	return params;
     }
 }
 
 
-Patient line_tokenize(char *line, Patient patient )
+int worker(char * read_pipe, char * write_pipe, int bufferSize)
 {
-        char * token;
-
-        token = strtok(line, " ");
-        patient.recordID = malloc(sizeof(char)* strlen(token)+1);
-        strcpy(patient.recordID, token);
-
-        token = strtok(NULL, " ");
-        patient.firstName = malloc(sizeof(char)*strlen(token)+1);
-        strcpy( patient.firstName, token);
-
-        token = strtok(NULL, " ");
-        patient.lastName = malloc(sizeof(char)*strlen(token)+1);
-        strcpy( patient.lastName, token);
-
-        token = strtok(NULL, " ");
-        patient.diseaseID = malloc(sizeof(char)*strlen(token)+1);
-        strcpy( patient.diseaseID, token);
-
-        token = strtok(NULL, " ");
-        patient.country = malloc(sizeof(char)*strlen(token)+1);
-        strcpy( patient.country, token);
-
-        token = strtok(NULL, "-");
-        patient.entryDate.day = atoi (token);
-
-        token = strtok(NULL, "-");
-        patient.entryDate.month = atoi (token);
-
-        token = strtok(NULL, " ");
-        patient.entryDate.year = atoi (token);
-        token = strtok(NULL, "- ");
-        
-
-
-        if (atoi(token) == 0 ) //this means that current patient hasnt take discharge from hospital
-        {
-            patient.exitDate.day = 0;
-            patient.exitDate.month = 0;
-            patient.exitDate.year = 0;
-            return patient;
-        }
-        else
-        {
-            patient.exitDate.day = atoi (token);
-        
-            token = strtok(NULL, "-");
-            patient.exitDate.month = atoi (token);
-
-            token = strtok(NULL, "\n");
-            patient.exitDate.year = atoi (token);
-        }
-
-    return patient;
+	//printf("worker will start with procces id %u and %s %s\n", getpid(), read_pipe, write_pipe);
+	char *argv[]={"./worker/worker", 
+    read_pipe, write_pipe, "64" , NULL}; 
+    execvp(argv[0],argv);
 }
+
+

@@ -33,13 +33,20 @@ Bucket_Node * createNewBucketNode( int capacity )
 	bucket->slot_counter = 0;
 	bucket->capacity = capacity;
 	bucket->bucket_item = malloc(sizeof(BucketItem)* capacity);
+	bucket->bucket_item->age_ranges = malloc(4 *sizeof(int));
 	for (int i = 0; i < capacity; ++i)
 	{
 		//init avl tree of each bucket_slot
+		bucket->bucket_item[i].age_ranges = malloc(4 *sizeof(int));
 		bucket->bucket_item[i].root = NULL;
 		bucket->bucket_item[i].total_patients = 0;
 		bucket->bucket_item[i].patients_hospitalized = 0;
+		for (int j = 0; j < 4; ++j)
+		{
+			bucket->bucket_item[i].age_ranges[j] = 0;
+		}
 	}
+
 	return bucket;
 }
 
@@ -157,13 +164,35 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 
 int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
+	//printf("i eggrafi benei\n");
 	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string); //insert the record to the correct position of the bucket
 
 	this_bucket->bucket_item[this_bucket->slot_counter].root = \
 		tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
-
 	this_bucket->bucket_item[this_bucket->slot_counter].total_patients++;
 	this_bucket->slot_counter++;
+
+    if(this_patient->patient.age <= 20)
+    {
+        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[0] += 1;
+        //printf(" mikroteros apo 20\n");                 
+    }
+    else if(this_patient->patient.age >= 20 && this_patient->patient.age <= 40)
+    {
+        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[1] += 1;
+        //printf("anamesa se 20 kai 40\n"); 
+    }
+    else if( this_patient->patient.age >= 41 && this_patient->patient.age <= 60 )
+    {
+        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[2] += 1;
+       	//printf("anamesa se 41 kai 60\n");
+       	//printf("this->bucket->slot counter is %d\n",this_bucket->slot_counter);   
+    }
+    else
+    {
+        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[3] += 1;
+        //printf("60+\n"); 
+    }
 	
 	if(this_patient->patient.exitDate.year > 1)
 		this_bucket->bucket_item[this_bucket->slot_counter].patients_hospitalized++;
@@ -191,6 +220,27 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 				temp->bucket_item[i].root = \
 					tree_insert( temp->bucket_item[i].root , this_patient->patient.entryDate, this_patient);//insert to avl tree
 				temp->bucket_item[i].total_patients++;
+
+				if(this_patient->patient.age <= 20)
+				{
+				    temp->bucket_item[i].age_ranges[0] += 1;
+				    //printf(" mikroteros apo 20\n");                 
+				}
+				else if(this_patient->patient.age >= 20 && this_patient->patient.age <= 40)
+				{
+				    temp->bucket_item[i].age_ranges[1] += 1;
+				    //printf("anamesa se 20 kai 40\n"); 
+				}
+				else if( this_patient->patient.age >= 41 && this_patient->patient.age <= 60 )
+				{
+				    temp->bucket_item[i].age_ranges[2] += 1;
+				    //printf("anamesa se 41 kai 60\n"); 
+				}
+				else
+				{
+				    temp->bucket_item[i].age_ranges[3] += 1; 
+				    //printf("60+\n"); 
+				}
 				
 				if(this_patient->patient.exitDate.year > 1)
 					temp->bucket_item[i].patients_hospitalized++;
@@ -200,7 +250,7 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 		}
 		temp= temp->next;
 	}
-	return 0; //if anything goew wrong return 0
+	return 0; //if anything wert wrong return 0
 }
 
 
