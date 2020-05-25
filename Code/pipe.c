@@ -1,7 +1,8 @@
 #include "../headers/pipe.h"
+#include "../headers/main.h"
 
 
-void cli( Worker_info * workers_array, int workers )
+void cli( Worker_info * workers_array, Params params )
 {
 
     char *input = NULL, *line = NULL, *cmd = NULL;
@@ -17,6 +18,7 @@ void cli( Worker_info * workers_array, int workers )
         input = line;
         cmd = strtok_r(input, " \n", &input);
         input = strtok(input, "\n");
+        char query[50];
 
         if (cmd != NULL) 
         {
@@ -26,7 +28,7 @@ void cli( Worker_info * workers_array, int workers )
                 int index = 0;
                 char *token = NULL;
                 char country[50];
-                for (int i = 0; i < workers; ++i)
+                for (int i = 0; i < params.numWorkers; ++i)
                 {
                     list_counter = workers_array[i].country_list.counter;
                     //list_reverse(&workers_array[i].country_list);
@@ -58,11 +60,15 @@ void cli( Worker_info * workers_array, int workers )
                 }
                 else 
                 {
-                    for (int i = 0; i < workers; ++i)
+                    for (int i = 0; i < params.numWorkers; ++i)
                     {
-                        write_to_fifo(workers_array[i].write_fd, cmd);
-                    
-                        //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
+                        strcpy(query, cmd);
+                        sprintf(query, "%s ", query);
+                        strcat(query, input);
+                        // printf("query is %s \n", query );
+                        write_to_fifo(workers_array[i].write_fd, query);
+                        sleep(1);
+                        read_from_fifo( workers_array[i].read_fd , params.bufferSize);
                     }
                 }
 
@@ -77,7 +83,7 @@ void cli( Worker_info * workers_array, int workers )
                 }
                 else
                 {
-                    for (int i = 0; i < workers; ++i)
+                    for (int i = 0; i < params.numWorkers; ++i)
                     {
                         write_to_fifo(workers_array[i].write_fd, cmd);
                         //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
@@ -96,7 +102,7 @@ void cli( Worker_info * workers_array, int workers )
                 }
                 else
                 {
-                    for (int i = 0; i < workers; ++i)
+                    for (int i = 0; i < params.numWorkers; ++i)
                     {
                         write_to_fifo(workers_array[i].write_fd, cmd);
                         //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
@@ -115,7 +121,7 @@ void cli( Worker_info * workers_array, int workers )
                 }
                 else
                 {
-                    for (int i = 0; i < workers; ++i)
+                    for (int i = 0; i < params.numWorkers; ++i)
                     {
                         write_to_fifo(workers_array[i].write_fd, cmd);
                         //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
@@ -133,7 +139,7 @@ void cli( Worker_info * workers_array, int workers )
                 }
                 else
                 {
-                    for (int i = 0; i < workers; ++i)
+                    for (int i = 0; i < params.numWorkers; ++i)
                     {
                         write_to_fifo(workers_array[i].write_fd, cmd);
                         //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
@@ -149,7 +155,7 @@ void cli( Worker_info * workers_array, int workers )
             else if (strcmp(cmd, "/exit") == 0) 
             {
                 printf("\nExiting Disease Aggregator..\n\n"); //Done
-                for (int i = 0; i < workers; ++i)
+                for (int i = 0; i < params.numWorkers; ++i)
                 {
                     kill(workers_array[i].pid, SIGKILL);
                 }
@@ -290,12 +296,12 @@ int initialize_dirPaths(Directory_list* d_list, Worker_info* workers_array, char
 }
 
 
-char * read_from_fifo( int read_fd, int buffersize)
+int read_from_fifo( int read_fd, int buffersize)
 {
-    
     int bytes_in = 0, input_size; //posa byte diavastikan apo tin read
     int buffer_counter = 0;
-    char *token;char * buffer;char *p;
+    char *token;
+    char *p;
 
     char temp[100];
 
@@ -306,26 +312,25 @@ char * read_from_fifo( int read_fd, int buffersize)
     token = strtok(temp, "$");//printf("token = %s\n", token);
     //printf("token is %s\n", token);
     input_size = atoi(token); //tora ksero posa byte tha mou steilei
-
-    buffer = (char *)malloc(sizeof(char) * (input_size +1));
+    
+    char buffer[10000]; //(char *)malloc(sizeof(char) * (input_size +1));
     memset(buffer, 0, input_size +1);
-    //printf("input size is %d\n",input_size );
-    p = buffer;
-    if(input_size < buffersize)
-        buffersize = input_size;
 
-    while(buffer_counter < input_size)
-    {
-        p += bytes_in;
-        bytes_in = read( read_fd,p, buffersize );//printf("bytes_in = %d\n", bytes_in);
-        if(buffer_counter + bytes_in > input_size)
-            bytes_in = input_size-buffer_counter;
-        buffer_counter += bytes_in;
-    }
-    //p = NULL;
+    p = buffer;
+
+    if(input_size > buffersize)
+        buffersize = input_size + 1;
+
+
+    bytes_in = read( read_fd, p, input_size );//printf("bytes_in = %d\n", bytes_in);
+
     buffer[input_size]='\0';
-   printf("%s\n",buffer);
-    return buffer;
+    printf("%s\n",buffer);
+    //printf("strlen of buffer = %ld\n", strlen(buffer));
+    if (strlen(buffer) == 0)
+        return 0;
+
+    return 1;
 }
 
 void write_to_fifo(int  write_fd, char * message)

@@ -1,9 +1,8 @@
 #include "../Headers/worker.h"
 
-
-
-char * query_handler(char * ,HashTable * , HashTable *, Patient_list*, int );
 void open_manual();
+
+char * query_handler(char * , HashTable * , HashTable *, Patient_list*, int );
 
 Logfile_Info log_info;
 
@@ -12,7 +11,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, signal_handler);
     char read_fifo[100];
     char write_fifo[100];
-    int buffersize = 10;
+    int buffersize = 512;
     int buffer_counter = 0;
     strcpy(read_fifo, argv[1]);
     strcpy(write_fifo, argv[2]);
@@ -20,25 +19,27 @@ int main(int argc, char *argv[])
     struct stat st;
 
     int read_fd = open(read_fifo, O_RDONLY);
-    // printf("read_fd is %d and pipe is %s\n", read_fd, read_fifo);
 
     int write_fd = open(write_fifo, O_WRONLY);
-    // printf("write fd is %d and pipe is %s \n", write_fd, write_fifo);
 
-    // //printf("read_fifo is %s \n", read_fifo);
     char * message = read_from_fifo(read_fd, buffersize);
-    //printf("message from worker.c is %s\n",message );
 
-    Patient_list patient_list;
 
-    
-    HashTable disease_HT;
-    HashTable country_HT;
 
     Params params;
     params.disHashSize = 10;
     params.countryHashSize= 5;
     params.bucketsize = 256;
+
+    Patient_list patient_list;
+
+    HashTable disease_HT;
+    HashTable country_HT;
+
+    initHashTable(&disease_HT, params.disHashSize, params.bucketsize); 
+    initHashTable(&country_HT, params.countryHashSize, params.bucketsize); 
+
+    initPatientList(&patient_list);
 
     char *token = strtok(message , "$");
     int prev_token_len = strlen(token);
@@ -49,8 +50,6 @@ int main(int argc, char *argv[])
     {   
         strcpy(params.fileName, token);
         //printf("params filename of process id %u is %s\n", getpid() ,params.fileName );
-
-        //printf("\nProccesing Input...\n");//
         if(strlen(params.fileName)> 10)
         {
             if(readPatientRecordsFile ( params, &disease_HT, &country_HT, &patient_list, write_fd, &log_info)==0)
@@ -59,7 +58,6 @@ int main(int argc, char *argv[])
                 exit(0);
             }
         }
-        //printf("Parse of file Completed Succesfully!\n\n");
 
         p = p + (strlen(token) +1);
         token = strtok(p, "\n$");
@@ -69,17 +67,21 @@ int main(int argc, char *argv[])
 
     free(message);
 
-    // while(1)
-    // {
-    //     //printf("beno sto aenao loop\n");
-    //     message = read_from_fifo(read_fd, buffersize);
-    //     printf("message is %s\n", message);
-    //     message = query_handler(message, &disease_HT, &country_HT, &patient_list, write_fd);
-    //     //diaxeirizomai to message otan erthei kai etoimazo tin apantisi
-    //     //write_to_fifo (write_fd, result); //to message tha prokipsei einai to apotelesma tou query
-    // }
+    char * result;
+
+    //print_hash_table(&disease_HT);
+    while(1)
+    {
+        //printf("beno sto aenao loop\n");
+        message = read_from_fifo(read_fd, buffersize);
+
+        result = query_handler(message, &disease_HT, &country_HT, &patient_list, write_fd);
+        //diaxeirizomai to message otan erthei kai etoimazo tin apantisi
+        write_to_fifo (write_fd, result); //to message tha prokipsei einai to apotelesma tou query
+        free(message);
+        free(result);
+    }
     
-    //cli(&disease_HT, &country_HT, &patient_list);
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
@@ -221,10 +223,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
     log_info->success = 0;
     log_info->fail = 0;
 
-    initHashTable(disease_HT, params.disHashSize, params.bucketsize); 
-    initHashTable(country_HT, params.countryHashSize, params.bucketsize); 
 
-    initPatientList(patient_list);
 
     while ((de = readdir(dr)) != NULL)
     {

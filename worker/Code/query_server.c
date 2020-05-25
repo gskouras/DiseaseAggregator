@@ -1,59 +1,106 @@
 #include "../Headers/query_server.h"
 
 
-char * query_handler(char * cmd, HashTable * disease_HT, HashTable * country_HT, Patient_list *list, int write_fd)
+char * query_handler(char * message, HashTable * disease_HT, HashTable * country_HT, Patient_list *list, int write_fd)
 {
 
-    char *input = NULL;
+    	char *input = NULL, *cmd = NULL;
 
-	input = strtok(cmd, "\n");
+        input = message;
+        cmd = strtok_r(input, " \n", &input);
+        input = strtok(input, "\n");
 
 	if (cmd != NULL) 
 	{
-	    if (strcmp(cmd, "/globalDiseaseStats") == 0 || strcmp(cmd, "/gl") == 0) 
+
+		if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
 	    {
-	    	char *result = listCountries();
+	    	return diseaseFrequency(input, disease_HT, list);
 	    } 
-	    else if (strcmp(cmd, "/topk-Diseases") == 0 || strcmp(cmd, "/tkd") == 0) 
+	    else if (strcmp(cmd, "/topk-AgeRanges") == 0 || strcmp(cmd, "/tka") == 0 ) 
 	    {
-
+	    	printf("Beno tka\n");
 	    } 
-	    else if (strcmp(cmd, "/topk-Countries") == 0 || strcmp(cmd, "/tkc") == 0 ) 
+	    else if (strcmp(cmd, "/searchPatientRecord") == 0 || strcmp(cmd, "/spr") == 0)
 	    {
-
-
+			printf("Beno spr\n");
 	    } 
-	    else if (strcmp(cmd, "/recordPatientExit") == 0 || strcmp(cmd, "/rpe") == 0) 
+	    else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
 	    {
-
+	    	printf("Beno npa\n");
 	    } 
-	    else if (strcmp(cmd, "/numCurrentPatients") == 0 || strcmp(cmd, "/ncp") == 0) 
+	    else if (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd")==0 ) 
 	    {
-
-	        //numCurrentPAtients(input, disease_HT); //done
-
-	    } 
-	    else if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
-	    {
-
-
-	    } 
-	    else if (strcmp(cmd, "/insertPatientRecord") == 0 || strcmp(cmd, "/ipr") == 0) 
-	    {
-
+	    	printf("Beno npd\n");
 
 	    } 
 	}
 }
 
-// /*** CLI commands ***/
+/*** Query Server Functions ***/
 
 
-
-char * listCountries()
+char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *list)
 {
-	
+
+	Date d1, d2;
+	char * disease;
+	char * country;
+	int counter = 0;
+
+	char * result = NULL;
+
+	df_tokenize(input, &disease, &country, &d1, &d2 );
+
+
+	if(record_exist(disease, disease_HT)) //find if given disease exist
+	{			
+		int index = hash_fun(disease, disease_HT->size);
+		Bucket_Node *temp = disease_HT->lists_of_buckets[index].head;
+		while(temp !=NULL)
+		{
+			for (int i = 0; i < temp->slot_counter; ++i)
+			{
+				if(strcmp(temp->bucket_item[i].string, disease))
+				{
+					continue;
+				}
+				else
+				{
+					if(country == NULL)
+					{
+						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter);
+						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						print_date(d1); print_date(d2); printf("\n");
+						break;
+					}
+					else
+					{
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter);
+						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						print_date(d1); print_date(d2); printf(" in Country %s\n", country);
+						break;
+					}
+				}
+			}
+		temp = temp->next;
+		}
+	}
+	else
+	{
+		printf("No such disease found in our records!\n");
+		free(disease);
+		free(country);
+		return NULL;
+	}
+	free(disease);
+	free(country);
+	result = malloc(sizeof(char)* 10);
+	sprintf(result, "%d", counter);
+	return result;
 }
+
+
 
 // void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
 // {
@@ -347,71 +394,7 @@ char * listCountries()
 // }
 
 
-// void diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *list)
-// {
-// 	if (input == NULL)
-// 	{
-// 		printf("Please Insert Valid Data\n");
-// 		return;
-// 	}
 
-// 	Date d1, d2;
-// 	char * disease;
-// 	char * country;
-
-// 	df_tokenize(input, &disease, &country, &d1, &d2 );
-
-// 	if(date_cmp(d1, d2)== 1)
-// 	{
-// 		printf("First Date must be smaller than second Date\n");
-// 		return;
-// 	}
-
-
-// 	if(record_exist(disease, disease_HT)) //find if given disease exist
-// 	{			
-// 		int counter = 0;
-// 		int index = hash_fun(disease, disease_HT->size);
-// 		Bucket_Node *temp = disease_HT->lists_of_buckets[index].head;
-// 		while(temp !=NULL)
-// 		{
-// 			for (int i = 0; i < temp->slot_counter; ++i)
-// 			{
-// 				if(strcmp(temp->bucket_item[i].string, disease))
-// 				{
-// 					continue;
-// 				}
-// 				else
-// 				{
-// 					if(country == NULL)
-// 					{
-// 						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter);
-// 						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-// 						print_date(d1); print_date(d2); printf("\n");
-// 						break;
-// 					}
-// 					else
-// 					{
-// 						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter);
-// 						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-// 						print_date(d1); print_date(d2); printf(" in Country %s\n", country);
-// 						break;
-// 					}
-// 				}
-// 			}
-// 		temp = temp->next;
-// 		}
-// 	}
-// 	else
-// 	{
-// 		printf("No such disease found in our records!\n");
-// 		free(disease);
-// 		free(country);
-// 		return;
-// 	}
-// 	free(disease);
-// 	free(country);
-// }
 
 
 // void insertPatientRecord( char * input, HashTable * disease_HT, HashTable *country_HT, Patient_list *list)
@@ -468,34 +451,34 @@ char * listCountries()
 // /********************/
 
 
-// /***** Utillity Functions ****/
+/***** Utillity Functions ****/
 
-// void dateTokenize( char * input, Date *d1, Date *d2)
-// {	
-// 	char * token = NULL;
+void dateTokenize( char * input, Date *d1, Date *d2)
+{	
+	char * token = NULL;
 
-//  	token = strtok(input, "-");
-//     d1->day = atoi (token);
+ 	token = strtok(input, "-");
+    d1->day = atoi (token);
 
-//     token = strtok(NULL, "-");
-//     d1->month = atoi (token);
-
-
-//     token = strtok(NULL, " ");
-//     d1->year = atoi (token);
+    token = strtok(NULL, "-");
+    d1->month = atoi (token);
 
 
-//     token = strtok(NULL, "-");
-//     d2->day = atoi (token);
+    token = strtok(NULL, " ");
+    d1->year = atoi (token);
 
 
-//     token = strtok(NULL, "-");
-//     d2->month = atoi (token);
+    token = strtok(NULL, "-");
+    d2->day = atoi (token);
 
 
-//     token = strtok(NULL, "\n");
-//     d2->year = atoi (token);  
-// }
+    token = strtok(NULL, "-");
+    d2->month = atoi (token);
+
+
+    token = strtok(NULL, "\n");
+    d2->year = atoi (token);  
+}
 
 // Patient line_tokenize_without_exitDate(char * input)
 // {
@@ -543,49 +526,49 @@ char * listCountries()
 // }
 
 
-// void df_tokenize (char *input, char ** disease_holder, char ** country_holder, Date *d1, Date *d2)	//printf(" disease holder is%s\n", *disease_holder );
-// {	
-// 	if (strlen(input) <= 30) //tokenize without country name
-// 	{
-// 		char *token = strtok( input, " ");
+void df_tokenize (char *input, char ** disease_holder, char ** country_holder, Date *d1, Date *d2)	//printf(" disease holder is%s\n", *disease_holder );
+{	
+	if (strlen(input) <= 30) //tokenize without country name
+	{
+		char *token = strtok( input, " ");
 	
-//  		*disease_holder = malloc(sizeof(char)*strlen(token)+1);
-// 		strcpy(*disease_holder, token);
-// 		token = strtok( NULL, "\n");	
-// 		char *date_holder = malloc(sizeof(char)*strlen(token)+1);
-// 		strcpy(date_holder, token);
-// 		dateTokenize(date_holder , d1, d2);	
-// 		*country_holder = NULL;
-// 	}
-//  	else
-// 	{
-// 		char *token = strtok( input, " ");
+ 		*disease_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(*disease_holder, token);
+		token = strtok( NULL, "\n");	
+		char *date_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(date_holder, token);
+		dateTokenize(date_holder , d1, d2);	
+		*country_holder = NULL;
+	}
+ 	else
+	{
+		char *token = strtok( input, " ");
 	
-//  		*disease_holder = malloc(sizeof(char)*strlen(token)+1);
-// 		strcpy(*disease_holder, token);
-// 		token = strtok(NULL, "-");
-//         d1->day = atoi (token);
+ 		*disease_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(*disease_holder, token);
+		token = strtok(NULL, "-");
+        d1->day = atoi (token);
 
-//         token = strtok(NULL, "-");
-//         d1->month = atoi (token);
+        token = strtok(NULL, "-");
+        d1->month = atoi (token);
 
-//         token = strtok(NULL, " ");
-//         d1->year = atoi (token);
+        token = strtok(NULL, " ");
+        d1->year = atoi (token);
 
-//         token = strtok(NULL, "-");
-//         d2->day = atoi (token);
+        token = strtok(NULL, "-");
+        d2->day = atoi (token);
 
-//         token = strtok(NULL, "-");
-//         d2->month = atoi (token);
+        token = strtok(NULL, "-");
+        d2->month = atoi (token);
 
-//         token = strtok(NULL, " ");
-//         d2->year = atoi (token);
+        token = strtok(NULL, " ");
+        d2->year = atoi (token);
 
-//         token = strtok(NULL, "\n");
-//         *country_holder = malloc(sizeof(char)*strlen(token)+1);
-// 		strcpy(*country_holder, token);
-//  	}
-// }
+        token = strtok(NULL, "\n");
+        *country_holder = malloc(sizeof(char)*strlen(token)+1);
+		strcpy(*country_holder, token);
+ 	}
+}
 
 
 // void topK_tokenize(char * input, char ** string, Date * d1, Date *d2, int *k)

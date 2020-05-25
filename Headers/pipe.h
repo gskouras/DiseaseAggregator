@@ -30,13 +30,11 @@ void open_write_pipes(int *, char **, int );
 
 int initialize_dirPaths( Directory_list *, Worker_info *, char ** , char ** , int );
 
-char * read_from_fifo( int, int);
+int read_from_fifo( int, int);
 
 void write_to_fifo(int, char *);
 
 int worker( char *, char * , int );
-
-void cli( Worker_info * , int );
 
 void open_manual();
 

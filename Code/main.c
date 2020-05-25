@@ -80,8 +80,7 @@ int main(int argc, char* argv[])
 	printf("Parse of file Completed Succesfully!\n");
 	printf("\nWelcome to diseaseAggregator CLI\n");
 
-    cli(workers_array, params.numWorkers);
-
+    cli(workers_array, params);
 
 	//1.getline
 	//2.grapse sta fifos tin entoli(na tsekaro an iparxei country. an iparxei tha stelno se 1)
@@ -128,10 +127,10 @@ void read_from_workers( Worker_info * workers, Params params)
      		{
 	            if(fdarray[i].fd == workers[i].read_fd)
 	            {
-	               	message = read_from_fifo( workers[i].read_fd , params.bufferSize);
-	               	//printf("\n%s\n",message );
-	               	free(message);               		
-	               	//printf("message is over\n");
+	            	//printf("start to print the message with i %d\n", i);
+	               	while(read_from_fifo( workers[i].read_fd , params.bufferSize));
+	               	//free(message);
+	               	//printf("message is over \n");               		
 	               	workers[i].flag = 0;	               	
 	            }	            
         	}
@@ -208,8 +207,8 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 8;
-        params.bufferSize = 124;
+        params.numWorkers = 1;
+        params.bufferSize = 128;
         params.input_dir = malloc(sizeof(50));
         strcpy(params.input_dir, "./resources/input_dir");
         return params;
@@ -228,7 +227,7 @@ Params inputValidate (int argc, char *argv[])
     	{
     		params.numWorkers = atoi(argv[2]);
         	params.bufferSize = atoi(argv[4]);
-        	params.input_dir = argv[6];
+        	strcpy(params.input_dir, argv[6]);
         	return params;
     	}
     	else 
@@ -244,7 +243,7 @@ int worker(char * read_pipe, char * write_pipe, int bufferSize)
 {
 	//printf("worker will start with procces id %u and %s %s\n", getpid(), read_pipe, write_pipe);
 	char *argv[]={"./worker/worker", 
-    read_pipe, write_pipe, "64" , NULL}; 
+    read_pipe, write_pipe, "512" , NULL}; 
     execvp(argv[0],argv);
 }
 

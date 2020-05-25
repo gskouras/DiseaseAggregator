@@ -5,9 +5,12 @@
 #include "../Headers/worker.h"
 #include "../Headers/heap.h"
 
+
+
+
 /*** Queries ***/
 
-char * listCountries();
+char * diseaseFrequency( char * , HashTable *, Patient_list * );
 
 void topDiseases( char *, HashTable *, Patient_list *);
 
@@ -17,7 +20,6 @@ void recordPatientExit( char * , Patient_list * );
 
 void numCurrentPAtients( char * , HashTable * );
 
-void diseaseFrequency( char * , HashTable *, Patient_list * );
 
 void insertPatientRecord( char * , HashTable * , HashTable * , Patient_list * );
 

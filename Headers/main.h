@@ -36,6 +36,8 @@ int checkAllFlags(Worker_info *, int);
 
 void initAllFlags(Worker_info *, int);
 
+void cli( Worker_info * , Params );
+
 
 
 
