@@ -24,8 +24,6 @@ int main(int argc, char *argv[])
 
     char * message = read_from_fifo(read_fd, buffersize);
 
-
-
     Params params;
     params.disHashSize = 10;
     params.countryHashSize= 5;
@@ -69,19 +67,21 @@ int main(int argc, char *argv[])
 
     char * result;
 
-    //print_hash_table(&disease_HT);
+    //print_hash_table(&country_HT);
     while(1)
     {
         //printf("beno sto aenao loop\n");
         message = read_from_fifo(read_fd, buffersize);
 
         result = query_handler(message, &disease_HT, &country_HT, &patient_list, write_fd);
-        //diaxeirizomai to message otan erthei kai etoimazo tin apantisi
+        //printf("result is %s\n",result );
         write_to_fifo (write_fd, result); //to message tha prokipsei einai to apotelesma tou query
-        free(message);
+        
         free(result);
+        free(message);
     }
     
+    //print_hash_table(&disease_HT);
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
@@ -224,6 +224,24 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
     log_info->fail = 0;
 
 
+    for (int i = 0; i < disease_HT->size; ++i)
+    {   
+        if( disease_HT->lists_of_buckets[i].head != NULL)
+        {
+            Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
+            while(temp !=NULL)
+            {
+                for (int j = 0; j < temp->slot_counter; ++j)
+                {
+                    for (int k = 0; k < 4; ++k)
+                    {
+                        temp->bucket_item[j].age_ranges[k] = 0;
+                    }
+                }
+            temp = temp->next;
+            }
+        }
+    }
 
     while ((de = readdir(dr)) != NULL)
     {
@@ -280,14 +298,15 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
            
                 }
                 else if(!id_exist(patient_list, patient_attributes.recordID))
-                {                
+                {      
+                    //printf("New patient id is %s\n",  patient_attributes.recordID);          
                     new_patient_node =  insertNewPatient(patient_list, patient_attributes);
                     insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
-                    //insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
+                    insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
                     log_info->success++;
                 }  
 
-                log_info->total ++;
+                log_info->total++;
             }
             write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd);
             fclose(fp);
@@ -295,7 +314,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
            //printf("file_path is %s\n", file_path);
         }
     }
-    // // print_hash_table(disease_HT);line 
+    // print_hash_table(disease_HT);
 
     free(line);
     closedir(dr);   

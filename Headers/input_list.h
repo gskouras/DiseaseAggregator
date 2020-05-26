@@ -6,6 +6,14 @@
 #include <string.h>
 
 
+
+typedef struct
+{
+	int day;
+	int month;
+	int year;
+} Date;
+
 typedef struct CountryPath_Node
 {
 	char country_path[50];

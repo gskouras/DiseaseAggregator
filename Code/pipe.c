@@ -11,6 +11,7 @@ void cli( Worker_info * workers_array, Params params )
 
     // printf("\t\t\t##########  WELCOME TO DISEASE MONITOR COMMAND LINE INTERFACE  ##########\n\n"); 
     // printf("You can use the available commands listed in the manual page. Type /man to see the manual page or type /exit to quit\n\n");
+    printf("\n");
     putchar('>');
 
     while ((read = getline(&line, &len, stdin)) != EOF) 
@@ -18,7 +19,7 @@ void cli( Worker_info * workers_array, Params params )
         input = line;
         cmd = strtok_r(input, " \n", &input);
         input = strtok(input, "\n");
-        char query[50];
+        char query[50]="";
 
         if (cmd != NULL) 
         {
@@ -52,7 +53,7 @@ void cli( Worker_info * workers_array, Params params )
             } 
             else if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
             {
-                if (input != NULL && strlen(input) < 10)
+                if (input != NULL && strlen(input) < 20)
                 {
                     printf("Please Insert valid Data\n");
                     putchar('>');
@@ -60,6 +61,15 @@ void cli( Worker_info * workers_array, Params params )
                 }
                 else 
                 {
+                    // Date d1, d2;
+                    // char * disease;
+                    // char * country;
+                    // df_tokenize(input, &disease, &country, &d1, &d2 );
+
+                    // printf("Requested country is %s\n", country);
+
+                    // if (country == NULL)
+                    // {
                     for (int i = 0; i < params.numWorkers; ++i)
                     {
                         strcpy(query, cmd);
@@ -67,9 +77,23 @@ void cli( Worker_info * workers_array, Params params )
                         strcat(query, input);
                         // printf("query is %s \n", query );
                         write_to_fifo(workers_array[i].write_fd, query);
-                        sleep(1);
-                        read_from_fifo( workers_array[i].read_fd , params.bufferSize);
-                    }
+                        read_from_workers(workers_array, params);
+                    }                        
+                    // }
+                    // else
+                    // {
+                    //     int pos = find_worker_country(workers_array, params.numWorkers, country);
+                    //     printf("Position is %d\n",pos );
+                    //     if(pos != -1)
+                    //     {
+                    //         write_to_fifo(workers_array[pos].write_fd, query);
+                    //         read_from_workers(workers_array, params);
+                    //     }
+                    //     else
+                    //     {
+                    //         printf("Error: Requested Country Doesnt Exist\n");
+                    //     }
+                    // }
                 }
 
             } 
@@ -85,8 +109,11 @@ void cli( Worker_info * workers_array, Params params )
                 {
                     for (int i = 0; i < params.numWorkers; ++i)
                     {
-                        write_to_fifo(workers_array[i].write_fd, cmd);
-                        //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
+                        strcpy(query, cmd);
+                        sprintf(query, "%s ", query);
+                        strcat(query, input);
+                        write_to_fifo(workers_array[i].write_fd, query);
+                        read_from_workers(workers_array, params);
                     }             
                 }
 
@@ -94,9 +121,9 @@ void cli( Worker_info * workers_array, Params params )
             else if (strcmp(cmd, "/searchPatientRecord") == 0 || strcmp(cmd, "/spr") == 0 ) 
             {
 
-                if (input != NULL && (strlen(input) > 10))
+                if (input == NULL ||  digitValidate(input))
                 {
-                    printf("Error \n");
+                    printf("Error :  \n");
                     putchar('>');
                     continue;
                 }
@@ -104,8 +131,11 @@ void cli( Worker_info * workers_array, Params params )
                 {
                     for (int i = 0; i < params.numWorkers; ++i)
                     {
-                        write_to_fifo(workers_array[i].write_fd, cmd);
-                        //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
+                        strcpy(query, cmd);
+                        sprintf(query, "%s ", query);
+                        strcat(query, input);
+                        write_to_fifo(workers_array[i].write_fd, query);
+                        read_from_workers(workers_array, params);
                     }   
                 }
 
@@ -293,6 +323,7 @@ int initialize_dirPaths(Directory_list* d_list, Worker_info* workers_array, char
 			write_to_fifo(workers_array[i].write_fd, message_buffer);
     	}	
     }
+    sleep(1);
 }
 
 
@@ -302,12 +333,11 @@ int read_from_fifo( int read_fd, int buffersize)
     int buffer_counter = 0;
     char *token;
     char *p;
-
     char temp[100];
+
 
     //printf("read fd is %d\n",read_fd );
     read(read_fd, temp, 10);
-
     //printf("temp is %s\n",temp );
     token = strtok(temp, "$");//printf("token = %s\n", token);
     //printf("token is %s\n", token);
@@ -321,15 +351,20 @@ int read_from_fifo( int read_fd, int buffersize)
     if(input_size > buffersize)
         buffersize = input_size + 1;
 
-
+    // printf("input size is %d\n",input_size );
     bytes_in = read( read_fd, p, input_size );//printf("bytes_in = %d\n", bytes_in);
+    // printf("I read %d bytes\n", bytes_in);
+    if (bytes_in == 0)
+        return 0;
 
     buffer[input_size]='\0';
-    printf("%s\n",buffer);
+    if (strcmp(buffer, "0") !=0)
+        printf("%s\n",buffer);
     //printf("strlen of buffer = %ld\n", strlen(buffer));
     if (strlen(buffer) == 0)
         return 0;
 
+    // printf("strlen of buffer is  %ld\n", strlen(buffer));
     return 1;
 }
 
@@ -344,4 +379,106 @@ void write_to_fifo(int  write_fd, char * message)
     //printf("message is %s \n", message);
     write(write_fd, message, message_len);
 
+}
+
+
+///////******* Utillity Fucntions ******///////
+
+
+
+int find_worker_country(Worker_info * workers_array, int workers, char * country)
+{
+    printf("country is(in find worker country) ::: %s\n", country);
+    for (int i = 0; i < workers; ++i)
+    {
+        CountryPath_Node * temp = workers_array[i].country_list.head;
+        char * token = NULL;
+        char country[20];
+        while( temp != NULL)
+        {
+            token = strtok(temp->country_path, "/");
+            token = strtok(NULL, "/");
+            token = strtok(NULL, "/");
+            token = strtok(NULL, "/");
+            //printf("token inside while is ::: %s\n",token );
+
+            if(strcmp(country, token) == 0)
+                return i;
+            temp = temp->next;
+        }
+    }
+    return 1;
+}
+
+
+void df_tokenize (char *input, char ** disease_holder, char ** country_holder, Date *d1, Date *d2)  //printf(" disease holder is%s\n", *disease_holder );
+{   
+    if (strlen(input) <= 30) //tokenize without country name
+    {
+        char *token = strtok( input, " ");
+    
+        *disease_holder = malloc(sizeof(char)*strlen(token)+1);
+        strcpy(*disease_holder, token);
+        token = strtok( NULL, "\n");    
+        char *date_holder = malloc(sizeof(char)*strlen(token)+1);
+        strcpy(date_holder, token);
+        dateTokenize(date_holder , d1, d2); 
+        *country_holder = NULL;
+    }
+    else
+    {
+        char *token = strtok( input, " ");
+    
+        *disease_holder = malloc(sizeof(char)*strlen(token)+1);
+        strcpy(*disease_holder, token);
+        token = strtok(NULL, "-");
+        d1->day = atoi (token);
+
+        token = strtok(NULL, "-");
+        d1->month = atoi (token);
+
+        token = strtok(NULL, " ");
+        d1->year = atoi (token);
+
+        token = strtok(NULL, "-");
+        d2->day = atoi (token);
+
+        token = strtok(NULL, "-");
+        d2->month = atoi (token);
+
+        token = strtok(NULL, " ");
+        d2->year = atoi (token);
+
+        token = strtok(NULL, "\n");
+        *country_holder = malloc(sizeof(char)*strlen(token)+1);
+        strcpy(*country_holder, token);
+    }
+}
+
+
+void dateTokenize( char * input, Date *d1, Date *d2)
+{   
+    char * token = NULL;
+
+    token = strtok(input, "-");
+    d1->day = atoi (token);
+
+    token = strtok(NULL, "-");
+    d1->month = atoi (token);
+
+
+    token = strtok(NULL, " ");
+    d1->year = atoi (token);
+
+
+    token = strtok(NULL, "-");
+    d2->day = atoi (token);
+
+
+    token = strtok(NULL, "-");
+    d2->month = atoi (token);
+
+
+    token = strtok(NULL, "\n");
+    d2->year = atoi (token);  
 }

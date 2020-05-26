@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 	read_from_workers(workers_array, params);
 
 
-	printf("Parse of file Completed Succesfully!\n");
+	printf("\nParse of file Completed Succesfully!\n");
 	printf("\nWelcome to diseaseAggregator CLI\n");
 
     cli(workers_array, params);
@@ -118,8 +118,9 @@ void read_from_workers( Worker_info * workers, Params params)
      		fdarray[i].events = POLLIN;
      	}
 
-     	poll(fdarray,params.numWorkers, 10);
-
+     	poll(fdarray, params.numWorkers, -1);
+     	// printf("Infinite\n");
+     	//sleep(1);
      	for (i = 0; i < params.numWorkers; i++)
      	{
      		
@@ -130,13 +131,14 @@ void read_from_workers( Worker_info * workers, Params params)
 	            	//printf("start to print the message with i %d\n", i);
 	               	while(read_from_fifo( workers[i].read_fd , params.bufferSize));
 	               	//free(message);
-	               	//printf("message is over \n");               		
+	               	// printf("message is over \n");               		
 	               	workers[i].flag = 0;	               	
 	            }	            
         	}
         	else if((fdarray[i].revents & POLLHUP)) // exei kleisei to pipe apo to allo meros
                 workers[i].flag = 1;
      	}
+      	//break;
     }
 }
 
@@ -144,10 +146,10 @@ int checkAllFlags(Worker_info * workers, int numWorkers) //return 1 oso kati den
 {
 	for (int i = 0; i < numWorkers; ++i)
 	{
-		if(workers[i].flag)
-			return 1;
+		if(workers[i].flag != 1)
+			return 0;
 	}
-	return 0;
+	return 1;
 }
 
 void initAllFlags(Worker_info * workers, int numWorkers)
@@ -207,7 +209,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 1;
+        params.numWorkers = 8;
         params.bufferSize = 128;
         params.input_dir = malloc(sizeof(50));
         strcpy(params.input_dir, "./resources/input_dir");

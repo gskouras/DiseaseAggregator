@@ -15,7 +15,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
 
 		if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
 	    {
-	    	return diseaseFrequency(input, disease_HT, list);
+	    	return diseaseFrequency(input, disease_HT, list); //done
 	    } 
 	    else if (strcmp(cmd, "/topk-AgeRanges") == 0 || strcmp(cmd, "/tka") == 0 ) 
 	    {
@@ -23,7 +23,21 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
 	    } 
 	    else if (strcmp(cmd, "/searchPatientRecord") == 0 || strcmp(cmd, "/spr") == 0)
 	    {
-			printf("Beno spr\n");
+			Patient patient = searchPatientRecord(input, list);
+			if (patient.recordID == 0)
+			{
+				char * result = malloc(sizeof(char)* 2);
+				strcpy(result, "0");
+				return result;
+			}
+			else
+			{
+				char * result = patient_stringify(patient);	
+				return  result;
+			}	
+			//printf("result before return is %s\n", result);
+
+			
 	    } 
 	    else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
 	    {
@@ -52,6 +66,11 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 
 	df_tokenize(input, &disease, &country, &d1, &d2 );
 
+	// print_date(d1);
+	// printf("\n");
+	// print_date(d2);
+
+
 
 	if(record_exist(disease, disease_HT)) //find if given disease exist
 	{			
@@ -70,15 +89,15 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 					if(country == NULL)
 					{
 						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter);
-						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						print_date(d1); print_date(d2); printf("\n");
+						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						// print_date(d1); print_date(d2); printf("\n");
 						break;
 					}
 					else
 					{
 						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter);
-						printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						print_date(d1); print_date(d2); printf(" in Country %s\n", country);
+						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);
 						break;
 					}
 				}
@@ -88,7 +107,7 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 	}
 	else
 	{
-		printf("No such disease found in our records!\n");
+		//printf("No such disease found in our records!\n");
 		free(disease);
 		free(country);
 		return NULL;
@@ -99,6 +118,59 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 	sprintf(result, "%d", counter);
 	return result;
 }
+
+Patient searchPatientRecord(char * input, Patient_list * list)
+{
+	Patient_Node *temp = list->head;
+	Patient dummy;
+	dummy.recordID = 0;
+
+	while(temp != NULL)
+	{	
+		if(strcmp(temp->patient.recordID, input)==0)
+		{
+			// printf("I eggrafi vrethike me stoixeia \n");
+			// printPatientData(temp->patient);
+			return temp->patient;
+		}
+
+		temp = temp->next;
+	}
+	return dummy;
+}
+
+char * patient_stringify(Patient patient)
+{
+	unsigned int message_length = calculate_patient_chars(patient);
+	char *result = malloc(sizeof(char) * (message_length));
+	sprintf(result, "%s", patient.recordID);
+	sprintf(result, "%s %s", result, patient.firstName);
+	sprintf(result, "%s %s", result, patient.lastName);
+	sprintf(result, "%s %s", result, patient.diseaseID);
+	sprintf(result, "%s %d", result, patient.age);
+	sprintf(result, "%s %d", result, patient.entryDate.day);
+	sprintf(result, "%s-%d", result, patient.entryDate.month);
+	sprintf(result, "%s-%d", result, patient.entryDate.year);
+	if(patient.exitDate.day > 0)
+	{
+		sprintf(result, "%s %d", result, patient.exitDate.day);
+		sprintf(result, "%s-%d", result, patient.exitDate.month);
+		sprintf(result, "%s-%d", result, patient.exitDate.year);
+	}
+	else
+	{
+		sprintf(result, "%s  --", result);
+	}
+
+	//printf("result is %s\n", result);
+	return result;
+}
+
+unsigned int calculate_patient_chars( Patient patient)
+{
+	return strlen(patient.recordID) + strlen(patient.firstName) + strlen(patient.lastName) + strlen(patient.diseaseID) + 30; 
+}
+
 
 
 
