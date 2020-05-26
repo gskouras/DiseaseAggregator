@@ -61,39 +61,48 @@ void cli( Worker_info * workers_array, Params params )
                 }
                 else 
                 {
-                    // Date d1, d2;
-                    // char * disease;
-                    // char * country;
-                    // df_tokenize(input, &disease, &country, &d1, &d2 );
+                    strcpy(query, cmd);
+                    sprintf(query, "%s ", query);
+                    strcat(query, input);
+                    //printf("query is %s\n", query);
 
-                    // printf("Requested country is %s\n", country);
-
-                    // if (country == NULL)
-                    // {
-                    for (int i = 0; i < params.numWorkers; ++i)
+                    if (strlen(query) <= 35) // Sent Query to All Workers
                     {
-                        strcpy(query, cmd);
-                        sprintf(query, "%s ", query);
-                        strcat(query, input);
-                        // printf("query is %s \n", query );
-                        write_to_fifo(workers_array[i].write_fd, query);
-                        read_from_workers(workers_array, params);
-                    }                        
-                    // }
-                    // else
-                    // {
-                    //     int pos = find_worker_country(workers_array, params.numWorkers, country);
-                    //     printf("Position is %d\n",pos );
-                    //     if(pos != -1)
-                    //     {
-                    //         write_to_fifo(workers_array[pos].write_fd, query);
-                    //         read_from_workers(workers_array, params);
-                    //     }
-                    //     else
-                    //     {
-                    //         printf("Error: Requested Country Doesnt Exist\n");
-                    //     }
-                    // }
+                        for (int i = 0; i < params.numWorkers; ++i)
+                        {
+                            //printf("stelno se pollous worker\n");
+                            write_to_fifo(workers_array[i].write_fd, query);
+                            read_from_workers(workers_array, params);
+                        }                        
+                    }
+                    else // Sent Query to the Worker with the specific country
+                    {
+                        // printf("query is %s\n",query );
+                        char temp[50];
+                        strcpy(temp, query);
+                        char * token = strtok(temp," ");
+                        token = strtok(NULL, " ");
+                        token = strtok(NULL, " ");
+                        token = strtok(NULL, " ");
+                        token = strtok(NULL, " ");
+
+                        char * country = malloc(sizeof(char) * strlen(token) + 1);
+                        strcpy(country, token);
+                        // printf("Requested country is %s\n", country);
+                        int pos = find_worker_country(workers_array, params.numWorkers, country);
+                        // printf("Position is %d\n",pos );
+                        if(pos != -1)
+                        {
+                            // printf("query to be written is %s \n", query);
+                            printf("stelno se ena worker\n");
+                            write_to_fifo(workers_array[pos].write_fd, query);
+                            read_from_workers(workers_array, params);
+                        }
+                        else
+                        {
+                            printf("Error: Requested Country Doesnt Exist\n");
+                        }
+                    }
                 }
 
             } 
@@ -388,15 +397,16 @@ void write_to_fifo(int  write_fd, char * message)
 
 int find_worker_country(Worker_info * workers_array, int workers, char * country)
 {
-    printf("country is(in find worker country) ::: %s\n", country);
+   //printf("country is(in find worker country) ::: %s\n", country);
+    char temp_path[50];
     for (int i = 0; i < workers; ++i)
     {
         CountryPath_Node * temp = workers_array[i].country_list.head;
         char * token = NULL;
-        char country[20];
         while( temp != NULL)
         {
-            token = strtok(temp->country_path, "/");
+            strcpy(temp_path, temp->country_path);
+            token = strtok(temp_path, "/");
             token = strtok(NULL, "/");
             token = strtok(NULL, "/");
             token = strtok(NULL, "/");
@@ -407,7 +417,7 @@ int find_worker_country(Worker_info * workers_array, int workers, char * country
             temp = temp->next;
         }
     }
-    return 1;
+    return -1;
 }
 
 

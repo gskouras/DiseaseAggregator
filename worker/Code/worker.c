@@ -72,9 +72,10 @@ int main(int argc, char *argv[])
     {
         //printf("beno sto aenao loop\n");
         message = read_from_fifo(read_fd, buffersize);
+        //printf("message is %s", message);
 
         result = query_handler(message, &disease_HT, &country_HT, &patient_list, write_fd);
-        //printf("result is %s\n",result );
+       //printf("result is %s\n",result );
         write_to_fifo (write_fd, result); //to message tha prokipsei einai to apotelesma tou query
         
         free(result);
@@ -110,7 +111,6 @@ char * read_from_fifo( int read_fd, int buffersize)
 {
     int bytes_in; //posa byte diavastikan apo tin read
     int buffer_counter = 0;
-
 
     char temp[11];
 
@@ -308,6 +308,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
 
                 log_info->total++;
             }
+            
             write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd);
             fclose(fp);
             strcpy(file_path, params.fileName);

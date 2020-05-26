@@ -119,7 +119,7 @@ void read_from_workers( Worker_info * workers, Params params)
      	}
 
      	poll(fdarray, params.numWorkers, -1);
-     	// printf("Infinite\n");
+     	//printf("Infinite\n");
      	//sleep(1);
      	for (i = 0; i < params.numWorkers; i++)
      	{
