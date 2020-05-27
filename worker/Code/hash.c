@@ -165,33 +165,39 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
 	//printf("i eggrafi benei\n");
+	//printf("String to be copied is %s\n", string);
 	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string); //insert the record to the correct position of the bucket
-
+	//printf("strcpy result : %s\n", this_bucket->bucket_item[this_bucket->slot_counter].string);
+	
 	this_bucket->bucket_item[this_bucket->slot_counter].root = \
 		tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
 	this_bucket->bucket_item[this_bucket->slot_counter].total_patients++;
-	this_bucket->slot_counter++;
+	
 
     if(this_patient->patient.age <= 20)
     {
         this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[0] += 1;
-        //printf(" mikroteros apo 20\n");                 
+        // printf(" insert bucket :mikroteros apo 20 ");   
+        // printf("From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);         
     }
     else if(this_patient->patient.age >= 20 && this_patient->patient.age <= 40)
     {
         this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[1] += 1;
-        //printf("anamesa se 20 kai 40\n"); 
+        // printf(" insert bucket : anamesa se 20 kai 40");
+        // printf(" From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
     }
     else if( this_patient->patient.age >= 41 && this_patient->patient.age <= 60 )
     {
         this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[2] += 1;
-       	//printf("anamesa se 41 kai 60\n");
+       	// printf(" insert bucket: anamesa se 41 kai 60");
+       	// printf(" From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
        	//printf("this->bucket->slot counter is %d\n",this_bucket->slot_counter);   
     }
     else
     {
         this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[3] += 1;
-        //printf("60+\n"); 
+        // printf(" insert bucket :60+ ");
+        // printf("From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
     }
 	
 	if(this_patient->patient.exitDate.year > 1)
@@ -202,6 +208,8 @@ int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * thi
 		this_bucket->next = createNewBucketNode(this_bucket->capacity);
 		return 1;
 	}
+
+	this_bucket->slot_counter++;
 	return 0;
 }
 
@@ -224,22 +232,22 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 				if(this_patient->patient.age <= 20)
 				{
 				    temp->bucket_item[i].age_ranges[0] += 1;
-				    //printf(" mikroteros apo 20\n");                 
+				   	//printf(" is exist :mikroteros apo 20\n");                 
 				}
 				else if(this_patient->patient.age >= 20 && this_patient->patient.age <= 40)
 				{
 				    temp->bucket_item[i].age_ranges[1] += 1;
-				    //printf("anamesa se 20 kai 40\n"); 
+				    //printf("is exist :anamesa se 20 kai 40\n"); 
 				}
 				else if( this_patient->patient.age >= 41 && this_patient->patient.age <= 60 )
 				{
 				    temp->bucket_item[i].age_ranges[2] += 1;
-				    //printf("anamesa se 41 kai 60\n"); 
+				    //printf("is exist :anamesa se 41 kai 60\n"); 
 				}
 				else
 				{
 				    temp->bucket_item[i].age_ranges[3] += 1; 
-				    //printf("60+\n"); 
+				    //printf("is exist : 60+\n"); 
 				}
 				
 				if(this_patient->patient.exitDate.year > 1)

@@ -33,9 +33,9 @@ Tree_Node * leftRotate( Tree_Node * );
 
 void tree_preorder_print(Tree_Node* );
 
-void tree_search_dateRange( Tree_Node * , Date , Date, int * ); //counts how many incidents of a disease exist in a given range of Dates
+void tree_search_dateRange( Tree_Node * , Date , Date, int * , int ); //counts how many incidents of a disease exist in a given range of Dates
 
-void tree_search_Country_dateRange( Tree_Node * , Date , Date, char *, int * ); // counts how many incidents of a diseases exist in a country in a given range
+void tree_search_Country_dateRange( Tree_Node * , Date , Date, char *, int * , int); // counts how many incidents of a diseases exist in a country in a given range
 
 void tree_country_search( Tree_Node * , char *, int * ); //counts how many incidents of a disease exist in a given country
 

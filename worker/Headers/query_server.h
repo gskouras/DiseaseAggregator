@@ -12,7 +12,9 @@
 
 char * diseaseFrequency( char * , HashTable *, Patient_list * );
 
-Patient searchPatientRecord(char * input, Patient_list * list);
+Patient searchPatientRecord( char * , Patient_list * );
+
+char * numPatientAdmissions( char * , HashTable * , Patient_list *);
 
 void topCountries( char *, HashTable *, Patient_list * );
 
@@ -37,10 +39,10 @@ void df_tokenize ( char *, char **, char **, Date *, Date *);
 
 void topK_tokenize(char * , char ** , Date * , Date *, int *);
 
-
 char * patient_stringify( Patient );
 
 unsigned int calculate_patient_chars( Patient );
+
 
 
 /*********************/

@@ -19,13 +19,15 @@ int main(int argc, char *argv[])
     struct stat st;
 
     int read_fd = open(read_fifo, O_RDONLY);
+   // printf("read_fd is %d\n",read_fd );
 
     int write_fd = open(write_fifo, O_WRONLY);
 
+    //printf("write_fd is %d\n", write_fd);
     char * message = read_from_fifo(read_fd, buffersize);
 
     Params params;
-    params.disHashSize = 10;
+    params.disHashSize = 5;
     params.countryHashSize= 5;
     params.bucketsize = 256;
 
@@ -65,17 +67,15 @@ int main(int argc, char *argv[])
 
     free(message);
 
-    char * result;
+    char * result = NULL;
 
-    //print_hash_table(&country_HT);
-    while(1)
+    while(1) //worker is ready to receive queries
     {
         //printf("beno sto aenao loop\n");
         message = read_from_fifo(read_fd, buffersize);
-        //printf("message is %s", message);
-
+        //printf("message child is ::: %s\n",message );
         result = query_handler(message, &disease_HT, &country_HT, &patient_list, write_fd);
-       //printf("result is %s\n",result );
+        //printf("result is %s\n",result );
         write_to_fifo (write_fd, result); //to message tha prokipsei einai to apotelesma tou query
         
         free(result);
@@ -88,6 +88,144 @@ int main(int argc, char *argv[])
     freePatientList(&patient_list);
 
 }
+
+int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *patient_list, int write_fd, Logfile_Info *log_info)
+{
+    //printf("file name is %s\n",params.fileName );
+
+    struct dirent *de;
+    // if(strcmp(params.fileName, "./resources/input_dir/China")==0)
+    //     printf("profanos kai einai isa\n");
+
+    DIR *dr = opendir(params.fileName);
+
+    //printf("To directory einai %s\n",params.fileName);
+
+    if (dr == NULL)  // opendir returns NULL if couldn't open directory 
+    { 
+        perror("Error dr == NULL ");
+        exit(0);
+    } 
+
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t nread;
+    int line_pos;
+    char file_path[200] = " ";
+    char date[50];
+
+    strcpy(file_path, params.fileName);
+
+    Patient patient_attributes; 
+
+    Patient_Node * new_patient_node = NULL;
+
+    log_info->total = 0;
+    log_info->success = 0;
+    log_info->fail = 0;
+
+    while ((de = readdir(dr)) != NULL)
+    {
+        if(strcmp(de->d_name, ".") && strcmp(de->d_name, ".."))
+        {
+            //printf("%s\n",de->d_name );
+            strcat(file_path, "/");
+            strcat(file_path, de->d_name);
+    
+            //printf("file path is %s\n",file_path );
+            FILE *fp = fopen(file_path, "r");
+
+            if (fp == NULL) //error handling when opening the file
+            {
+                perror(" Requested file failed to open");
+                return 0;
+            }   
+
+            for (int i = 0; i < disease_HT->size; ++i)
+            {   
+                if( disease_HT->lists_of_buckets[i].head != NULL)
+                {
+                    Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
+                    while(temp !=NULL)
+                    {
+                        for (int j = 0; j < temp->slot_counter; ++j)
+                        {
+                            for (int k = 0; k < 4; ++k)
+                            {
+                                temp->bucket_item[j].age_ranges[k] = 0;
+                            }
+                        }
+                        temp = temp->next;
+                    }
+                }
+            }
+
+            while ((nread = getline(&line, &len, fp)) != -1) 
+            {   
+                strcpy(date, de->d_name);
+                char temp_line[100] = " ";
+
+                for (int i = 0; line[i] != '\0'; ++i) 
+                {
+                    temp_line[i] = line[i];
+                }
+
+                //printf("temp_lineis %s\n", temp_line);
+
+                patient_attributes = line_tokenize(line, patient_attributes, date, file_path);
+                
+                if (id_exist(patient_list, patient_attributes.recordID))
+                {
+                    printf("Patient with Record ID %s has been already inserted, thus it ommited\n", patient_attributes.recordID);
+                    free(patient_attributes.recordID);
+                    free(patient_attributes.firstName);
+                    free(patient_attributes.lastName);
+                    free(patient_attributes.diseaseID);
+                    free(patient_attributes.country);
+                    log_info->fail++;
+           
+                }
+                else if(strcmp(patient_attributes.status, "EXIT") == 0 && !id_exist(patient_list, patient_attributes.recordID))
+                {
+                    //printf("Provlimatiki eggrafi me stoixeia");
+                    //printPatientData(patient_attributes);
+                    free(patient_attributes.recordID);
+                    free(patient_attributes.firstName);
+                    free(patient_attributes.lastName);
+                    free(patient_attributes.diseaseID);
+                    free(patient_attributes.country);
+                    log_info->fail++;
+           
+                }
+                else if(strcmp(patient_attributes.status, "EXIT") == 0 && id_exist(patient_list, patient_attributes.recordID))
+                {
+                    updatePatientRecord( patient_attributes.recordID,  patient_attributes.exitDate, patient_list);
+                }
+                else if(!id_exist(patient_list, patient_attributes.recordID))
+                {      
+                    //printf("New patient id is %s\n",  patient_attributes.recordID);          
+                    new_patient_node =  insertNewPatient(patient_list, patient_attributes);
+                    insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
+                    //insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
+                    log_info->success++;
+                }
+
+                log_info->total++;
+            }
+
+            //write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd);
+            fclose(fp);
+            strcpy(file_path, params.fileName);
+           //printf("file_path is %s\n", file_path);
+        }
+    }
+    // print_hash_table(disease_HT);
+
+    free(line);
+    closedir(dr);   
+    return 1;
+}
+
 
 
 void signal_handler()
@@ -137,7 +275,7 @@ char * read_from_fifo( int read_fd, int buffersize)
     }
 
     buffer[input_size]='\0';
-   //printf("buffer to return is %s\n", buffer);
+    // printf("I receive your message :::: %s\n", buffer);
     return buffer;
 }
 
@@ -152,6 +290,7 @@ void write_to_fifo(int  write_fd, char * message)
     //printf("message is %s\n",message );
     write(write_fd, message, message_len);
 }
+
 
 
 void write_summary_stats( HashTable * disease_HT,  char * country, Date date, int write_fd)
@@ -169,6 +308,7 @@ void write_summary_stats( HashTable * disease_HT,  char * country, Date date, in
     {       
         if( disease_HT->lists_of_buckets[i].head != NULL)
         {
+            //printf("eimai diaforo tou NULL\n");
             Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
             while(temp !=NULL)
             {                    
@@ -185,141 +325,9 @@ void write_summary_stats( HashTable * disease_HT,  char * country, Date date, in
             }
         }
     }
+
+    //printf("Stats are :::::\n%s\n", stats );
     write_to_fifo(write_fd, stats);
-}
-
-int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *patient_list, int write_fd, Logfile_Info *log_info)
-{
-    //printf("file name is %s\n",params.fileName );
-
-    struct dirent *de;
-    // if(strcmp(params.fileName, "./resources/input_dir/China")==0)
-    //     printf("profanos kai einai isa\n");
-
-    DIR *dr = opendir(params.fileName);
-
-    //printf("To directory einai %s\n",params.fileName);
-
-    if (dr == NULL)  // opendir returns NULL if couldn't open directory 
-    { 
-        perror("Error dr == NULL ");
-        exit(0);
-    } 
-
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
-    int line_pos;
-    char file_path[200] = " ";
-    char date[50];
-
-    strcpy(file_path, params.fileName);
-
-    Patient patient_attributes; 
-
-    Patient_Node * new_patient_node = NULL;
-
-    log_info->total = 0;
-    log_info->success = 0;
-    log_info->fail = 0;
-
-
-    for (int i = 0; i < disease_HT->size; ++i)
-    {   
-        if( disease_HT->lists_of_buckets[i].head != NULL)
-        {
-            Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
-            while(temp !=NULL)
-            {
-                for (int j = 0; j < temp->slot_counter; ++j)
-                {
-                    for (int k = 0; k < 4; ++k)
-                    {
-                        temp->bucket_item[j].age_ranges[k] = 0;
-                    }
-                }
-            temp = temp->next;
-            }
-        }
-    }
-
-    while ((de = readdir(dr)) != NULL)
-    {
-        if(strcmp(de->d_name, ".") && strcmp(de->d_name, ".."))
-        {
-            //printf("%s\n",de->d_name );
-            strcat(file_path, "/");
-            strcat(file_path, de->d_name);
-    
-            //printf("file path is %s\n",file_path );
-            FILE *fp = fopen(file_path, "r");
-
-            if (fp == NULL) //error handling when opening the file
-            {
-                perror(" Requested file failed to open");
-                return 0;
-            }
-
-            while ((nread = getline(&line, &len, fp)) != -1) 
-            {   
-                strcpy(date, de->d_name);
-                char temp_line[100] = " ";
-
-                for (int i = 0; line[i] != '\0'; ++i) 
-                {
-                    temp_line[i] = line[i];
-                }
-
-                //printf("temp_lineis %s\n", temp_line);
-
-                patient_attributes = line_tokenize(line, patient_attributes, date, file_path);
-                
-                if (id_exist(patient_list, patient_attributes.recordID))
-                {
-                    printf("Patient with Record ID %s has been already inserted, thus it ommited\n", patient_attributes.recordID);
-                    free(patient_attributes.recordID);
-                    free(patient_attributes.firstName);
-                    free(patient_attributes.lastName);
-                    free(patient_attributes.diseaseID);
-                    free(patient_attributes.country);
-                    log_info->fail++;
-           
-                }
-                else if(strcmp(patient_attributes.status, "EXIT") == 0 && !id_exist(patient_list, patient_attributes.recordID))
-                {
-                    //printf("Provlimatiki eggrafi me stoixeia");
-                    //printPatientData(patient_attributes);
-                    free(patient_attributes.recordID);
-                    free(patient_attributes.firstName);
-                    free(patient_attributes.lastName);
-                    free(patient_attributes.diseaseID);
-                    free(patient_attributes.country);
-                    log_info->fail++;
-           
-                }
-                else if(!id_exist(patient_list, patient_attributes.recordID))
-                {      
-                    //printf("New patient id is %s\n",  patient_attributes.recordID);          
-                    new_patient_node =  insertNewPatient(patient_list, patient_attributes);
-                    insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
-                    insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
-                    log_info->success++;
-                }  
-
-                log_info->total++;
-            }
-            
-            write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd);
-            fclose(fp);
-            strcpy(file_path, params.fileName);
-           //printf("file_path is %s\n", file_path);
-        }
-    }
-    // print_hash_table(disease_HT);
-
-    free(line);
-    closedir(dr);   
-    return 1;
 }
 
 

@@ -86,6 +86,23 @@ void printPatientData(Patient patient)
 	patient.exitDate.day, patient.exitDate.month, patient.exitDate.year, patient.age );
 }
 
+
+void updatePatientRecord( char * id, Date date, Patient_list *list)
+{
+	Patient_Node * this = list_date_modify(list, date,  id);
+    // printf("Exit date of Patient with recordID %s updated!", id );
+    // printf(" New patient details are : ");
+    // printPatientData(this->patient);
+    // printf("\n");
+}
+
+
+
+
+
+
+
+
 void freePatientList(Patient_list * list )
 {
 	Patient_Node *temp = list->head;

@@ -131,42 +131,51 @@ Tree_Node * leftRotate(Tree_Node * this_node)
     return right_child; 
 }
 
-void tree_search_dateRange (Tree_Node * this, Date d1, Date d2, int *counter)
+void tree_search_dateRange (Tree_Node * this, Date d1, Date d2, int *counter, int flag)
 {
 	/* base case */
 	if(this == NULL)
 		return;
 
+	Date enter, exit;
 	/* Since the desired o/p is sorted, recurse for left subtree first 
     If root->data is greater than k1, then only we can get o/p keys 
     in left subtree */
 	if (date_cmp(d1 , this->date) == 0)
-		tree_search_dateRange(this->left, d1, d2, counter);
+		tree_search_dateRange(this->left, d1, d2, counter, flag);
 
 	/* if root's data lies in range, then prints root's data */
 	if(((date_cmp(d1, this->date) == 0) || (date_cmp(d1, this->date) == 2)) && ((date_cmp(d2, this->date) ==1) || (date_cmp(d2, this->date) == 2)))
 	{
-		*counter = *counter + 1;
+		exit = this->date_list.head->patient_node->patient.exitDate;
+		enter = this->date_list.head->patient_node->patient.entryDate;
+
+		if(date_cmp(enter, exit) == 1 && flag == 1) //this means that the patient has no exit date
+			*counter = *counter + 1;
+		else if(date_cmp(enter, exit) == 0 && flag == 0)
+			*counter = *counter + 1;
 	}
 
   	/* If root->data is smaller than k2, then only we can get o/p keys 
       in right subtree */
 	if(date_cmp(d2 , this->date) == 1)
-		tree_search_dateRange(this->right, d1, d2, counter);
+		tree_search_dateRange(this->right, d1, d2, counter, flag);
 }
 
-void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * country, int *counter)
+void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * country, int *counter, int flag)
 {
 
 	/* base case */
 	if(this == NULL)
 		return;
 
+	Date enter, exit;
+
 	/* Since the desired o/p is sorted, recurse for left subtree first 
     If root->data is greater than k1, then only we can get o/p keys 
     in left subtree */
 	if (date_cmp(d1 , this->date) == 0)
-		tree_search_Country_dateRange(this->left, d1, d2, country,  counter);
+		tree_search_Country_dateRange(this->left, d1, d2, country,  counter, flag);
 
 	/* if root's data lies in range, then prints root's data */
 	if(((date_cmp(d1, this->date) == 0) || (date_cmp(d1, this->date) == 2)) && ((date_cmp(d2, this->date) ==1) || (date_cmp(d2, this->date) == 2)))
@@ -174,8 +183,17 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
 		Date_Node *temp = this->date_list.head;
 		while(temp != NULL)
 		{
+			exit = temp->patient_node->patient.exitDate;
+			enter = temp->patient_node->patient.entryDate;
 			if(strcmp(temp->patient_node->patient.country, country)== 0)
-				*counter = *counter + 1;
+			{							
+				if(date_cmp(enter, exit) == 1 && flag == 1) //this means that the patient has no exit date
+					*counter = *counter + 1;
+				// printf("counter is %d\n", *counter);
+				else if(date_cmp(enter, exit) == 0 && flag == 0)
+					*counter = *counter + 1;
+			}
+
 			temp = temp->next;
 		}
 	}
@@ -183,7 +201,7 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
   	/* If root->data is smaller than k2, then only we can get o/p keys 
       in right subtree */
 	if(date_cmp(d2 , this->date) == 1)
-		tree_search_Country_dateRange(this->right, d1, d2, country,  counter);
+		tree_search_Country_dateRange(this->right, d1, d2, country,  counter, flag);
 }
 
 void tree_search_Disease_dateRange (Tree_Node * this, Date d1, Date d2, char * disease, int *counter)

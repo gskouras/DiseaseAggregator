@@ -4,11 +4,11 @@
 char * query_handler(char * message, HashTable * disease_HT, HashTable * country_HT, Patient_list *list, int write_fd)
 {
 
-    	char *input = NULL, *cmd = NULL;
+	char *input = NULL, *cmd = NULL;
 
-        input = message;
-        cmd = strtok_r(input, " \n", &input);
-        input = strtok(input, "\n");
+    input = message;
+    cmd = strtok_r(input, " \n", &input);
+    input = strtok(input, "\n");
 
 	if (cmd != NULL) 
 	{
@@ -35,18 +35,16 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
 				char * result = patient_stringify(patient);	
 				return  result;
 			}	
-			//printf("result before return is %s\n", result);
-
-			
-	    } 
-	    else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
-	    {
-	    	printf("Beno npa\n");
-	    } 
-	    else if (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd")==0 ) 
-	    {
-	    	printf("Beno npd\n");
-
+			//printf("result before return is %s\n", result);			
+		} 
+		else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
+		{
+		    //printf("Erxomai stin numPatientAdmissions\n");
+		    return numPatientAdmissions(input, disease_HT, list);
+		} 
+		else if (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd")==0 ) 
+		{
+		    printf("Beno npd\n");
 	    } 
 	}
 }
@@ -62,15 +60,16 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 	char * country;
 	int counter = 0;
 
+	int flag = 1; //search for patients whos ENTRY date lies in given range
+
 	char * result = NULL;
 
 	df_tokenize(input, &disease, &country, &d1, &d2 );
 
+	// printf("Country is : %s\n", country);
+	// printf("Disease is %s\n",disease );
 	// print_date(d1);
-	// printf("\n");
 	// print_date(d2);
-
-
 
 	if(record_exist(disease, disease_HT)) //find if given disease exist
 	{			
@@ -88,14 +87,14 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 				{
 					if(country == NULL)
 					{
-						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter);
+						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter, flag);
 						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
 						// print_date(d1); print_date(d2); printf("\n");
 						break;
 					}
 					else
 					{
-						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter);
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
 						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
 						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);
 						break;
@@ -118,6 +117,81 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 	sprintf(result, "%d", counter);
 	return result;
 }
+
+
+char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list *list)
+{
+	char *country = NULL, *disease = NULL, *result = NULL;	
+
+	Date d1, d2;
+	int counter = 0;
+	int found = 0;
+	
+	int flag = 1; //search for patients whos ENTRY date lies in given range
+	//printf("NumPAtient received your queryL::::::\n");
+	//printf("input%s\n",input );
+	df_tokenize(input, &disease, &country, &d1, &d2);
+
+	// printf("Country is : %s\n", country);
+	// printf("Disease is %s\n",disease );
+	// print_date(d1);
+	// print_date(d2);
+
+	if(record_exist(disease, disease_HT)) //find if given disease exist
+	{			
+		int index = hash_fun(disease, disease_HT->size);
+		Bucket_Node *temp = disease_HT->lists_of_buckets[index].head;
+		while(temp !=NULL)
+		{
+			for (int i = 0; i < temp->slot_counter; ++i)
+			{
+				if(strcmp(temp->bucket_item[i].string, disease))
+				{
+					continue;
+				}
+				else
+				{
+					if(country == NULL)
+					{
+						// printf("Country is NULL\n");
+						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter, flag);
+						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						// print_date(d1); print_date(d2); printf("\n");
+						found = 1;
+						break;
+					}
+					else
+					{
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
+						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
+						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);
+						
+						found = 1;
+						break;
+					}
+				}
+			}
+		temp = temp->next;
+		}
+	}
+
+	//printf("Calculation over::: Counter is %d\n", counter);
+	free(disease);
+	free(country);
+
+	if(!found)
+	{
+		result = malloc(sizeof(char)* 2);
+		sprintf(result, "0");
+		return result;
+	}
+	
+	result = malloc(sizeof(char)* 10);
+	sprintf(result, "%d", counter);
+	//printf("NPA result is %s", result);
+	return result;
+}
+
 
 Patient searchPatientRecord(char * input, Patient_list * list)
 {
@@ -170,8 +244,6 @@ unsigned int calculate_patient_chars( Patient patient)
 {
 	return strlen(patient.recordID) + strlen(patient.firstName) + strlen(patient.lastName) + strlen(patient.diseaseID) + 30; 
 }
-
-
 
 
 // void topDiseases( char * input, HashTable* disease_HT, Patient_list *list )
@@ -369,48 +441,6 @@ unsigned int calculate_patient_chars( Patient patient)
 // 	free(disease);
 // }
 
-// void recordPatientExit( char * input , Patient_list *list)
-// {
-// 	if(input != NULL)
-// 	{
-// 		Date date;
-// 		char * token = NULL;
-
-// 		token = strtok(input, " ");
-// 		char * id = malloc(sizeof(char)* strlen(token)+1);
-//         strcpy(id, token);
-
-
-// 	 	token = strtok(NULL, "-");
-// 	    date.day = atoi (token);
-// 	    //printf("_%d_\n", date.day);
-
-// 	    token = strtok(NULL, "-");
-// 	    date.month = atoi (token);
-// 	    //printf("_%d_\n", date.month);
-
-// 	    token = strtok(NULL, "\n");
-// 	    date.year = atoi (token);
-// 	    if(id_exist(list, id))
-// 	    {
-// 			Patient_Node * this = list_date_modify(list, date,  id);
-// 		    printf("Exit date of Patient with recordID %s updated!", id );
-// 		    printf(" New patient details are : ");
-// 		    printPatientData(this->patient);
-// 		    printf("\n");
-// 	    }
-// 	    else
-// 	    {
-// 	    	printf("No patient with id %s found!\n",id );
-// 	    }
-
-// 	free(id);
-// 	}
-// 	else
-// 	{
-// 		printf("Enter Valid Data\n");
-// 	}
-// }
 
 
 // void numCurrentPAtients( char * input, HashTable * disease_HT)

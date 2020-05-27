@@ -53,7 +53,7 @@ void cli( Worker_info * workers_array, Params params )
             } 
             else if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
             {
-                if (input != NULL && strlen(input) < 20)
+                if (input != NULL && strlen(input) < 20  || input == NULL)
                 {
                     printf("Please Insert valid Data\n");
                     putchar('>');
@@ -152,19 +152,56 @@ void cli( Worker_info * workers_array, Params params )
             } 
             else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
             {
-                if (input != NULL && strlen(input) < 10)
+                if (input != NULL && strlen(input) < 20 || input == NULL)
                 {
-                    printf("If you Enter a Date you must also enter another \n");
+                    printf("Please Insert valid Data\n");
                     putchar('>');
                     continue;
                 }
-                else
+                else 
                 {
-                    for (int i = 0; i < params.numWorkers; ++i)
+                    strcpy(query, cmd);
+                    sprintf(query, "%s ", query);
+                    strcat(query, input);
+                    //printf("query is %s\n", query);
+
+                    if (strlen(query) <= 35) // Sent Query to All Workers
                     {
-                        write_to_fifo(workers_array[i].write_fd, cmd);
-                        //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
-                    }   
+                        for (int i = 0; i < params.numWorkers; ++i)
+                        {
+                            //printf("Parent : stelno se pollous worker to query:: %s\n", query);
+                            write_to_fifo(workers_array[i].write_fd, query);
+                            read_from_workers(workers_array, params);
+                        }                        
+                    }
+                    else // Sent Query to the Worker with the specific country
+                    {
+                        // printf("query is %s\n",query );
+                        char temp[50];
+                        strcpy(temp, query);
+                        char * token = strtok(temp," ");
+                        token = strtok(NULL, " ");
+                        token = strtok(NULL, " ");
+                        token = strtok(NULL, " ");
+                        token = strtok(NULL, " ");
+
+                        char * country = malloc(sizeof(char) * strlen(token) + 1);
+                        strcpy(country, token);
+                        // printf("Requested country is %s\n", country);
+                        int pos = find_worker_country(workers_array, params.numWorkers, country);
+                        // printf("Position is %d\n",pos );
+                        if(pos != -1)
+                        {
+                            // printf("query to be written is %s \n", query);
+                            printf("stelno se ena worker\n");
+                            write_to_fifo(workers_array[pos].write_fd, query);
+                            read_from_workers(workers_array, params);
+                        }
+                        else
+                        {
+                            printf("Error: Requested Country Doesnt Exist\n");
+                        }
+                    }
                 }
             } 
             else if (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd") == 0) 
@@ -294,7 +331,7 @@ int initialize_dirPaths(Directory_list* d_list, Worker_info* workers_array, char
 
     for (int i = 0; i < numWorkers; ++i)
     {
-        if(workers_array[i].country_list.counter > 1)
+        if(workers_array[i].country_list.counter > 1) // an o sigekrimenos worker exei parapano apo mia xores
     	{
             char message_buffer[1000]="";
             char temp_buffer[1000]="";
@@ -304,26 +341,26 @@ int initialize_dirPaths(Directory_list* d_list, Worker_info* workers_array, char
 
             list_counter = workers_array[i].country_list.counter;
             int index = 0;
-    		while (list_counter > 0)
+    		while (list_counter > 0) //oso i lista den einai keni
     		{
-    			CountryPath_Node *temp =  get_country(&workers_array[i].country_list, index);
+    			CountryPath_Node *temp =  get_country(&workers_array[i].country_list, index); //pairno apo to lista to proto path
                 //printf("tenp country is %s\n", temp->country_path);
                 if(strlen(temp_buffer) > 1 )
-                    sprintf(temp_buffer, "%s$", temp_buffer);
+                    sprintf(temp_buffer, "%s$", temp_buffer);//vazo dolario gia na ta ksexwriso meta me strtok
 
-				strcat(temp_buffer, temp->country_path);
+				strcat(temp_buffer, temp->country_path); //vazo tin epomeni xwra pou exei i lista
                 index++;
                 list_counter--;
     		}
 
-            strcat(message_buffer, temp_buffer);
+            strcat(message_buffer, temp_buffer); //ston synoliko message buffer vazo ton temp
             //printf("message_buffer is %s\n", message_buffer );
             //printf("i am writing to %s\n",workers_array[i].write_fifo );
-            write_to_fifo(workers_array[i].write_fd, message_buffer);
+            write_to_fifo(workers_array[i].write_fd, message_buffer); //grafo se olous tous worker ta path me tis xores
     		
             //printf("writed from ifto %s countries %s\n",workers_array[0].write_fifo, message_buffer );
     	}
-    	else
+    	else //an exeis mono mia xora apla partin apo ti lista kai grapstin sto fifo
     	{
             char message_buffer[1000] = "";
             char temp_buffer[1000] = "";

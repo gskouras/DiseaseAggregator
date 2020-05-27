@@ -74,8 +74,7 @@ int main(int argc, char* argv[])
 
 	initialize_dirPaths(&d_list, workers_array, parentPipes, workerPipes, params.numWorkers);
 
-	read_from_workers(workers_array, params);
-
+	//read_from_workers(workers_array, params);
 
 	printf("\nParse of file Completed Succesfully!\n");
 	printf("\nWelcome to diseaseAggregator CLI\n");
@@ -229,6 +228,7 @@ Params inputValidate (int argc, char *argv[])
     	{
     		params.numWorkers = atoi(argv[2]);
         	params.bufferSize = atoi(argv[4]);
+        	params.input_dir = malloc(sizeof(char) *strlen(argv[6])+1);
         	strcpy(params.input_dir, argv[6]);
         	return params;
     	}

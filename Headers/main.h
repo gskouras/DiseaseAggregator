@@ -50,7 +50,7 @@ void cli( Worker_info * , Params );
 
 //3)Stelno se olous tous workers tis xores pou exoun analavei
 
-//3)Kano select gia na paro oles tis apantiseis
+//3)Kano poll gia na paro oles tis apantiseis
 
 //4) Command line
 

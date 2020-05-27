@@ -17,3 +17,6 @@ clean:
 
 run:
 	./diseaseAggregator
+
+val:
+	valgrind --trace-children=yes ./diseaseAggregator

@@ -60,6 +60,8 @@ void printPatientList( Patient_list * );
 
 void printPatientData(Patient);
 
+void updatePatientRecord( char *, Date , Patient_list *);
+
 void freePatientList( Patient_list * );
 
 /****************************/
