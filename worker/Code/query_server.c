@@ -1,53 +1,7 @@
 #include "../Headers/query_server.h"
 
 
-char * query_handler(char * message, HashTable * disease_HT, HashTable * country_HT, Patient_list *list, int write_fd)
-{
 
-	char *input = NULL, *cmd = NULL;
-
-    input = message;
-    cmd = strtok_r(input, " \n", &input);
-    input = strtok(input, "\n");
-
-	if (cmd != NULL) 
-	{
-
-		if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
-	    {
-	    	return diseaseFrequency(input, disease_HT, list); //done
-	    } 
-	    else if (strcmp(cmd, "/topk-AgeRanges") == 0 || strcmp(cmd, "/tka") == 0 ) 
-	    {
-	    	printf("Beno tka\n");
-	    } 
-	    else if (strcmp(cmd, "/searchPatientRecord") == 0 || strcmp(cmd, "/spr") == 0)
-	    {
-			Patient patient = searchPatientRecord(input, list);
-			if (patient.recordID == 0)
-			{
-				char * result = malloc(sizeof(char)* 2);
-				strcpy(result, "0");
-				return result;
-			}
-			else
-			{
-				char * result = patient_stringify(patient);	
-				return  result;
-			}	
-			//printf("result before return is %s\n", result);			
-		} 
-		else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
-		{
-		    //printf("Erxomai stin numPatientAdmissions\n");
-		    return numPatientAdmissions(input, disease_HT, list);
-		} 
-		else if (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd")==0 ) 
-		{
-		    printf("Beno npd\n");
-	    } 
-	}
-}
 
 /*** Query Server Functions ***/
 
@@ -60,7 +14,7 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 	char * country;
 	int counter = 0;
 
-	int flag = 1; //search for patients whos ENTRY date lies in given range
+	int flag = 1, found = 0;//search for patients whos ENTRY date lies in given range
 
 	char * result = NULL;
 
@@ -90,6 +44,7 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter, flag);
 						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
 						// print_date(d1); print_date(d2); printf("\n");
+						found = 1;
 						break;
 					}
 					else
@@ -97,6 +52,7 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
 						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
 						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);
+						found = 1;
 						break;
 					}
 				}
@@ -104,33 +60,52 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 		temp = temp->next;
 		}
 	}
-	else
+
+
+	if(!found)
 	{
-		//printf("No such disease found in our records!\n");
+		result = malloc(sizeof(char)* 2);
+		sprintf(result, "0");
 		free(disease);
 		free(country);
-		return NULL;
+		return result;
+	}
+	
+	if(country)
+	{
+		result = malloc(sizeof(char)* 10);
+		//printf("Country is %s\n", country);
+		sprintf(result, "%s : ", country);
+		sprintf(result, "%s%d", result, counter);\
+	}
+	else
+	{
+		result = malloc(sizeof(char)* 10);
+		sprintf(result, "%d", counter);
+		//printf("NPA result is %s", result);
 	}
 	free(disease);
 	free(country);
-	result = malloc(sizeof(char)* 10);
-	sprintf(result, "%d", counter);
 	return result;
+
 }
 
 
-char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list *list)
+
+char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list *list, char * country, int flag)
 {
-	char *country = NULL, *disease = NULL, *result = NULL;	
+	char *disease = NULL, *result = NULL, *temp_country = NULL;	
 
 	Date d1, d2;
 	int counter = 0;
 	int found = 0;
-	
-	int flag = 1; //search for patients whos ENTRY date lies in given range
+
 	//printf("NumPAtient received your queryL::::::\n");
-	//printf("input%s\n",input );
-	df_tokenize(input, &disease, &country, &d1, &d2);
+	char temp_input[50];
+	strcpy(temp_input , input);
+
+	df_tokenize(temp_input, &disease, &temp_country, &d1, &d2);
+
 
 	// printf("Country is : %s\n", country);
 	// printf("Disease is %s\n",disease );
@@ -150,24 +125,23 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 					continue;
 				}
 				else
-				{
-					if(country == NULL)
-					{
-						// printf("Country is NULL\n");
-						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter, flag);
+				{	
+					if(country != NULL)
+					{						
+						//printf("beno na psakso xoris na dosei xora o xristis\n");
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
 						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						// print_date(d1); print_date(d2); printf("\n");
+						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);					
 						found = 1;
 						break;
 					}
-					else
+					else if(temp_country != NULL)
 					{
-						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
+						//printf("beno na psakso me xora pou edose o xristis\n");
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, temp_country, &counter, flag);
 						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);
-						
+						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);					
 						found = 1;
-						break;
 					}
 				}
 			}
@@ -176,20 +150,35 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	}
 
 	//printf("Calculation over::: Counter is %d\n", counter);
-	free(disease);
-	free(country);
 
 	if(!found)
 	{
 		result = malloc(sizeof(char)* 2);
 		sprintf(result, "0");
+		free(disease);
 		return result;
 	}
 	
-	result = malloc(sizeof(char)* 10);
-	sprintf(result, "%d", counter);
-	//printf("NPA result is %s", result);
-	return result;
+	if(country)
+	{
+		result = malloc(sizeof(char)* 10);
+		//printf("Country is %s\n", country);
+		sprintf(result, "%s : ", country);
+		sprintf(result, "%s%d", result, counter);
+		free(disease);
+		return result;
+	}
+	else if(temp_country)
+	{
+		result = malloc(sizeof(char)* 10);
+		//printf("Country is %s\n", country);
+		sprintf(result, "%s : ", temp_country);
+		sprintf(result, "%s%d", result, counter);
+		free(disease);
+		free(temp_country);
+		return result;		
+	}
+
 }
 
 

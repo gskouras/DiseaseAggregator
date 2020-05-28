@@ -1,8 +1,10 @@
 #include "../Headers/worker.h"
+#include "../../code/input_list.c"
+
 
 void open_manual();
 
-char * query_handler(char * , HashTable * , HashTable *, Patient_list*, int );
+char * query_handler(char * , HashTable *, HashTable * , Patient_list *, Directory_list * , int );
 
 Logfile_Info log_info;
 
@@ -32,6 +34,8 @@ int main(int argc, char *argv[])
     params.bucketsize = 256;
 
     Patient_list patient_list;
+    Directory_list d_list;
+
 
     HashTable disease_HT;
     HashTable country_HT;
@@ -40,6 +44,7 @@ int main(int argc, char *argv[])
     initHashTable(&country_HT, params.countryHashSize, params.bucketsize); 
 
     initPatientList(&patient_list);
+    initDirectorytList(&d_list);
 
     char *token = strtok(message , "$");
     int prev_token_len = strlen(token);
@@ -49,6 +54,8 @@ int main(int argc, char *argv[])
     while (token)
     {   
         strcpy(params.fileName, token);
+
+        insertNewDirectory(&d_list, params.fileName);
         //printf("params filename of process id %u is %s\n", getpid() ,params.fileName );
         if(strlen(params.fileName)> 10)
         {
@@ -74,7 +81,7 @@ int main(int argc, char *argv[])
         //printf("beno sto aenao loop\n");
         message = read_from_fifo(read_fd, buffersize);
         //printf("message child is ::: %s\n",message );
-        result = query_handler(message, &disease_HT, &country_HT, &patient_list, write_fd);
+        result = query_handler(message, &disease_HT, &country_HT, &patient_list, &d_list, write_fd);
         //printf("result is %s\n",result );
         write_to_fifo (write_fd, result); //to message tha prokipsei einai to apotelesma tou query
         
@@ -227,6 +234,122 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
 }
 
 
+
+char * query_handler(char * message, HashTable * disease_HT, HashTable * country_HT, Patient_list *list, Directory_list * dir_list, int write_fd)
+{
+
+    char *input = NULL, *cmd = NULL;
+
+    input = message;
+    cmd = strtok_r(input, " \n", &input);
+    input = strtok(input, "\n");
+
+    if (cmd != NULL) 
+    {
+
+        if (strcmp(cmd, "/diseaseFrequency") == 0 || strcmp(cmd, "/df") == 0) 
+        {
+            return diseaseFrequency(input, disease_HT, list); //done
+        } 
+        else if (strcmp(cmd, "/topk-AgeRanges") == 0 || strcmp(cmd, "/tka") == 0 ) 
+        {
+            printf("Beno tka\n");
+        } 
+        else if (strcmp(cmd, "/searchPatientRecord") == 0 || strcmp(cmd, "/spr") == 0)
+        {
+            Patient patient = searchPatientRecord(input, list);
+            if (patient.recordID == 0)
+            {
+                char * result = malloc(sizeof(char)* 2);
+                strcpy(result, "0");
+                return result;
+            }
+            else
+            {
+                char * result = patient_stringify(patient); 
+                return  result;
+            }   
+            //printf("result before return is %s\n", result);           
+        } 
+        else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
+        {
+            int flag = 1;
+            char *token = NULL;
+            printf("strlen of input is %ld\n",strlen(input));
+            if (strlen(input) <= 30)
+            {
+                int index = 0;
+                char * response = malloc(sizeof(char)* 100);
+                strcpy(response, "");
+            
+                CountryPath_Node* temp = NULL;
+
+                int counter = dir_list->counter;
+                //printf("counter is %d\n", counter);
+        
+                while(counter > 0)
+                {
+                    temp = get_country(dir_list, index);
+                    // printf("temp->country path is %s\n", temp->country_path);
+                    token = strtok(temp->country_path, "/");
+                    token = strtok(NULL, "/");
+                    token = strtok(NULL, "/");
+                    token = strtok(NULL, "/");
+
+                    // printf("token is %s\n", token );
+                    char * result = numPatientAdmissions(input, disease_HT, list, token, flag);
+                    sprintf(response, "%s\n%s", response, result);
+                    free(result);
+                    index++;
+                    counter--;
+                }
+                return response;
+            }
+            else // query had a country name
+            {
+                return numPatientAdmissions(input, disease_HT, list, token, flag);
+            }
+        } 
+        else if (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd")==0 ) 
+        {
+            int flag = 0;
+            char *token = NULL;
+            if (strlen(input) <= 33)
+            {
+                int index = 0;
+                char * response = malloc(sizeof(char)* 100);
+                strcpy(response, "");
+            
+                CountryPath_Node* temp = NULL;
+
+                int counter = dir_list->counter;
+                //printf("counter is %d\n", counter);
+        
+                while(counter > 0)
+                {
+                    temp = get_country(dir_list, index);
+                    // printf("temp->country path is %s\n", temp->country_path);
+                    token = strtok(temp->country_path, "/");
+                    token = strtok(NULL, "/");
+                    token = strtok(NULL, "/");
+                    token = strtok(NULL, "/");
+
+                    // printf("token is %s\n", token );
+                    char * result = numPatientAdmissions(input, disease_HT, list, token, flag);
+                    sprintf(response, "%s\n%s", response, result);
+                    free(result);
+                    index++;
+                    counter--;
+                }
+                return response;
+            }
+            else // query had a country name
+            {
+                return numPatientAdmissions(input, disease_HT, list, token, flag);
+            }
+        } 
+    }
+}
 
 void signal_handler()
 {

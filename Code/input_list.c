@@ -1,6 +1,6 @@
 #include "../headers/input_list.h"
 
-CountryPath_Node *createPatientNode(char * path)
+CountryPath_Node *createPathNode(char * path)
 {
 	CountryPath_Node *new_node= malloc(sizeof(CountryPath_Node));
 	strcpy(new_node->country_path, path);
@@ -15,21 +15,20 @@ void initDirectorytList(Directory_list *this_list)
 	this_list->counter = 0;
 }
 
-CountryPath_Node* insertNewDirectory(Directory_list * list, char * path)
+void insertNewDirectory(Directory_list * list, char * path)
 {
-	CountryPath_Node *new_path = createPatientNode(path);
+	CountryPath_Node *new_path = createPathNode(path);
 	if (list->counter == 0)
 	{
 		list->head = new_path;
 		list->tail = new_path;
 		list->counter = 1;
-		return new_path;
+		return;
 	}
 
 	list->counter++;
 	list->tail->next = new_path;
 	list->tail = new_path;
-	return new_path;
 }
 
 

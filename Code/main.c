@@ -208,7 +208,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 8;
+        params.numWorkers = 1;
         params.bufferSize = 128;
         params.input_dir = malloc(sizeof(50));
         strcpy(params.input_dir, "./resources/input_dir");

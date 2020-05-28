@@ -7,12 +7,6 @@
 
 
 
-typedef struct
-{
-	int day;
-	int month;
-	int year;
-} Date;
 
 typedef struct CountryPath_Node
 {
@@ -30,14 +24,14 @@ typedef struct
 
 /***** Constructors *****/
 
-CountryPath_Node *CountryPathNode( char * );
+CountryPath_Node *createPathNode( char * );
 
 void initDirectorytList(Directory_list *);
 
 /****************************/
 
 /**** Date List Functions *****/
-CountryPath_Node * insertNewDirectory( Directory_list * , char * );
+void insertNewDirectory( Directory_list * , char * );
 
 CountryPath_Node * get_directoryList_head( Directory_list * );
 

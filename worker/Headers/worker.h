@@ -1,3 +1,6 @@
+#ifndef WORKER_H_
+#define WORKER_H_
+
 #include <stdio.h>
 #include <ctype.h> 
 #include <string.h>
@@ -9,6 +12,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include "../Headers/hash.h"
+#include "../Headers/query_server.h"
+
 
 #define PERMISSIONS 0666
 
@@ -45,3 +50,6 @@ char * read_from_fifo( int read_fd, int buffersize);
 void write_to_fifo(int  write_fd, char * message);
 
 void signal_handler();
+
+
+#endif

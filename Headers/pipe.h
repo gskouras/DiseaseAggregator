@@ -13,6 +13,15 @@
 
 #define PERMISSIONS 0666
 
+
+typedef struct
+{
+    int day;
+    int month;
+    int year;
+} Date;
+
+
 typedef struct 
 {
 	pid_t pid;
@@ -23,6 +32,7 @@ typedef struct
 	int write_fd;
     int flag;
 } Worker_info;
+
 
 
 void create_named_pipes( char **, char **, int);

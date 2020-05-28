@@ -150,9 +150,9 @@ void cli( Worker_info * workers_array, Params params )
 
 
             } 
-            else if (strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0) 
+            else if ((strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0)  ||  (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd") == 0))
             {
-                if (input != NULL && strlen(input) < 20 || input == NULL)
+                if ((input != NULL && strlen(input) < 20 || input == NULL))
                 {
                     printf("Please Insert valid Data\n");
                     putchar('>');
@@ -203,26 +203,6 @@ void cli( Worker_info * workers_array, Params params )
                         }
                     }
                 }
-            } 
-            else if (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd") == 0) 
-            {
-
-                if (input != NULL && strlen(input) < 10)
-                {
-                    printf("If you Enter a Date you must also enter another \n");
-                    putchar('>');
-                    continue;
-                }
-                else
-                {
-                    for (int i = 0; i < params.numWorkers; ++i)
-                    {
-                        write_to_fifo(workers_array[i].write_fd, cmd);
-                        //read_from_fifo( workers_array[i].read_fd , params.bufferSize);
-                    }   
-                }
-
-
             } 
             else if (strcmp(cmd, "/man") == 0)
             {
