@@ -94,7 +94,7 @@ void cli( Worker_info * workers_array, Params params )
                         if(pos != -1)
                         {
                             // printf("query to be written is %s \n", query);
-                            printf("stelno se ena worker\n");
+                            //printf("stelno se ena worker\n");
                             write_to_fifo(workers_array[pos].write_fd, query);
                             read_from_workers(workers_array, params);
                         }

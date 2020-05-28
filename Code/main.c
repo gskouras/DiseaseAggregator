@@ -18,8 +18,6 @@ int main(int argc, char* argv[])
 	char ** workerPipes;
 
 
-	//initAllPipes(parentPipes, workerPipes, params.numWorkers);
-
 	parentPipes = malloc(params.numWorkers *sizeof(char*));
 	workerPipes = malloc(params.numWorkers *sizeof(char*));
 
@@ -208,7 +206,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 1;
+        params.numWorkers = 8;
         params.bufferSize = 128;
         params.input_dir = malloc(sizeof(50));
         strcpy(params.input_dir, "./resources/input_dir");
@@ -243,9 +241,11 @@ Params inputValidate (int argc, char *argv[])
 
 int worker(char * read_pipe, char * write_pipe, int bufferSize)
 {
-	//printf("worker will start with procces id %u and %s %s\n", getpid(), read_pipe, write_pipe);
-	char *argv[]={"./worker/worker", 
-    read_pipe, write_pipe, "512" , NULL}; 
+	
+	char buffer[10];//printf("worker will start with procces id %u and %s %s\n", getpid(), read_pipe, write_pipe);
+	sprintf(buffer, "%d", bufferSize);
+	char *argv[]={"./workerz", 
+    read_pipe, write_pipe, buffer , NULL}; 
     execvp(argv[0],argv);
 }
 

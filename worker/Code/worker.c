@@ -2,23 +2,32 @@
 #include "../../code/input_list.c"
 
 
-void open_manual();
-
 char * query_handler(char * , HashTable *, HashTable * , Patient_list *, Directory_list * , int );
 
+/*** Global Variables that allow signal handlers to retrive usefull Informations ***/ 
+
 Logfile_Info log_info;
+
+Directory_list d_list;
+
+Patient_list patient_list;
+
+HashTable disease_HT;
+HashTable country_HT;
+
+/**********************************************************************************/
 
 int main(int argc, char *argv[])
 {
     signal(SIGINT, signal_handler);
+    signal(SIGQUIT, signal_handler);
+
     char read_fifo[100];
     char write_fifo[100];
-    int buffersize = 512;
+    int buffersize = atoi(argv[3]);
     int buffer_counter = 0;
     strcpy(read_fifo, argv[1]);
     strcpy(write_fifo, argv[2]);
-
-    struct stat st;
 
     int read_fd = open(read_fifo, O_RDONLY);
    // printf("read_fd is %d\n",read_fd );
@@ -30,15 +39,8 @@ int main(int argc, char *argv[])
 
     Params params;
     params.disHashSize = 5;
-    params.countryHashSize= 5;
+    params.countryHashSize = 5;
     params.bucketsize = 256;
-
-    Patient_list patient_list;
-    Directory_list d_list;
-
-
-    HashTable disease_HT;
-    HashTable country_HT;
 
     initHashTable(&disease_HT, params.disHashSize, params.bucketsize); 
     initHashTable(&country_HT, params.countryHashSize, params.bucketsize); 
@@ -93,6 +95,7 @@ int main(int argc, char *argv[])
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
+    freeDirList(&d_list);
 
 }
 
@@ -351,22 +354,6 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
     }
 }
 
-void signal_handler()
-{
-    char buffer[30] = " ";
-    // sprintf(buffer, "%u", getpid());
-    sprintf(buffer, "log_file.");
-    sprintf(buffer + strlen(buffer), "%u", getpid());
-
-    FILE *fp = fopen(buffer, "w");
-
-    //printf("buffer in signal is %s\n",buffer );
-    fprintf(fp, "Total: %d\n", log_info.total);
-    fprintf(fp, "Success: %d\n", log_info.success);
-    fprintf(fp, "Fail: %d\n" , log_info.fail);
-
-    fclose(fp);
-}
 
 char * read_from_fifo( int read_fd, int buffersize)
 {
@@ -544,5 +531,48 @@ Patient line_tokenize(char *line, Patient patient, char * date, char * country )
         strcpy( patient.country, token); 
 
     return patient;
+}
+
+
+void signal_handler()
+{
+
+    char buffer[30] = "";
+
+    sprintf(buffer, "log_file.");
+    sprintf(buffer + strlen(buffer), "%u", getpid());
+
+    FILE *fp = fopen(buffer, "w");
+
+    CountryPath_Node* temp = NULL;
+    int counter = d_list.counter;
+    char *token = NULL;
+    int index = 0;
+        
+    while(counter > 0)
+    {
+        temp = get_country(&d_list, index);
+        //printf("temp->country path is %s\n", temp->country_path);
+        token = strtok(temp->country_path, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+
+        //printf("token is %s\n", token );
+        fprintf(fp, "%s\n", token);
+        index++;
+        counter--;
+    }
+
+    fprintf(fp, "Total: %d\n", log_info.total);
+    fprintf(fp, "Success: %d\n", log_info.success);
+    fprintf(fp, "Fail: %d\n" , log_info.fail);
+
+    fclose(fp);
+
+    destroyHashTable(&disease_HT);
+    destroyHashTable(&country_HT);
+    freePatientList(&patient_list);
+    freeDirList(&d_list);
 }
 

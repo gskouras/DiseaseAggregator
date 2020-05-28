@@ -14,13 +14,6 @@ Patient searchPatientRecord( char * , Patient_list * );
 
 char * numPatientAdmissions( char * , HashTable * , Patient_list *, char *, int );
 
-void topCountries( char *, HashTable *, Patient_list * );
-
-void recordPatientExit( char * , Patient_list * );
-
-void numCurrentPAtients( char * , HashTable * );
-
-void insertPatientRecord( char * , HashTable * , HashTable * , Patient_list * );
 
 /********************/
 
@@ -29,13 +22,7 @@ void insertPatientRecord( char * , HashTable * , HashTable * , Patient_list * );
 
 void dateTokenize( char *, Date *, Date *);
 
-void open_manual();
-
-Patient line_tokenize_without_exitDate( char * );
-
 void df_tokenize ( char *, char **, char **, Date *, Date *);
-
-void topK_tokenize(char * , char ** , Date * , Date *, int *);
 
 char * patient_stringify( Patient );
 
