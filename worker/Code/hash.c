@@ -32,12 +32,12 @@ Bucket_Node * createNewBucketNode( int capacity )
 	bucket->next = NULL;
 	bucket->slot_counter = 0;
 	bucket->capacity = capacity;
-	bucket->bucket_item = malloc(sizeof(BucketItem)* capacity);
-	bucket->bucket_item->age_ranges = malloc(4 *sizeof(int));
+	bucket->bucket_item = malloc(sizeof(BucketItem) * capacity);
+
+	//printf("Capacity is %d\n", capacity);
 	for (int i = 0; i < capacity; ++i)
 	{
 		//init avl tree of each bucket_slot
-		bucket->bucket_item[i].age_ranges = malloc(4 *sizeof(int));
 		bucket->bucket_item[i].root = NULL;
 		bucket->bucket_item[i].total_patients = 0;
 		bucket->bucket_item[i].patients_hospitalized = 0;
@@ -58,6 +58,7 @@ void insert_to_hash_table(HashTable *ht, char * string, Patient_Node * this_pati
 {
 	int index = hash_fun(string, ht->size); //find the index of the record through hash functions
 	Bucket_List * target_list = &ht->lists_of_buckets[index]; //assign that index to the correct list of the Hash Table
+	//printf("intex is %d\n", index);
 
 	insert_to_bucket_list(target_list, string, this_patient); // Insert that Record to the corresponding list
 	ht->total_bucket_items++;		
@@ -138,8 +139,8 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 	else if(this_list->counter == 0) //if the records is to inserted in the first bucket of the bucket list
 	{
 		if(isExist(this_list, string, this_patient))
-			//printf("adress of the root its %p\n",this_list->head->bucket_item[0].root );
 			return 0;
+
 		if (insert_to_bucket(this_list->head, string, this_patient))
 		{
 			this_list->tail= this_list->tail->next;
@@ -148,56 +149,59 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 		return 1;		
 	}
 
-
 	if(isExist(this_list, string, this_patient)) //if the records exist there is no need to insert it to the hash table, only to the avl tree
-	{
 		return 0;
-	}
 
 	if (insert_to_bucket(this_list->tail, string, this_patient)) //if not, the insert the ne record to the Hash Table
 	{
 		this_list->tail= this_list->tail->next;
 		this_list->counter++;
 	}
+	return 1;
 }
 
 
 int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
-	//printf("i eggrafi benei\n");
-	//printf("String to be copied is %s\n", string);
+	//printf("i eggrafi benei me stoixeia\n");
+	// printPatientData(this_patient->patient);
+	// printf("String to be copied is %s\n", string);
+	// printf("this bucket slot ocunter is %d\n", this_bucket->slot_counter );
+
+	this_bucket->bucket_item[this_bucket->slot_counter].string = malloc(sizeof(char) * strlen(string)+1);
 	strcpy(this_bucket->bucket_item[this_bucket->slot_counter].string, string); //insert the record to the correct position of the bucket
-	//printf("strcpy result : %s\n", this_bucket->bucket_item[this_bucket->slot_counter].string);
+	// printf("strcpy result : %s\n", this_bucket->bucket_item[this_bucket->slot_counter].string);
 	
 	this_bucket->bucket_item[this_bucket->slot_counter].root = \
 		tree_insert( this_bucket->bucket_item[this_bucket->slot_counter].root , this_patient->patient.entryDate, this_patient);//insert the record to avl tree
 	this_bucket->bucket_item[this_bucket->slot_counter].total_patients++;
 	
+	//printf("this bucket->slot counter is %d\n",this_bucket->slot_counter );
 
     if(this_patient->patient.age <= 20)
     {
-        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[0] += 1;
-        // printf(" insert bucket :mikroteros apo 20 ");   
-        // printf("From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);         
+        this_bucket->bucket_item[1].age_ranges[0]++;
+        //printf(" insert bucket :mikroteros apo 20 ");   
+        //printf("From disease %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);         
     }
     else if(this_patient->patient.age >= 20 && this_patient->patient.age <= 40)
     {
-        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[1] += 1;
-        // printf(" insert bucket : anamesa se 20 kai 40");
-        // printf(" From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
+        this_bucket->bucket_item[1].age_ranges[1]++;
+        //printf(" insert bucket : anamesa se 20 kai 40");
+        //printf(" From disease %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
     }
     else if( this_patient->patient.age >= 41 && this_patient->patient.age <= 60 )
     {
-        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[2] += 1;
-       	// printf(" insert bucket: anamesa se 41 kai 60");
-       	// printf(" From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
+        this_bucket->bucket_item[1].age_ranges[2]++;
+       	//printf(" insert bucket: anamesa se 41 kai 60");
+       	//printf(" From disease %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
        	//printf("this->bucket->slot counter is %d\n",this_bucket->slot_counter);   
     }
-    else
+    else if (this_patient->patient.age > 60)
     {
-        this_bucket->bucket_item[this_bucket->slot_counter].age_ranges[3] += 1;
-        // printf(" insert bucket :60+ ");
-        // printf("From country %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
+        this_bucket->bucket_item[1].age_ranges[3]++;
+        //printf(" insert bucket :60+ ");
+        //printf("From disease %s\n",this_bucket->bucket_item[this_bucket->slot_counter].string);
     }
 	
 	if(this_patient->patient.exitDate.year > 1)
@@ -216,7 +220,7 @@ int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * thi
 
 int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patient)
 {
-
+	//printPatientData(this_patient->patient);
 	Bucket_Node *temp = this_list->head;
 	while(temp != NULL)
 	{
@@ -244,7 +248,7 @@ int isExist( Bucket_List * this_list, char * string , Patient_Node * this_patien
 				    temp->bucket_item[i].age_ranges[2] += 1;
 				    //printf("is exist :anamesa se 41 kai 60\n"); 
 				}
-				else
+				else if (this_patient->patient.age > 60)
 				{
 				    temp->bucket_item[i].age_ranges[3] += 1; 
 				    //printf("is exist : 60+\n"); 
@@ -289,7 +293,8 @@ void freeBucketNodes(Bucket_List * this_list)
 		this_list->head = this_list->head->next;
 		for (int i = 0; i < temp->slot_counter; ++i)
 		{
-			tree_destroy(temp->bucket_item[i].root);	
+			tree_destroy(temp->bucket_item[i].root);
+			free(temp->bucket_item[i].string);	
 		}
 		free(temp->bucket_item);
 		free(temp);

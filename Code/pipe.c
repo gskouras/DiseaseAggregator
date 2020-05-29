@@ -165,7 +165,7 @@ void cli( Worker_info * workers_array, Params params )
                     strcat(query, input);
                     //printf("query is %s\n", query);
 
-                    if (strlen(query) <= 35) // Sent Query to All Workers
+                    if (strlen(query) < 30) // Sent Query to All Workers
                     {
                         for (int i = 0; i < params.numWorkers; ++i)
                         {
@@ -193,7 +193,7 @@ void cli( Worker_info * workers_array, Params params )
                         if(pos != -1)
                         {
                             // printf("query to be written is %s \n", query);
-                            printf("stelno se ena worker\n");
+                            //printf("stelno se ena worker\n");
                             write_to_fifo(workers_array[pos].write_fd, query);
                             read_from_workers(workers_array, params);
                         }

@@ -30,17 +30,19 @@ int main(int argc, char *argv[])
     strcpy(write_fifo, argv[2]);
 
     int read_fd = open(read_fifo, O_RDONLY);
-   // printf("read_fd is %d\n",read_fd );
+    //printf("read_fd is %d\n",read_fd );
 
     int write_fd = open(write_fifo, O_WRONLY);
 
     //printf("write_fd is %d\n", write_fd);
     char * message = read_from_fifo(read_fd, buffersize);
 
+    //printf("message is %s\n",message );
+
     Params params;
-    params.disHashSize = 5;
+    params.disHashSize = 15;
     params.countryHashSize = 5;
-    params.bucketsize = 256;
+    params.bucketsize = 512;
 
     initHashTable(&disease_HT, params.disHashSize, params.bucketsize); 
     initHashTable(&country_HT, params.countryHashSize, params.bucketsize); 
@@ -74,7 +76,7 @@ int main(int argc, char *argv[])
             prev_token_len += strlen(token);
     }
 
-    free(message);
+    //free(message);
 
     char * result = NULL;
 
@@ -97,12 +99,14 @@ int main(int argc, char *argv[])
     freePatientList(&patient_list);
     freeDirList(&d_list);
 
+    return 0;
+
 }
 
 int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *patient_list, int write_fd, Logfile_Info *log_info)
 {
     //printf("file name is %s\n",params.fileName );
-
+    //printf("Edo  beno?\n");
     struct dirent *de;
     // if(strcmp(params.fileName, "./resources/input_dir/China")==0)
     //     printf("profanos kai einai isa\n");
@@ -121,7 +125,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
     size_t len = 0;
     ssize_t nread;
     int line_pos;
-    char file_path[200] = " ";
+    char file_path[200];
     char date[50];
 
     strcpy(file_path, params.fileName);
@@ -173,7 +177,8 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
             while ((nread = getline(&line, &len, fp)) != -1) 
             {   
                 strcpy(date, de->d_name);
-                char temp_line[100] = " ";
+                //printf("Date is %s\n", date);
+                char temp_line[100] = "";
 
                 for (int i = 0; line[i] != '\0'; ++i) 
                 {
@@ -184,18 +189,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
 
                 patient_attributes = line_tokenize(line, patient_attributes, date, file_path);
                 
-                if (id_exist(patient_list, patient_attributes.recordID))
-                {
-                    printf("Patient with Record ID %s has been already inserted, thus it ommited\n", patient_attributes.recordID);
-                    free(patient_attributes.recordID);
-                    free(patient_attributes.firstName);
-                    free(patient_attributes.lastName);
-                    free(patient_attributes.diseaseID);
-                    free(patient_attributes.country);
-                    log_info->fail++;
-           
-                }
-                else if(strcmp(patient_attributes.status, "EXIT") == 0 && !id_exist(patient_list, patient_attributes.recordID))
+                if(strcmp(patient_attributes.status, "EXIT") == 0 && !id_exist(patient_list, patient_attributes.recordID))
                 {
                     //printf("Provlimatiki eggrafi me stoixeia");
                     //printPatientData(patient_attributes);
@@ -208,13 +202,18 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
            
                 }
                 else if(strcmp(patient_attributes.status, "EXIT") == 0 && id_exist(patient_list, patient_attributes.recordID))
-                {
+                {    
                     updatePatientRecord( patient_attributes.recordID,  patient_attributes.exitDate, patient_list);
+                    // printf("{Patient updated : {");
+                    // printPatientData(patient_attributes);
+                    // printf("}\n");
                 }
                 else if(!id_exist(patient_list, patient_attributes.recordID))
                 {      
                     //printf("New patient id is %s\n",  patient_attributes.recordID);          
                     new_patient_node =  insertNewPatient(patient_list, patient_attributes);
+                    // printf("\nGinetai eisagogi tou asthni\n");
+                    // printPatientData(new_patient_node->patient);
                     insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
                     //insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
                     log_info->success++;
@@ -223,7 +222,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
                 log_info->total++;
             }
 
-            //write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd);
+            write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd);
             fclose(fp);
             strcpy(file_path, params.fileName);
            //printf("file_path is %s\n", file_path);
@@ -278,8 +277,8 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
         {
             int flag = 1;
             char *token = NULL;
-            printf("strlen of input is %ld\n",strlen(input));
-            if (strlen(input) <= 30)
+            //printf("strlen of input is %ld\n",strlen(input));
+            if (strlen(input) < 30)
             {
                 int index = 0;
                 char * response = malloc(sizeof(char)* 100);
@@ -308,7 +307,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
                 }
                 return response;
             }
-            else // query had a country name
+            else if(strlen(input) >= 30)
             {
                 return numPatientAdmissions(input, disease_HT, list, token, flag);
             }
@@ -317,7 +316,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
         {
             int flag = 0;
             char *token = NULL;
-            if (strlen(input) <= 33)
+            if (strlen(input) < 30)
             {
                 int index = 0;
                 char * response = malloc(sizeof(char)* 100);
@@ -405,7 +404,7 @@ void write_to_fifo(int  write_fd, char * message)
 
 void write_summary_stats( HashTable * disease_HT,  char * country, Date date, int write_fd)
 {
-    char stats[1000];
+    char stats[1000000];
     // print_date(date);
     // printf("\n");
     // printf("%s\n",country);
@@ -455,8 +454,8 @@ int digitValidate(char *a)
 Patient line_tokenize(char *line, Patient patient, char * date, char * country )
 {
         char * token;
-        char temp [50] = " ";
-        char temp_line[50]= " ";
+        char temp [100] = " ";
+        char temp_line[100]= " ";
         strcpy(temp, country);
         strcpy(temp_line, line );
 
@@ -534,7 +533,7 @@ Patient line_tokenize(char *line, Patient patient, char * date, char * country )
 }
 
 
-void signal_handler()
+void signal_handler(int sig)
 {
 
     char buffer[30] = "";

@@ -100,7 +100,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	int counter = 0;
 	int found = 0;
 
-	//printf("NumPAtient received your queryL::::::\n");
+	// printf("NumPAtient received your queryL:::::: %s \n", input);
 	char temp_input[50];
 	strcpy(temp_input , input);
 
@@ -109,6 +109,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 
 	// printf("Country is : %s\n", country);
 	// printf("Disease is %s\n",disease );
+	//printf("Temp country is %s\n", temp_country);
 	// print_date(d1);
 	// print_date(d2);
 
@@ -120,6 +121,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 		{
 			for (int i = 0; i < temp->slot_counter; ++i)
 			{
+				//printf("Sigkrino tin asthenia %s me tin asthenia %s\n", temp->bucket_item[i].string, disease);
 				if(strcmp(temp->bucket_item[i].string, disease))
 				{
 					continue;
@@ -153,6 +155,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 
 	if(!found)
 	{
+		//printf("didnt found!!!\n");
 		result = malloc(sizeof(char)* 2);
 		sprintf(result, "0");
 		free(disease);
@@ -171,7 +174,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	else if(temp_country)
 	{
 		result = malloc(sizeof(char)* 10);
-		//printf("Country is %s\n", country);
+		//printf("Country is %s\n", temp_country);
 		sprintf(result, "%s : ", temp_country);
 		sprintf(result, "%s%d", result, counter);
 		free(disease);
@@ -366,7 +369,7 @@ void dateTokenize( char * input, Date *d1, Date *d2)
 
 void df_tokenize (char *input, char ** disease_holder, char ** country_holder, Date *d1, Date *d2)	//printf(" disease holder is%s\n", *disease_holder );
 {	
-	if (strlen(input) <= 30) //tokenize without country name
+	if (strlen(input) < 30) //tokenize without country name
 	{
 		char *token = strtok( input, " ");
 	

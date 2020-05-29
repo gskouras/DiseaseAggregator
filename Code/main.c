@@ -4,6 +4,7 @@
 int main(int argc, char* argv[])
 {
 
+	signal(SIGCHLD, worker_handler);
 
 	Params params = inputValidate(argc, argv);
 
@@ -72,7 +73,7 @@ int main(int argc, char* argv[])
 
 	initialize_dirPaths(&d_list, workers_array, parentPipes, workerPipes, params.numWorkers);
 
-	//read_from_workers(workers_array, params);
+	read_from_workers(workers_array, params);
 
 	printf("\nParse of file Completed Succesfully!\n");
 	printf("\nWelcome to diseaseAggregator CLI\n");
@@ -207,7 +208,7 @@ Params inputValidate (int argc, char *argv[])
     if(argc==1)
     {
         params.numWorkers = 8;
-        params.bufferSize = 128;
+        params.bufferSize = 512;
         params.input_dir = malloc(sizeof(50));
         strcpy(params.input_dir, "./resources/input_dir");
         return params;
@@ -248,5 +249,14 @@ int worker(char * read_pipe, char * write_pipe, int bufferSize)
     read_pipe, write_pipe, buffer , NULL}; 
     execvp(argv[0],argv);
 }
+
+
+void worker_handler( int sig)
+{
+	printf("I caught a signal!\n");
+}
+
+
+
 
 

@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <poll.h>
 #include <dirent.h> 
+#include <signal.h>
 #include "pipe.h"
 #include "input_list.h"
 
@@ -37,6 +38,10 @@ int checkAllFlags(Worker_info *, int);
 void initAllFlags(Worker_info *, int);
 
 void cli( Worker_info * , Params );
+
+
+/**** Signal Handlers ****/
+void worker_handler( int );
 
 
 

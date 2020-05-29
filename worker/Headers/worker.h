@@ -62,7 +62,7 @@ void write_to_fifo(int  write_fd, char * message);
 
 /*** Signal Handlers ****/
 
-void signal_handler();
+void signal_handler( int );
 
 /*************************/
 
