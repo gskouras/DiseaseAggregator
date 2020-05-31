@@ -241,6 +241,55 @@ void tree_search_Disease_dateRange (Tree_Node * this, Date d1, Date d2, char * d
 	if(date_cmp(d2 , this->date) == 1)
 		tree_search_Disease_dateRange(this->right, d1, d2, disease, counter);
 }
+
+void tree_search_Age_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * country, int * age_ranges)
+{
+
+	/* base case */
+	if(this == NULL)
+		return;
+
+	/* Since the desired o/p is sorted, recurse for left subtree first 
+    If root->data is greater than k1, then only we can get o/p keys 
+    in left subtree */
+	if (date_cmp(d1 , this->date) == 0)
+		tree_search_Age_Country_dateRange(this->left, d1, d2, country, age_ranges);
+
+	/* if root's data lies in range, then prints root's data */
+	if(((date_cmp(d1, this->date) == 0) || (date_cmp(d1, this->date) == 2)) && ((date_cmp(d2, this->date) ==1) || (date_cmp(d2, this->date) == 2)))
+	{	
+		Date_Node *temp = this->date_list.head;
+		while(temp != NULL)
+		{
+			if(strcmp(temp->patient_node->patient.country, country)== 0)
+			{							
+			 	if(temp->patient_node->patient.age <= 20)
+			    {
+			    	age_ranges[0]++;
+			    }
+			    else if(temp->patient_node->patient.age >= 20 && temp->patient_node->patient.age <= 40)
+			    {
+			    	age_ranges[1]++;
+			    }
+			    else if( temp->patient_node->patient.age >= 41 && temp->patient_node->patient.age <= 60 )
+			    {
+			    	age_ranges[2]++;   
+			    }
+			    else if (temp->patient_node->patient.age > 60)
+			    {
+
+			    	age_ranges[3]++;
+				}			       
+			}
+			temp = temp->next;
+		}
+	}
+	
+  	/* If root->data is smaller than k2, then only we can get o/p keys 
+      in right subtree */
+	if(date_cmp(d2 , this->date) == 1)
+		tree_search_Age_Country_dateRange(this->right, d1, d2, country, age_ranges);
+}
  
 void tree_country_search( Tree_Node * this , char * country, int * counter)
 {

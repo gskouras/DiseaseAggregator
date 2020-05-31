@@ -43,6 +43,9 @@ void cli( Worker_info * , Params );
 /**** Signal Handlers ****/
 void worker_handler( int );
 
+int find_worker_pos( pid_t );
+
+
 
 
 

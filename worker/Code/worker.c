@@ -22,12 +22,17 @@ int main(int argc, char *argv[])
     signal(SIGINT, signal_handler);
     signal(SIGQUIT, signal_handler);
 
+    //printf("Hallo from process id %d\n", getpid());
+
     char read_fifo[100];
     char write_fifo[100];
     int buffersize = atoi(argv[3]);
     int buffer_counter = 0;
     strcpy(read_fifo, argv[1]);
     strcpy(write_fifo, argv[2]);
+
+    // printf("read fifo is %s\n", read_fifo);
+    // printf("write_fifo is %s\n", write_fifo);
 
     int read_fd = open(read_fifo, O_RDONLY);
     //printf("read_fd is %d\n",read_fd );
@@ -37,8 +42,10 @@ int main(int argc, char *argv[])
     //printf("write_fd is %d\n", write_fd);
     char * message = read_from_fifo(read_fd, buffersize);
 
-    //printf("message is %s\n",message );
+    //printf("message is");
+    //printf("%s\n",message );
 
+    // printf("Starting....\n");
     Params params;
     params.disHashSize = 15;
     params.countryHashSize = 5;
@@ -76,9 +83,11 @@ int main(int argc, char *argv[])
             prev_token_len += strlen(token);
     }
 
-    //free(message);
+    free(message);
 
     char * result = NULL;
+
+    //printf("I am ready to receive your queries\n");
 
     while(1) //worker is ready to receive queries
     {
@@ -105,19 +114,14 @@ int main(int argc, char *argv[])
 
 int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * country_HT, Patient_list *patient_list, int write_fd, Logfile_Info *log_info)
 {
-    //printf("file name is %s\n",params.fileName );
-    //printf("Edo  beno?\n");
+
     struct dirent *de;
-    // if(strcmp(params.fileName, "./resources/input_dir/China")==0)
-    //     printf("profanos kai einai isa\n");
 
     DIR *dr = opendir(params.fileName);
 
-    //printf("To directory einai %s\n",params.fileName);
-
     if (dr == NULL)  // opendir returns NULL if couldn't open directory 
     { 
-        perror("Error dr == NULL ");
+        perror("Error ");
         exit(0);
     } 
 
@@ -173,7 +177,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
                     }
                 }
             }
-
+            
             while ((nread = getline(&line, &len, fp)) != -1) 
             {   
                 strcpy(date, de->d_name);
@@ -198,6 +202,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
                     free(patient_attributes.lastName);
                     free(patient_attributes.diseaseID);
                     free(patient_attributes.country);
+                    //printf("Error : \n");
                     log_info->fail++;
            
                 }
@@ -207,8 +212,9 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
                     // printf("{Patient updated : {");
                     // printPatientData(patient_attributes);
                     // printf("}\n");
+                    log_info->success++;
                 }
-                else if(!id_exist(patient_list, patient_attributes.recordID))
+                else if(!id_exist(patient_list, patient_attributes.recordID) && (strcmp(patient_attributes.status, "ENTER") == 0))
                 {      
                     //printf("New patient id is %s\n",  patient_attributes.recordID);          
                     new_patient_node =  insertNewPatient(patient_list, patient_attributes);
@@ -255,7 +261,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
         } 
         else if (strcmp(cmd, "/topk-AgeRanges") == 0 || strcmp(cmd, "/tka") == 0 ) 
         {
-            printf("Beno tka\n");
+            return topAgeRanges(input, disease_HT, list);
         } 
         else if (strcmp(cmd, "/searchPatientRecord") == 0 || strcmp(cmd, "/spr") == 0)
         {
@@ -365,23 +371,29 @@ char * read_from_fifo( int read_fd, int buffersize)
 
     char *token = strtok(temp, "$");
     int input_size = atoi(token); //tora ksero posa byte tha mou steilei
-
+    //printf("input_size is %d\n", input_size);
     char * buffer = malloc(sizeof(char) * (input_size+1));
 
     char *p = buffer;
 
-    //printf("char *p is %s\n", p);
 
     while(buffer_counter < input_size)
     {
+        //printf("Starting to read the message...\n");
         bytes_in = read( read_fd,p, buffersize );//printf("bytes_in = %d\n", bytes_in);
-        
+        if (bytes_in == 0)
+        {
+            //printf("i reead girise 0\n");
+            break;
+        }
         if(buffer_counter + bytes_in > input_size)
             bytes_in = input_size-buffer_counter;
         
         p += bytes_in;
         buffer_counter += bytes_in;
+        //printf("Bytes in are: %d\n", bytes_in);
     }
+    //printf("End of read\n");
 
     buffer[input_size]='\0';
     // printf("I receive your message :::: %s\n", buffer);

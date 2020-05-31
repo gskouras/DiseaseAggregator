@@ -1,23 +1,25 @@
 #include "../headers/main.h"
 
+Params params;	
+Worker_info * workers_array = NULL;
 
 int main(int argc, char* argv[])
 {
 
-	signal(SIGCHLD, worker_handler);
+	//signal(SIGCHLD, worker_handler);
 
 	Params params = inputValidate(argc, argv);
 
 	Directory_list d_list;
 
 	readInputDirectory(&d_list, params.input_dir);
-	//printDirectoryList(&d_list);
-	
+
+	workers_array = malloc(sizeof(Worker_info) * params.numWorkers);
+
 	pid_t pid;
 	int status;
 	char ** parentPipes;
 	char ** workerPipes;
-
 
 	parentPipes = malloc(params.numWorkers *sizeof(char*));
 	workerPipes = malloc(params.numWorkers *sizeof(char*));
@@ -31,28 +33,26 @@ int main(int argc, char* argv[])
 		snprintf(workerPipes[i], strlen("/tmp/worker_fifo%d\0"), "/tmp/worker_fifo%d", i);
 		if(stat(parentPipes[i],&st)==-1)
 		{
-			if(mkfifo(parentPipes[i], PERMISSIONS)<0){
+			if(mkfifo(parentPipes[i], PERMISSIONS)<0)
+			{
 				perror("Error creating the named pipe \n");
 				exit(1);
 			}
 		}
 		if(stat(workerPipes[i],&st)==-1)
 		{
-			if(mkfifo(workerPipes[i], PERMISSIONS)<0){
+			if(mkfifo(workerPipes[i], PERMISSIONS)<0)
+			{
 				perror("Error creating the named pipe \n");
 				exit(1);
 			}
 		}
 	}
 
-	Worker_info workers_array[params.numWorkers];	
-
-	int id_counter = 0;
-
-
 	for (int i = 0; i < params.numWorkers; ++i)
 	{
 		pid = fork();
+
 		if (pid == 0)
 		{
 			worker(parentPipes[i], workerPipes[i], params.bufferSize);
@@ -60,7 +60,6 @@ int main(int argc, char* argv[])
 		else
 		{
 			workers_array[i].pid = pid;
-			//printf("%s %s\n", parentPipes[i], workerPipes[i]);
 			workers_array[i].write_fifo = malloc(strlen(parentPipes[i])+1);
 			workers_array[i].read_fifo = malloc(strlen(workerPipes[i])+1);
 			initDirectorytList(&workers_array[i].country_list); 
@@ -68,35 +67,26 @@ int main(int argc, char* argv[])
 			strcpy (workers_array[i].read_fifo, workerPipes[i]);					 
 		}
 	}
-
-	//printf("Worker arrays info data..\n");
+	printf("Sending Information to Workers...\n");
 
 	initialize_dirPaths(&d_list, workers_array, parentPipes, workerPipes, params.numWorkers);
 
 	read_from_workers(workers_array, params);
 
-	printf("\nParse of file Completed Succesfully!\n");
-	printf("\nWelcome to diseaseAggregator CLI\n");
+	printf("\nWrokers Received and Saved Requested Data Succesfully!\n");
+	printf("\nWelcome to Disease Aggregator Command Line Interface\n");
 
     cli(workers_array, params);
 
-	//1.getline
-	//2.grapse sta fifos tin entoli(na tsekaro an iparxei country. an iparxei tha stelno se 1)
-	//3. kalo tin read from workers // i tin sketi read an esteila se 1
-
-	//4.auto ginetai mexri na lavo exit.
-
-	for (int i = 0; i < params.numWorkers; ++i)
-	{
-	 	unlink(parentPipes[i]);
-		unlink(workerPipes[i]);
-	}
     for (int i = 0; i < params.numWorkers; ++i)
     {
     	pid = wait(&status);
+    	unlink(parentPipes[i]);
+		unlink(workerPipes[i]);
     	//printf("%d\n", status);
     }
-	
+
+    free(workers_array);	
 	return 0;
 }
 
@@ -207,9 +197,9 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 8;
+        params.numWorkers = 1;
         params.bufferSize = 512;
-        params.input_dir = malloc(sizeof(50));
+        params.input_dir = malloc(sizeof(char) *25);
         strcpy(params.input_dir, "./resources/input_dir");
         return params;
     }
@@ -239,7 +229,6 @@ Params inputValidate (int argc, char *argv[])
     }
 }
 
-
 int worker(char * read_pipe, char * write_pipe, int bufferSize)
 {
 	
@@ -250,10 +239,74 @@ int worker(char * read_pipe, char * write_pipe, int bufferSize)
     execvp(argv[0],argv);
 }
 
-
-void worker_handler( int sig)
+int find_worker_pos(pid_t pid)
 {
-	printf("I caught a signal!\n");
+	for (int i = 0; i < params.numWorkers; ++i)
+	{
+		if(workers_array[i].pid == pid)
+			return i;
+	}
+}
+
+void worker_handler( int sig )
+{
+	pid_t pid, new_pid;
+    int status;
+    int index;
+
+	pid = waitpid(-1, &status, WNOHANG);
+	index = find_worker_pos(pid);
+
+	//printf("index of procces id %d which died is %d\n",pid, index );
+	if(sig == SIGCHLD)
+	{
+		new_pid = fork();
+
+		if (new_pid == 0)
+		{
+			worker(workers_array[index].write_fifo, workers_array[index].read_fifo, params.bufferSize);
+		}
+		sleep(1);
+		// workers_array[index].write_fd = open(workers_array[index].write_fifo, O_WRONLY | O_NONBLOCK);
+	 //    workers_array[index].read_fd =  open(workers_array[index].read_fifo, O_RDONLY | O_NONBLOCK); 
+	    if(workers_array[index].country_list.counter > 1) // an o sigekrimenos worker exei parapano apo mia xores
+		{
+	        char message_buffer[1000]="";
+	        char temp_buffer[1000]="";
+
+	        memset( (void *)message_buffer, '\0', sizeof(message_buffer));
+	        memset( (void *)temp_buffer, '\0', sizeof(temp_buffer));
+
+	        int list_counter = workers_array[index].country_list.counter;
+	        int pos = 0;
+			while (list_counter > 0) //oso i lista den einai keni
+			{
+				CountryPath_Node *temp =  get_country(&workers_array[index].country_list, pos); //pairno apo to lista to proto path
+	            //printf("tenp country is %s\n", temp->country_path);
+	            if(strlen(temp_buffer) > 1 )
+	                sprintf(temp_buffer, "%s$", temp_buffer);//vazo dolario gia na ta ksexwriso meta me strtok
+
+				strcat(temp_buffer, temp->country_path); //vazo tin epomeni xwra pou exei i lista
+	            pos++;
+	            list_counter--;
+			}
+
+	        strcat(message_buffer, temp_buffer); //ston synoliko message buffer vazo ton temp
+	        //printf("message_buffer is %s\n", message_buffer );
+	        //printf("i am writing to %s\n",workers_array[index].write_fifo );
+	        write_to_fifo(workers_array[index].write_fd, message_buffer); //grafo se olous tous worker ta path me tis xores
+			
+	        //printf("writed from ifto %s countries %s\n",workers_array[index].write_fifo, message_buffer );
+		}
+		else //an exeis mono mia xora apla partin apo ti lista kai grapstin sto fifo
+		{
+	        char message_buffer[1000] = "";
+	        char temp_buffer[1000] = "";
+			CountryPath_Node *temp =  get_country(&workers_array[index].country_list, 0);
+			strcat(message_buffer, temp->country_path);
+			write_to_fifo(workers_array[index].write_fd, message_buffer);
+		}
+	}	
 }
 
 

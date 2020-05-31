@@ -41,6 +41,8 @@ void tree_country_search( Tree_Node * , char *, int * ); //counts how many incid
 
 void tree_search_Disease_dateRange ( Tree_Node * , Date , Date , char * , int *);
 
+void tree_search_Age_Country_dateRange(Tree_Node *, Date, Date, char*, int*);
+
 void tree_disease_search( Tree_Node * this , char * , int * );
 
 void tree_destroy(Tree_Node *tree);

@@ -32,13 +32,10 @@ void cli( Worker_info * workers_array, Params params )
                 for (int i = 0; i < params.numWorkers; ++i)
                 {
                     list_counter = workers_array[i].country_list.counter;
-                    //list_reverse(&workers_array[i].country_list);
-                    //printDirectoryList(&workers_array[i].country_list);
                     while(list_counter > 0)
                     {
                         CountryPath_Node *temp = get_country(&workers_array[i].country_list, index); 
                         strcpy(country, temp->country_path);
-                        //printf("country is %s\n", country);
                         token = strtok(country, "/");
                         token = strtok(NULL, "/");
                         token = strtok(NULL, "/");
@@ -66,7 +63,7 @@ void cli( Worker_info * workers_array, Params params )
                     strcat(query, input);
                     //printf("query is %s\n", query);
 
-                    if (strlen(query) <= 35) // Sent Query to All Workers
+                    if (strlen(query) <= 30) // Sent Query to All Workers
                     {
                         for (int i = 0; i < params.numWorkers; ++i)
                         {
@@ -108,24 +105,45 @@ void cli( Worker_info * workers_array, Params params )
             } 
             else if (strcmp(cmd, "/topk-AgeRanges") == 0 || strcmp(cmd, "/tka") == 0) 
             {
-                if (input != NULL && (strlen(input) < 24  && strlen(input) > 12))
+                if (input != NULL && (strlen(input) < 30) || input == NULL)
                 {
-                    printf("If you Enter a Date you must also enter another \n");
+                    printf("Please Insert valid Data \n");
                     putchar('>');
                     continue;
                 }
                 else
                 {
-                    for (int i = 0; i < params.numWorkers; ++i)
-                    {
-                        strcpy(query, cmd);
-                        sprintf(query, "%s ", query);
-                        strcat(query, input);
-                        write_to_fifo(workers_array[i].write_fd, query);
-                        read_from_workers(workers_array, params);
-                    }             
-                }
+                    strcpy(query, cmd);
+                    sprintf(query, "%s ", query);
+                    strcat(query, input);
+                    //printf("query is %s\n", query);
 
+                    // printf("query is %s\n",query );
+                    char temp[50];
+                    strcpy(temp, query);
+                    char * token = strtok(temp," ");
+                    token = strtok(NULL, " ");
+                    token = strtok(NULL, " ");
+
+                    printf("Country is %s\n",token );
+
+                    char * country = malloc(sizeof(char) * strlen(token) + 1);
+                    strcpy(country, token);
+                    // printf("Requested country is %s\n", country);
+                    int pos = find_worker_country(workers_array, params.numWorkers, country);
+                    // printf("Position is %d\n",pos );
+                    if(pos != -1)
+                    {
+                        // printf("query to be written is %s \n", query);
+                        //printf("stelno se ena worker\n");
+                        write_to_fifo(workers_array[pos].write_fd, query);
+                        read_from_workers(workers_array, params);
+                    }
+                    else
+                    {
+                        printf("Error: Requested Country Doesnt Exist\n");
+                    }                    
+                }
             } 
             else if (strcmp(cmd, "/searchPatientRecord") == 0 || strcmp(cmd, "/spr") == 0 ) 
             {
@@ -147,8 +165,6 @@ void cli( Worker_info * workers_array, Params params )
                         read_from_workers(workers_array, params);
                     }   
                 }
-
-
             } 
             else if ((strcmp(cmd, "/numPatientAdmissions") == 0 || strcmp(cmd, "/npa") == 0)  ||  (strcmp(cmd, "/numPatientDischarges") == 0 || strcmp(cmd, "/npd") == 0))
             {
