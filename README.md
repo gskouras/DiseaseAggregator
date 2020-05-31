@@ -1,6 +1,6 @@
 ## Disease Aggregator
 
-### Intoduction
+### System Programming - Second Assigment
 
 Aim of this Project is to get acquainted with creating proccesses making use of the fork/exec system calls, inter-process communication(IPC) via named pipes and signals, the use of low-level I\O and bash script creation.
 
