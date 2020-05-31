@@ -4,7 +4,8 @@
 
 Aim of this Project is to get acquainted with creating proccesses making use of the fork/exec system calls, inter-process communication(IPC) via named pipes and signals, the use of low-level I\O and bash script creation.
 
-The goal is to implement a distributed information processing software that receives and asnwer queries about diseases infections. Speccifically, the application Disease Aggregator along with a series of Worker Procceses will co-oparate to answer the user's queries.
+The goal is to implement a distributed information processing software that receives and asnwer queries about diseases infections. Speccifically, the application Disease Aggregator along with a series of Worker Procceses will co-operate to answer user's queries.
+(See ./resources/hw2-spring-2020.pdf for more details)
 
 ### Compilation and Running
 
