@@ -11,9 +11,9 @@ The goal is to implement a distributed information processing software that rece
 
 First of all the application starts numWorkers Workers child processes and distributes subdirectories with the countries evenly to all worker proccesses and inform each Worker via named pipe for  the subdirectories which he will be undertaken.
 
-Each Worker process, for each catalog assigned to it, reads all its files in chronological order based on file names and fills a series of data structures( hashtables, linked lists, binary trees )that it will use for answer questions asked by the parent process. Upon finishing, each worker will send, via named pipe, in parent process, summary statistics of the file he undertook.
+Each Worker process, for each catalog assigned to it, reads all its files in chronological order based on file names and fills a series of data structures( hashtables, linked lists, binary trees )that it will use for answer questions asked by the parent process. Upon finishing, each worker will send, via named pipe, in parent process, summary statistics of the files he undertook.
 
-When this procedure finished, the parent process receives [queries](./resources/manual.txt)via command line from user and send them to workers to proccess the input and calculate the results.
+When this procedure finished, the parent process receives [queries](./resources/manual.txt) via command line from user and send them to workers to proccess the input and calculate the results.
 
 The architectural design between parent and child proccesses is depicted below.
 
