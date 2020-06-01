@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "../headers/worker.h"
-#include "../Headers/heap.h"
 
 
 /*** Queries ***/

@@ -21,8 +21,9 @@ int main(int argc, char *argv[])
 {
     signal(SIGINT, signal_handler);
     signal(SIGQUIT, signal_handler);
+    signal(SIGTERM, )
 
-    //printf("Hallo from process id %d\n", getpid());
+    // printf("Hallo from process id %d\n", getpid());
 
     char read_fifo[100];
     char write_fifo[100];
@@ -87,7 +88,9 @@ int main(int argc, char *argv[])
 
     char * result = NULL;
 
-    //printf("I am ready to receive your queries\n");
+
+    // print_hash_table(&disease_HT);
+
 
     while(1) //worker is ready to receive queries
     {
@@ -102,7 +105,6 @@ int main(int argc, char *argv[])
         free(message);
     }
     
-    //print_hash_table(&disease_HT);
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
@@ -202,32 +204,25 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, HashTable * 
                     free(patient_attributes.lastName);
                     free(patient_attributes.diseaseID);
                     free(patient_attributes.country);
-                    //printf("Error : \n");
+                    //printf("Error\n");
                     log_info->fail++;
            
                 }
                 else if(strcmp(patient_attributes.status, "EXIT") == 0 && id_exist(patient_list, patient_attributes.recordID))
                 {    
                     updatePatientRecord( patient_attributes.recordID,  patient_attributes.exitDate, patient_list);
-                    // printf("{Patient updated : {");
-                    // printPatientData(patient_attributes);
-                    // printf("}\n");
                     log_info->success++;
                 }
                 else if(!id_exist(patient_list, patient_attributes.recordID) && (strcmp(patient_attributes.status, "ENTER") == 0))
                 {      
-                    //printf("New patient id is %s\n",  patient_attributes.recordID);          
+       
                     new_patient_node =  insertNewPatient(patient_list, patient_attributes);
-                    // printf("\nGinetai eisagogi tou asthni\n");
-                    // printPatientData(new_patient_node->patient);
                     insert_to_hash_table(disease_HT, patient_attributes.diseaseID, new_patient_node);
-                    //insert_to_hash_table(country_HT, patient_attributes.country, new_patient_node);
                     log_info->success++;
                 }
 
                 log_info->total++;
             }
-
             write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd);
             fclose(fp);
             strcpy(file_path, params.fileName);
@@ -363,24 +358,25 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
 char * read_from_fifo( int read_fd, int buffersize)
 {
     int bytes_in; //posa byte diavastikan apo tin read
-    int buffer_counter = 0;
+    int buffer_counter = 0 , input_size = 0;
+    char * token = NULL , *p = NULL;
 
     char temp[11];
 
     read(read_fd, temp, 10);
 
-    char *token = strtok(temp, "$");
-    int input_size = atoi(token); //tora ksero posa byte tha mou steilei
+    token = strtok(temp, "$");
+    input_size = atoi(token); //tora ksero posa byte tha mou steilei
     //printf("input_size is %d\n", input_size);
-    char * buffer = malloc(sizeof(char) * (input_size+1));
+    char * buffer = calloc(sizeof(char) , (input_size) + 1);
 
-    char *p = buffer;
+    p = buffer;
 
 
     while(buffer_counter < input_size)
     {
         //printf("Starting to read the message...\n");
-        bytes_in = read( read_fd,p, buffersize );//printf("bytes_in = %d\n", bytes_in);
+        bytes_in = read( read_fd, p, buffersize );//printf("bytes_in = %d\n", bytes_in);
         if (bytes_in == 0)
         {
             //printf("i reead girise 0\n");

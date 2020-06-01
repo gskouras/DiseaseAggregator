@@ -6,7 +6,7 @@ Worker_info * workers_array = NULL;
 int main(int argc, char* argv[])
 {
 
-	//signal(SIGCHLD, worker_handler);
+	signal(SIGCHLD, worker_handler);
 
 	Params params = inputValidate(argc, argv);
 
@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
 	readInputDirectory(&d_list, params.input_dir);
 
-	workers_array = malloc(sizeof(Worker_info) * params.numWorkers);
+	workers_array = calloc(sizeof(Worker_info) , params.numWorkers);
 
 	pid_t pid;
 	int status;
@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
 		else
 		{
 			workers_array[i].pid = pid;
-			workers_array[i].write_fifo = malloc(strlen(parentPipes[i])+1);
-			workers_array[i].read_fifo = malloc(strlen(workerPipes[i])+1);
+			workers_array[i].write_fifo = malloc(sizeof(char) * strlen(parentPipes[i])+1);
+			workers_array[i].read_fifo = malloc(sizeof(char) * strlen(workerPipes[i])+1);
 			initDirectorytList(&workers_array[i].country_list); 
 			strcpy( workers_array[i].write_fifo, parentPipes[i]);
 			strcpy (workers_array[i].read_fifo, workerPipes[i]);					 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
 	read_from_workers(workers_array, params);
 
-	printf("\nWrokers Received and Saved Requested Data Succesfully!\n");
+	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
 	printf("\nWelcome to Disease Aggregator Command Line Interface\n");
 
     cli(workers_array, params);
@@ -83,10 +83,18 @@ int main(int argc, char* argv[])
     	pid = wait(&status);
     	unlink(parentPipes[i]);
 		unlink(workerPipes[i]);
+		free(parentPipes[i]);
+		free(workerPipes[i]);
+		free(workers_array[i].write_fifo);
+		free(workers_array[i].read_fifo);
+		freeDirList(&workers_array[i].country_list);
     	//printf("%d\n", status);
     }
-
-    free(workers_array);	
+    free(parentPipes);
+    free(workerPipes);
+    free(workers_array);
+    freeDirList( &d_list);
+    free(params.input_dir);	
 	return 0;
 }
 
@@ -234,7 +242,7 @@ int worker(char * read_pipe, char * write_pipe, int bufferSize)
 	
 	char buffer[10];//printf("worker will start with procces id %u and %s %s\n", getpid(), read_pipe, write_pipe);
 	sprintf(buffer, "%d", bufferSize);
-	char *argv[]={"./workerz", 
+	char *argv[]={"./workers", 
     read_pipe, write_pipe, buffer , NULL}; 
     execvp(argv[0],argv);
 }

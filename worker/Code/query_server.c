@@ -20,11 +20,6 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 
 	df_tokenize(input, &disease, &country, &d1, &d2 );
 
-	// printf("Country is : %s\n", country);
-	// printf("Disease is %s\n",disease );
-	// print_date(d1);
-	// print_date(d2);
-
 	if(record_exist(disease, disease_HT)) //find if given disease exist
 	{			
 		int index = hash_fun(disease, disease_HT->size);
@@ -106,7 +101,10 @@ char * topAgeRanges(char *input, HashTable * disease_HT, Patient_list *list)
 	if(date_cmp(d1, d2) == 1) //date 2 is bigger	
 	{
 		printf("First Date must be smaller than second Date\n");
-		return NULL;
+		result = malloc(sizeof(char)* 2);
+		sprintf(result, "0");
+		free(disease);
+		return result;
 	}
 
 	// printf("Disease is %s \n", disease);
@@ -185,8 +183,6 @@ char * topAgeRanges(char *input, HashTable * disease_HT, Patient_list *list)
 		age_ranges[index] = 0;
 	}
 
-
-	//printf("%s\n",result );
 	free(country);
 	free(disease);
 	return result;
@@ -468,6 +464,5 @@ void topK_tokenize(char * input, char ** country, char ** disease, Date * d1, Da
 
     token = strtok(NULL, "\n");
     d2->year = atoi (token);  
-    printf("hii\n");
 
 }

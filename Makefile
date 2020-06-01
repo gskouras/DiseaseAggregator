@@ -2,8 +2,8 @@ all:  Aggregator Worker
 
 
 # Target to compile worker files seperately#
-Worker: query_server.o worker.o patient_list.o hash.o tree.o date_list.o heap.o
-	gcc -o  workerz  query_server.o worker.o patient_list.o date_list.o hash.o tree.o heap.o -g 
+Worker: query_server.o worker.o patient_list.o hash.o tree.o date_list.o
+	gcc -o  workers  query_server.o worker.o patient_list.o date_list.o hash.o tree.o -g 
 
 worker.o: ./worker/Code/worker.c
 	gcc -g -c ./worker/Code/worker.c
@@ -19,9 +19,6 @@ hash.o: ./worker/Code/hash.c
 
 tree.o: ./worker/Code/tree.c
 	gcc -g -c  ./worker/Code/tree.c
-
-heap.o: ./worker/Code/heap.c
-	gcc -g -c  ./worker/Code/heap.c
 
 query_server.o: ./worker/Code/query_server.c
 	gcc -g -c  ./worker/Code/query_server.c
@@ -40,15 +37,14 @@ pipe.o:	 ./code/pipe.c
 input_list.o:	./code/input_list.c
 	gcc -c -g ./code/input_list.c
 
-
 clean:
 	rm *.o
 	rm log*
 	rm diseaseAggregator
-	rm workerz
+	rm workers
 
 run:
 	./diseaseAggregator
 
 val:
-	valgrind --trace-children=yes ./diseaseAggregator
+	valgrind --trace-children=yes --track-origins=yes --leak-check=full ./diseaseAggregator

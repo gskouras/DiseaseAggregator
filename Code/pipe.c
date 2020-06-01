@@ -125,7 +125,7 @@ void cli( Worker_info * workers_array, Params params )
                     token = strtok(NULL, " ");
                     token = strtok(NULL, " ");
 
-                    printf("Country is %s\n",token );
+                    //printf("Country is %s\n",token );
 
                     char * country = malloc(sizeof(char) * strlen(token) + 1);
                     strcpy(country, token);
@@ -371,12 +371,11 @@ int initialize_dirPaths(Directory_list* d_list, Worker_info* workers_array, char
 
 int read_from_fifo( int read_fd, int buffersize)
 {
-    int bytes_in = 0, input_size; //posa byte diavastikan apo tin read
+    int bytes_in = 0, input_size = 0; //posa byte diavastikan apo tin read
     int buffer_counter = 0;
-    char *token;
-    char *p;
-    char temp[100];
+    char *token = NULL , *p = NULL;;
 
+    char temp[11];
 
     //printf("read fd is %d\n",read_fd );
     read(read_fd, temp, 10);
@@ -385,12 +384,13 @@ int read_from_fifo( int read_fd, int buffersize)
     //printf("token is %s\n", token);
     input_size = atoi(token); //tora ksero posa byte tha mou steilei
     
+    
     char buffer[10000]; //(char *)malloc(sizeof(char) * (input_size +1));
     memset(buffer, 0, input_size +1);
 
     p = buffer;
 
-    if(input_size > buffersize)
+    if( input_size > buffersize)
         buffersize = input_size + 1;
 
     // printf("input size is %d\n",input_size );
@@ -400,9 +400,16 @@ int read_from_fifo( int read_fd, int buffersize)
         return 0;
 
     buffer[input_size]='\0';
+
+
+    // printf("atoi buffer is %d\n", atoi(buffer));
+    // if(isdigit(atoi(buffer)))
+    // {
+    //     printf("eimai psifio\n");
+    // }
+
     if (strcmp(buffer, "0") !=0)
         printf("%s\n",buffer);
-    //printf("strlen of buffer = %ld\n", strlen(buffer));
     if (strlen(buffer) == 0)
         return 0;
 
@@ -413,14 +420,14 @@ int read_from_fifo( int read_fd, int buffersize)
 void write_to_fifo(int  write_fd, char * message)
 {
     int message_len = strlen(message);
-    char temp[11];
+    char* temp = calloc(sizeof(char) , strlen(message) + 1);
 
     sprintf(temp, "%d$", message_len);
     //printf("temp is %s\n", temp);
     write(write_fd, temp, 10);
     //printf("message is %s \n", message);
     write(write_fd, message, message_len);
-
+    free(temp);
 }
 
 

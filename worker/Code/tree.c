@@ -36,17 +36,10 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 	}
 
 	if (date_cmp(date,tree_node->date) == 2) // equal dates
-	{
-		Date_Node *temp = tree_node->date_list.head;
-		while(temp != NULL)
-		{	
-			if(temp->patient_node->patient.recordID != this_patient->patient.recordID)
-				insertNewDate(&tree_node->date_list , this_patient);
-			temp = temp->next;
-		}
+	{			
+		insertNewDate(&tree_node->date_list , this_patient);
 		return tree_node;
 	}
-
 
 	// /**** Recursive Insert ****/
 	if (date_cmp(date, tree_node->date) == 0) //date 2 is bigger
@@ -57,6 +50,9 @@ Tree_Node * tree_insert( Tree_Node * tree_node , Date date , Patient_Node * this
 	{
 		tree_node->right = tree_insert(tree_node->right, date, this_patient);
 	}
+
+
+
  
 	tree_node->height = max(get_height(tree_node->left), get_height(tree_node->right)) + 1;
 
@@ -147,13 +143,17 @@ void tree_search_dateRange (Tree_Node * this, Date d1, Date d2, int *counter, in
 	/* if root's data lies in range, then prints root's data */
 	if(((date_cmp(d1, this->date) == 0) || (date_cmp(d1, this->date) == 2)) && ((date_cmp(d2, this->date) ==1) || (date_cmp(d2, this->date) == 2)))
 	{
-		exit = this->date_list.head->patient_node->patient.exitDate;
-		enter = this->date_list.head->patient_node->patient.entryDate;
-
-		if(date_cmp(enter, exit) == 1 && flag == 1) //this means that the patient has no exit date
-			*counter = *counter + 1;
-		else if(date_cmp(enter, exit) == 0 && flag == 0)
-			*counter = *counter + 1;
+		Date_Node *temp = this->date_list.head;
+		while(temp != NULL)
+		{
+			exit = temp->patient_node->patient.exitDate;
+			enter = temp->patient_node->patient.entryDate;		
+			if(date_cmp(enter, exit) == 1 && flag == 1) //this means that the patient has no exit date
+				*counter = *counter + 1;
+			else if(date_cmp(enter, exit) == 0 && flag == 0)
+				*counter = *counter + 1;
+			temp = temp->next;
+		}
 	}
 
   	/* If root->data is smaller than k2, then only we can get o/p keys 
@@ -187,11 +187,11 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
 		{
 			exit = temp->patient_node->patient.exitDate;
 			enter = temp->patient_node->patient.entryDate;
-			//printf("Sigkrino ton astheny me xora %s me tin xora %s\n", temp->patient_node->patient.country, country );
 			if(strcmp(temp->patient_node->patient.country, country)== 0)
-			{							
+			{						
 				if(date_cmp(enter, exit) == 1 && flag == 1) //this means that the patient has no exit date
 				{
+					//printPatientData(temp->patient_node->patient);
 					*counter = *counter + 1;
 					//printf("counter is %d\n", *counter);
 				}	

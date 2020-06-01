@@ -32,6 +32,7 @@ void insertNewDate(Date_List * list, Patient_Node * patient_node)
 	list->counter++;
 	list->tail->next = new_date;
 	list->tail = new_date;
+	//printPatientData(new_date->patient_node->patient);
 	return;
 }
 

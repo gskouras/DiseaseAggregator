@@ -163,8 +163,7 @@ int  insert_to_bucket_list (Bucket_List * this_list, char * string, Patient_Node
 
 int insert_to_bucket(Bucket_Node *this_bucket, char * string, Patient_Node * this_patient) 
 {
-	//printf("i eggrafi benei me stoixeia\n");
-	// printPatientData(this_patient->patient);
+	//printPatientData(this_patient->patient);
 	// printf("String to be copied is %s\n", string);
 	// printf("this bucket slot ocunter is %d\n", this_bucket->slot_counter );
 
