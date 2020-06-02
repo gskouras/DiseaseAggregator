@@ -37,16 +37,12 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 					if(country == NULL)
 					{
 						tree_search_dateRange( temp->bucket_item[i].root, d1, d2, &counter, flag);
-						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						// print_date(d1); print_date(d2); printf("\n");
 						found = 1;
 						break;
 					}
 					else
 					{
 						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
-						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);
 						found = 1;
 						break;
 					}
@@ -66,19 +62,9 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 		return result;
 	}
 	
-	if(country)
-	{
-		result = malloc(sizeof(char)* 10);
-		//printf("Country is %s\n", country);
-		sprintf(result, "%s : ", country);
-		sprintf(result, "%s%d", result, counter);\
-	}
-	else
-	{
-		result = malloc(sizeof(char)* 10);
-		sprintf(result, "%d", counter);
-		//printf("NPA result is %s", result);
-	}
+	result = malloc(sizeof(char)* 10);
+	sprintf(result, "%d", counter);
+
 	free(disease);
 	free(country);
 	return result;
@@ -107,12 +93,6 @@ char * topAgeRanges(char *input, HashTable * disease_HT, Patient_list *list)
 		return result;
 	}
 
-	// printf("Disease is %s \n", disease);
-	// printf("Country is %s\n", country);
-	// printf("k is %d\n",k );
-	// print_date(d1);
-	// printf("\n");
-	// print_date(d2);
 	int * age_ranges = malloc(sizeof(int)* 4);
 	for (int i = 0; i < 4; ++i)
 	{
@@ -125,14 +105,10 @@ char * topAgeRanges(char *input, HashTable * disease_HT, Patient_list *list)
 	{
 		for (int i = 0; i < temp->slot_counter; ++i)
 		{
-			//printf("Sigkrino tin asthenia %s me tin asthenia %s\n", temp->bucket_item[i].string, disease);
+
 			if(strcmp(temp->bucket_item[i].string, disease) == 0)
 			{
-				//printf("beno na psakso xoris na dosei xora o xristis\n");
-				//tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
-				tree_search_Age_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, age_ranges);
-				//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-				// print_date(d1); print_date(d2); printf(" in Country %s\n", country);					
+				tree_search_Age_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, age_ranges);			
 				found = 1;
 				break;	
 			}
@@ -220,19 +196,14 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 				{	
 					if(country != NULL)
 					{						
-						//printf("beno na psakso xoris na dosei xora o xristis\n");
-						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);
-						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);					
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);	
 						found = 1;
 						break;
 					}
 					else if(temp_country != NULL)
 					{
-						//printf("beno na psakso me xora pou edose o xristis\n");
-						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, temp_country, &counter, flag);
-						//printf("Disease %s has a total of %d incidents between ", temp->bucket_item[i].string, counter);
-						// print_date(d1); print_date(d2); printf(" in Country %s\n", country);					
+
+						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, temp_country, &counter, flag);				
 						found = 1;
 					}
 				}
@@ -241,11 +212,8 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 		}
 	}
 
-	//printf("Calculation over::: Counter is %d\n", counter);
-
 	if(!found)
 	{
-		//printf("didnt found!!!\n");
 		result = malloc(sizeof(char)* 2);
 		sprintf(result, "0");
 		free(disease);
@@ -255,7 +223,6 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	if(country)
 	{
 		result = malloc(sizeof(char)* 10);
-		//printf("Country is %s\n", country);
 		sprintf(result, "%s : ", country);
 		sprintf(result, "%s%d", result, counter);
 		free(disease);
@@ -264,7 +231,6 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	else if(temp_country)
 	{
 		result = malloc(sizeof(char)* 10);
-		//printf("Country is %s\n", temp_country);
 		sprintf(result, "%s : ", temp_country);
 		sprintf(result, "%s%d", result, counter);
 		free(disease);
@@ -285,8 +251,6 @@ Patient searchPatientRecord(char * input, Patient_list * list)
 	{	
 		if(strcmp(temp->patient.recordID, input)==0)
 		{
-			// printf("I eggrafi vrethike me stoixeia \n");
-			// printPatientData(temp->patient);
 			return temp->patient;
 		}
 

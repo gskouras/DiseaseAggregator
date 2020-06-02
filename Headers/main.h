@@ -23,6 +23,14 @@ typedef struct
 } Params;
 
 
+typedef struct
+{
+	int total;
+	int success;
+	int fail;
+} Log_Info;
+
+
 int digitValidate( char *a );
 
 Params inputValidate ( int argc, char *argv[]);
@@ -37,13 +45,16 @@ int checkAllFlags(Worker_info *, int);
 
 void initAllFlags(Worker_info *, int);
 
-void cli( Worker_info * , Params );
+void cli( Worker_info * , Params ,int *, Log_Info *);
 
+int find_worker_pos( pid_t );
 
 /**** Signal Handlers ****/
 void worker_handler( int );
 
-int find_worker_pos( pid_t );
+void signal_handler(int sig);
+
+/*********************/
 
 
 

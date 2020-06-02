@@ -1,6 +1,6 @@
 ## Disease Aggregator
 
-### [System Programming](http://cgi.di.uoa.gr/~mema/courses/k24/k24.html) - [Second Assigment](./resources/hw2-spring-2020.pdf)
+### [System Programming](http://cgi.di.uoa.gr/~mema/courses/k24/k24.html) - [Second Assigment](./resources/lib/hw2-spring-2020.pdf)
 
 Aim of this Project is to get acquainted with creating proccesses making use of the fork/exec system calls, inter-process communication(IPC) via named pipes and signals, the use of low-level I\O and bash script creation.
 
@@ -17,7 +17,7 @@ When this procedure finish, the parent process receives [queries](./resources/ma
 
 The architectural design between parent and child proccesses is depicted below.
 
->![alt text](./resources/parent-child.jpg "Communication")
+>![alt text](./resources/lib/parent-child.jpg "Communication")
 
 ### Compilation and Running
 
@@ -31,9 +31,9 @@ make run
 ```
 Execution with personalized parameters
  ```bash
-  ./diseaseAggregator -w # -b # -i # 
+  ./diseaseAggregator -w -b -i  
  ```
-where -w # is the number of worker proccesess, -b # is the buffer size for reading trough named-pipes and -i # is the path of the input directory
+where -w is the number of worker proccesess, -b is the buffer size for reading trough named-pipes and -i is the path of the input directory
 
 ### Bash Script
 

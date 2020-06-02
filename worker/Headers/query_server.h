@@ -2,7 +2,7 @@
 #define QUERY_SERVER_H_
 #include <stdio.h>
 
-#include "../headers/worker.h"
+#include "../Headers/worker.h"
 
 
 /*** Queries ***/

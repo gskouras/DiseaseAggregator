@@ -2,17 +2,25 @@
 
 Params params;	
 Worker_info * workers_array = NULL;
+Log_Info log_info;
+int kill_flag;
+Directory_list d_list;
 
 int main(int argc, char* argv[])
 {
 
 	signal(SIGCHLD, worker_handler);
+	signal(SIGINT, signal_handler);
+	signal(SIGQUIT, signal_handler);
 
-	Params params = inputValidate(argc, argv);
+	kill_flag = 1;
 
-	Directory_list d_list;
+	params = inputValidate(argc, argv);
 
 	readInputDirectory(&d_list, params.input_dir);
+
+	if(params.numWorkers > d_list.counter)
+		params.numWorkers = d_list.counter;
 
 	workers_array = calloc(sizeof(Worker_info) , params.numWorkers);
 
@@ -20,6 +28,10 @@ int main(int argc, char* argv[])
 	int status;
 	char ** parentPipes;
 	char ** workerPipes;
+
+	log_info.total = 0;
+    log_info.success = 0;
+    log_info.fail = 0;
 
 	parentPipes = malloc(params.numWorkers *sizeof(char*));
 	workerPipes = malloc(params.numWorkers *sizeof(char*));
@@ -73,10 +85,16 @@ int main(int argc, char* argv[])
 
 	read_from_workers(workers_array, params);
 
-	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
-	printf("\nWelcome to Disease Aggregator Command Line Interface\n");
+	for (int i = 0; i < params.numWorkers; ++i)
+	{
+		log_info.total++;
+		log_info.success++;
 
-    cli(workers_array, params);
+	}
+
+	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
+
+    cli(workers_array, params, &kill_flag, &log_info);
 
     for (int i = 0; i < params.numWorkers; ++i)
     {
@@ -116,7 +134,6 @@ void read_from_workers( Worker_info * workers, Params params)
 
      	poll(fdarray, params.numWorkers, -1);
      	//printf("Infinite\n");
-     	//sleep(1);
      	for (i = 0; i < params.numWorkers; i++)
      	{
      		
@@ -205,7 +222,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 1;
+        params.numWorkers = 8;
         params.bufferSize = 512;
         params.input_dir = malloc(sizeof(char) *25);
         strcpy(params.input_dir, "./resources/input_dir");
@@ -265,18 +282,22 @@ void worker_handler( int sig )
 	pid = waitpid(-1, &status, WNOHANG);
 	index = find_worker_pos(pid);
 
-	//printf("index of procces id %d which died is %d\n",pid, index );
-	if(sig == SIGCHLD)
+	if(kill_flag == 1)
 	{
+		printf("\n\nProcces %d terminated suddenly..\n", pid);
+		printf("Creating a new proccess to replace it...\n");
+		printf("\nPrinting Summary statistics...\n");
+
 		new_pid = fork();
+
 
 		if (new_pid == 0)
 		{
 			worker(workers_array[index].write_fifo, workers_array[index].read_fifo, params.bufferSize);
 		}
-		sleep(1);
-		// workers_array[index].write_fd = open(workers_array[index].write_fifo, O_WRONLY | O_NONBLOCK);
-	 //    workers_array[index].read_fd =  open(workers_array[index].read_fifo, O_RDONLY | O_NONBLOCK); 
+
+		sleep(2);
+		workers_array[index].pid = new_pid;
 	    if(workers_array[index].country_list.counter > 1) // an o sigekrimenos worker exei parapano apo mia xores
 		{
 	        char message_buffer[1000]="";
@@ -301,23 +322,73 @@ void worker_handler( int sig )
 
 	        strcat(message_buffer, temp_buffer); //ston synoliko message buffer vazo ton temp
 	        //printf("message_buffer is %s\n", message_buffer );
-	        //printf("i am writing to %s\n",workers_array[index].write_fifo );
-	        write_to_fifo(workers_array[index].write_fd, message_buffer); //grafo se olous tous worker ta path me tis xores
-			
-	        //printf("writed from ifto %s countries %s\n",workers_array[index].write_fifo, message_buffer );
+	        //printf("i am writing to %s\n",workers_array[index].write_fifo);
+
+	        //printf("handler write_df is %d\n", workers_array[index].write_fd);
+	       	write_to_fifo(workers_array[index].write_fd, message_buffer); //grafo se olous tous worker ta path me tis xores
+			read_from_workers(workers_array, params);			
+	        //printf("write to fifo %s countries %s\n",workers_array[index].write_fifo, message_buffer );
 		}
-		else //an exeis mono mia xora apla partin apo ti lista kai grapstin sto fifo
+		else
 		{
 	        char message_buffer[1000] = "";
 	        char temp_buffer[1000] = "";
 			CountryPath_Node *temp =  get_country(&workers_array[index].country_list, 0);
 			strcat(message_buffer, temp->country_path);
 			write_to_fifo(workers_array[index].write_fd, message_buffer);
+			read_from_workers(workers_array, params);
 		}
-	}	
+		printf("\nNow you can Insert Queries Again!\n");
+	}
+
+	return;
 }
 
 
+void signal_handler(int sig)
+{
+	kill_flag = 0;
+	char logs[50];
+	int status;
+	memset(logs, '\0', sizeof(logs));
+	for (int i = 0; i < params.numWorkers; ++i)
+    {	
+		kill(workers_array[i].pid, SIGKILL);
+		pid_t pid = wait(&status);
+   	}
+
+   	sprintf(logs, "log_file_aggregator.");
+    sprintf(logs + strlen(logs), "%u", getpid());
+
+    FILE *fp = fopen(logs, "w");
+
+    CountryPath_Node* temp = NULL;
+    int counter = d_list.counter;
+    char *token = NULL;
+    int index = 0;
+        
+    while(counter > 0)
+    {
+        temp = get_country(&d_list, index);
+        //printf("temp->country path is %s\n", temp->country_path);
+        token = strtok(temp->country_path, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+
+        //printf("token is %s\n", token );
+        fprintf(fp, "%s\n", token);
+        index++;
+        counter--;
+    }
+
+    fprintf(fp, "Total: %d\n", log_info.total);
+    fprintf(fp, "Success: %d\n", log_info.success);
+    fprintf(fp, "Fail: %d\n" , log_info.fail);
+
+    fclose(fp);
+    exit(0);
+}
 
 
 

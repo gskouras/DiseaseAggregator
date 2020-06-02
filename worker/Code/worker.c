@@ -11,9 +11,9 @@ Logfile_Info log_info;
 Directory_list d_list;
 
 Patient_list patient_list;
-
 HashTable disease_HT;
 HashTable country_HT;
+
 
 /**********************************************************************************/
 
@@ -21,9 +21,8 @@ int main(int argc, char *argv[])
 {
     signal(SIGINT, signal_handler);
     signal(SIGQUIT, signal_handler);
-    signal(SIGTERM, )
 
-    // printf("Hallo from process id %d\n", getpid());
+    // printf("Hallo from the other side id %d\n", getpid());
 
     char read_fifo[100];
     char write_fifo[100];
@@ -31,22 +30,19 @@ int main(int argc, char *argv[])
     int buffer_counter = 0;
     strcpy(read_fifo, argv[1]);
     strcpy(write_fifo, argv[2]);
+    char * token = NULL;
 
     // printf("read fifo is %s\n", read_fifo);
     // printf("write_fifo is %s\n", write_fifo);
 
     int read_fd = open(read_fifo, O_RDONLY);
-    //printf("read_fd is %d\n",read_fd );
+    // printf("read_fd is %d\n",read_fd );
 
     int write_fd = open(write_fifo, O_WRONLY);
 
-    //printf("write_fd is %d\n", write_fd);
+    // printf("write_fd is %d\n", write_fd);
     char * message = read_from_fifo(read_fd, buffersize);
-
-    //printf("message is");
-    //printf("%s\n",message );
-
-    // printf("Starting....\n");
+    
     Params params;
     params.disHashSize = 15;
     params.countryHashSize = 5;
@@ -58,7 +54,7 @@ int main(int argc, char *argv[])
     initPatientList(&patient_list);
     initDirectorytList(&d_list);
 
-    char *token = strtok(message , "$");
+    token = strtok(message , "$");
     int prev_token_len = strlen(token);
     
     char *p = message;
@@ -88,6 +84,7 @@ int main(int argc, char *argv[])
 
     char * result = NULL;
 
+    int sig_flag = 0;
 
     // print_hash_table(&disease_HT);
 
@@ -101,8 +98,8 @@ int main(int argc, char *argv[])
         //printf("result is %s\n",result );
         write_to_fifo (write_fd, result); //to message tha prokipsei einai to apotelesma tou query
         
-        free(result);
-        free(message);
+        // free(result);
+        // free(message);
     }
     
     destroyHashTable(&disease_HT);
@@ -359,37 +356,37 @@ char * read_from_fifo( int read_fd, int buffersize)
 {
     int bytes_in; //posa byte diavastikan apo tin read
     int buffer_counter = 0 , input_size = 0;
-    char * token = NULL , *p = NULL;
+    char * token = NULL , *p = NULL, *buffer = NULL;
 
     char temp[11];
 
-    read(read_fd, temp, 10);
+    if(read(read_fd, temp, 10)==0)
+        perror("Error");
+
 
     token = strtok(temp, "$");
     input_size = atoi(token); //tora ksero posa byte tha mou steilei
-    //printf("input_size is %d\n", input_size);
-    char * buffer = calloc(sizeof(char) , (input_size) + 1);
-
+    // printf("input_size is %d\n", input_size);
+    buffer = malloc(sizeof(char) * (input_size) + 1);
     p = buffer;
-
 
     while(buffer_counter < input_size)
     {
-        //printf("Starting to read the message...\n");
+        // printf("Starting to read the message...\n");
         bytes_in = read( read_fd, p, buffersize );//printf("bytes_in = %d\n", bytes_in);
-        if (bytes_in == 0)
-        {
-            //printf("i reead girise 0\n");
-            break;
-        }
+        // if (bytes_in == 0)
+        // {
+        //     printf("i reead girise 0\n");
+        //     return "Lathos";
+        // }
         if(buffer_counter + bytes_in > input_size)
             bytes_in = input_size-buffer_counter;
         
         p += bytes_in;
         buffer_counter += bytes_in;
-        //printf("Bytes in are: %d\n", bytes_in);
+        // printf("Bytes in are: %d\n", bytes_in);
     }
-    //printf("End of read\n");
+    // printf("End of read\n");
 
     buffer[input_size]='\0';
     // printf("I receive your message :::: %s\n", buffer);
@@ -543,10 +540,10 @@ Patient line_tokenize(char *line, Patient patient, char * date, char * country )
 
 void signal_handler(int sig)
 {
-
+    sleep(1); 
     char buffer[30] = "";
 
-    sprintf(buffer, "log_file.");
+    sprintf(buffer, "log_file_worker.");
     sprintf(buffer + strlen(buffer), "%u", getpid());
 
     FILE *fp = fopen(buffer, "w");
@@ -581,5 +578,5 @@ void signal_handler(int sig)
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
     freeDirList(&d_list);
-}
 
+}

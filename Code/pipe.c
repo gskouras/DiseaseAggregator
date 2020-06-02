@@ -2,19 +2,22 @@
 #include "../headers/main.h"
 
 
-void cli( Worker_info * workers_array, Params params )
+void cli( Worker_info * workers_array, Params params, int * kill_flag , Log_Info * log_info)
 {
+
+    printf("\n\t\t\t##########  WELCOME TO DISEASE Aggregator COMMAND LINE INTERFACE  ##########\n\n"); 
+    printf("You can use the available commands listed in the manual page. Type /man to see the manual page or type /exit to quit\n\n");
 
     char *input = NULL, *line = NULL, *cmd = NULL;
     size_t len = 0;
-    ssize_t read;
+    ssize_t reads;
 
     // printf("\t\t\t##########  WELCOME TO DISEASE MONITOR COMMAND LINE INTERFACE  ##########\n\n"); 
     // printf("You can use the available commands listed in the manual page. Type /man to see the manual page or type /exit to quit\n\n");
     printf("\n");
     putchar('>');
 
-    while ((read = getline(&line, &len, stdin)) != EOF) 
+    while ((reads = getline(&line, &len, stdin)) != EOF) 
     {
         input = line;
         cmd = strtok_r(input, " \n", &input);
@@ -44,6 +47,8 @@ void cli( Worker_info * workers_array, Params params )
                         printf("%s %u\n",country, workers_array[i].pid );
                         index++;
                         list_counter--;
+                        log_info->success++;
+                        log_info->total++;
                     }
                     index = 0;
                 }
@@ -53,6 +58,8 @@ void cli( Worker_info * workers_array, Params params )
                 if (input != NULL && strlen(input) < 20  || input == NULL)
                 {
                     printf("Please Insert valid Data\n");
+                    log_info->fail++;
+                    log_info->total++;
                     putchar('>');
                     continue;
                 }
@@ -63,14 +70,41 @@ void cli( Worker_info * workers_array, Params params )
                     strcat(query, input);
                     //printf("query is %s\n", query);
 
-                    if (strlen(query) <= 30) // Sent Query to All Workers
+                    if (strlen(query) < 30) // Sent Query to All Workers
                     {
+                        int sum = 0;
                         for (int i = 0; i < params.numWorkers; ++i)
                         {
                             //printf("stelno se pollous worker\n");
                             write_to_fifo(workers_array[i].write_fd, query);
-                            read_from_workers(workers_array, params);
-                        }                        
+                            usleep(1000);
+
+                            char *temp = malloc(sizeof(char) * 20);
+                                // //printf("read fd is %d\n", );
+                            read(workers_array[i].read_fd, temp, 10);
+    
+                            char *token = strtok(temp, "$");//printf("token = %s\n", token);
+                                                            //printf("token is %s\n", token);
+                            int input_size = atoi(token); //tora ksero posa byte tha mou steilei
+                                                               
+                            char buffer[10000]; //(char *)malloc(sizeof(char) * (input_size +1));
+                            memset(buffer, 0, input_size +1);
+
+                            char *p = buffer;
+
+                            if( input_size > params.bufferSize)
+                                    params.bufferSize = input_size + 1;
+
+                            read( workers_array[i].read_fd, p, input_size);//printf("bytes_in = %d\n", bytes_in);
+
+                            buffer[input_size]='\0';
+                            sum += atoi(buffer);
+                        }
+                        
+                        printf("%d\n",sum );
+                        log_info->success++;
+                        log_info->total++;
+                        sum = 0;                  
                     }
                     else // Sent Query to the Worker with the specific country
                     {
@@ -94,10 +128,14 @@ void cli( Worker_info * workers_array, Params params )
                             //printf("stelno se ena worker\n");
                             write_to_fifo(workers_array[pos].write_fd, query);
                             read_from_workers(workers_array, params);
+                            log_info->success++;
+                            log_info->total++;
                         }
                         else
                         {
                             printf("Error: Requested Country Doesnt Exist\n");
+                            log_info->fail++;
+                            log_info->total++;
                         }
                     }
                 }
@@ -108,6 +146,8 @@ void cli( Worker_info * workers_array, Params params )
                 if (input != NULL && (strlen(input) < 30) || input == NULL)
                 {
                     printf("Please Insert valid Data \n");
+                    log_info->fail++;
+                    log_info->total++;
                     putchar('>');
                     continue;
                 }
@@ -138,10 +178,14 @@ void cli( Worker_info * workers_array, Params params )
                         //printf("stelno se ena worker\n");
                         write_to_fifo(workers_array[pos].write_fd, query);
                         read_from_workers(workers_array, params);
+                        log_info->success++;
+                        log_info->total++;
                     }
                     else
                     {
                         printf("Error: Requested Country Doesnt Exist\n");
+                        log_info->fail++;
+                        log_info->total++;
                     }                    
                 }
             } 
@@ -150,8 +194,10 @@ void cli( Worker_info * workers_array, Params params )
 
                 if (input == NULL ||  digitValidate(input))
                 {
-                    printf("Error :  \n");
+                    printf("Error\n");
                     putchar('>');
+                    log_info->fail++;
+                    log_info->total++;
                     continue;
                 }
                 else
@@ -163,6 +209,8 @@ void cli( Worker_info * workers_array, Params params )
                         strcat(query, input);
                         write_to_fifo(workers_array[i].write_fd, query);
                         read_from_workers(workers_array, params);
+                        log_info->success++;
+                        log_info->total++;
                     }   
                 }
             } 
@@ -171,6 +219,8 @@ void cli( Worker_info * workers_array, Params params )
                 if ((input != NULL && strlen(input) < 20 || input == NULL))
                 {
                     printf("Please Insert valid Data\n");
+                    log_info->fail++;
+                    log_info->total++;
                     putchar('>');
                     continue;
                 }
@@ -188,6 +238,8 @@ void cli( Worker_info * workers_array, Params params )
                             //printf("Parent : stelno se pollous worker to query:: %s\n", query);
                             write_to_fifo(workers_array[i].write_fd, query);
                             read_from_workers(workers_array, params);
+                            log_info->success++;
+                            log_info->total++;
                         }                        
                     }
                     else // Sent Query to the Worker with the specific country
@@ -212,9 +264,13 @@ void cli( Worker_info * workers_array, Params params )
                             //printf("stelno se ena worker\n");
                             write_to_fifo(workers_array[pos].write_fd, query);
                             read_from_workers(workers_array, params);
+                            log_info->success++;
+                            log_info->total++;
                         }
                         else
                         {
+                            log_info->fail++;
+                            log_info->total++;
                             printf("Error: Requested Country Doesnt Exist\n");
                         }
                     }
@@ -229,6 +285,7 @@ void cli( Worker_info * workers_array, Params params )
                 printf("\nExiting Disease Aggregator..\n\n"); //Done
                 for (int i = 0; i < params.numWorkers; ++i)
                 {
+                    *kill_flag = 0;
                     kill(workers_array[i].pid, SIGKILL);
                 }
                 free(line);
@@ -237,6 +294,8 @@ void cli( Worker_info * workers_array, Params params )
             else 
             {
                 fprintf(stdout, "~ error: %s: command not found!\n", cmd);
+                log_info->fail++;
+                log_info->total++;
             }
             
         }
@@ -255,7 +314,7 @@ void open_manual()
     char filename[100], c; 
   
     // Open file 
-    fptr = fopen("./Resources/manual.txt", "r"); 
+    fptr = fopen("./resources/lib/manual.txt", "r"); 
     if (fptr == NULL) 
     { 
         printf("Cannot open file manual \n"); 
@@ -373,13 +432,18 @@ int read_from_fifo( int read_fd, int buffersize)
 {
     int bytes_in = 0, input_size = 0; //posa byte diavastikan apo tin read
     int buffer_counter = 0;
-    char *token = NULL , *p = NULL;;
+    char *token = NULL , *p = NULL;
 
-    char temp[11];
+    char *temp = malloc(sizeof(char) * 20);
 
     //printf("read fd is %d\n",read_fd );
-    read(read_fd, temp, 10);
-    //printf("temp is %s\n",temp );
+    if (read(read_fd, temp, 10)== -1)
+    {
+        free(temp);
+        return 0;
+    }
+
+    
     token = strtok(temp, "$");//printf("token = %s\n", token);
     //printf("token is %s\n", token);
     input_size = atoi(token); //tora ksero posa byte tha mou steilei
@@ -396,17 +460,10 @@ int read_from_fifo( int read_fd, int buffersize)
     // printf("input size is %d\n",input_size );
     bytes_in = read( read_fd, p, input_size );//printf("bytes_in = %d\n", bytes_in);
     // printf("I read %d bytes\n", bytes_in);
-    if (bytes_in == 0)
-        return 0;
+
 
     buffer[input_size]='\0';
 
-
-    // printf("atoi buffer is %d\n", atoi(buffer));
-    // if(isdigit(atoi(buffer)))
-    // {
-    //     printf("eimai psifio\n");
-    // }
 
     if (strcmp(buffer, "0") !=0)
         printf("%s\n",buffer);
@@ -414,6 +471,7 @@ int read_from_fifo( int read_fd, int buffersize)
         return 0;
 
     // printf("strlen of buffer is  %ld\n", strlen(buffer));
+    free(temp);
     return 1;
 }
 

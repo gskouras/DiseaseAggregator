@@ -1,0 +1,23 @@
+				##########  WELCOME TO DISEASE MONITOR MANUAL PAGE  ##########
+
+The available commands are listed above: 
+
+/**** Arguments in [..] can be ommited ***/
+
+/listCountries(/gl) :  Print the working file and id of each child proccess.
+
+/diseaseFrequency(/df) virusName date1 date2 [country]  : Printf total infections of a [country] in range [date1, date2]
+
+/topk-AgeRanges(/tka) k country disease date1 date2 : The application will print, for a given country and a given disease the top k age categories that
+there have been cases of this virus in this country and the percentage of their cases
+
+/searchPatientRecord(/spr) recordID : The parent process promotes the request to all Workers via named pipes and waits for a response from
+Worker with record recordID
+
+/numPatientAdmissions(/npa) disease date1 date2 [country] : If a country argument is given, the application will print, in a new line, the total number of patients that
+entered the hospital with the disease in that country during the period [date1
+date2]
+
+/numPatientDischarges(/npd) disease date1 date2 [country] : If the country argument is given, the application will print in a new line, the total number of patients with
+the disease that has been discharged from the hospital in that country during the period [date1
+date2].
