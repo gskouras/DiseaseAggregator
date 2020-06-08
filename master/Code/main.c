@@ -1,5 +1,8 @@
 #include "../headers/main.h"
 
+
+//ip address :  169.254.250.184/16 
+
 Params params;	
 Worker_info * workers_array = NULL;
 Log_Info log_info;
@@ -9,9 +12,9 @@ Directory_list d_list;
 int main(int argc, char* argv[])
 {
 
-	signal(SIGCHLD, worker_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, signal_handler);
+	// signal(SIGCHLD, worker_handler);
+	// signal(SIGINT, signal_handler);
+	// signal(SIGQUIT, signal_handler);
 
 	kill_flag = 1;
 
@@ -83,18 +86,14 @@ int main(int argc, char* argv[])
 
 	initialize_dirPaths(&d_list, workers_array, parentPipes, workerPipes, params.numWorkers);
 
-	read_from_workers(workers_array, params);
+	send_connection_info(workers_array, params);
 
-	for (int i = 0; i < params.numWorkers; ++i)
-	{
-		log_info.total++;
-		log_info.success++;
-
-	}
+	//read_from_workers(workers_array, params);
 
 	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
 
-    cli(workers_array, params, &kill_flag, &log_info);
+    //cli(workers_array, params, &kill_flag, &log_info);
+
 
     for (int i = 0; i < params.numWorkers; ++i)
     {
@@ -112,8 +111,21 @@ int main(int argc, char* argv[])
     free(workerPipes);
     free(workers_array);
     freeDirList( &d_list);
-    free(params.input_dir);	
+    free(params.input_dir);
+    free(params.serverIP);
 	return 0;
+}
+
+void send_connection_info(Worker_info * workers, Params params)
+{
+	char info[50];
+	sprintf(info ,"%s$%d", params.serverIP, params.serverPort);
+
+	for (int i = 0; i < params.numWorkers; i++)
+	{
+		write_to_fifo(workers_array[i].write_fd, info);
+	}
+	
 }
 
 void read_from_workers( Worker_info * workers, Params params)
@@ -222,8 +234,11 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 8;
+        params.numWorkers = 1;
         params.bufferSize = 512;
+        params.serverPort = 8000;
+        params.serverIP = malloc(sizeof(char) * 30);
+        strcpy(params.serverIP,  "127.0.0.1");
         params.input_dir = malloc(sizeof(char) *25);
         strcpy(params.input_dir, "./resources/input_dir");
         return params;
@@ -231,19 +246,22 @@ Params inputValidate (int argc, char *argv[])
 
     else
     { 
-    	if ( argc != 7 )
+    	if ( argc != 10 )
     	{
     		printf("Error. Arguement related error: Got %d, expectetd 7\n", argc);
     		exit(0);
     	}
 
-    	if ( (strcmp(argv[1], "-w") == 0 && strcmp(argv[3], "-b") == 0 && strcmp(argv[5], "-i") == 0)
-    	&& !digitValidate(argv[2]) && !digitValidate(argv[4]) )
+    	if ( (strcmp(argv[1], "-w") == 0 && strcmp(argv[3], "-b") == 0 && strcmp(argv[5], "-s") == 0  && strcmp(argv[7], "-p") == 0  && strcmp(argv[9], "-i") == 0)
+    	&& !digitValidate(argv[2]) && !digitValidate(argv[4]) && !digitValidate(argv[8]))
     	{
     		params.numWorkers = atoi(argv[2]);
         	params.bufferSize = atoi(argv[4]);
-        	params.input_dir = malloc(sizeof(char) *strlen(argv[6])+1);
-        	strcpy(params.input_dir, argv[6]);
+        	params.serverPort = atoi(argv[8]);
+        	params.serverIP = malloc(sizeof(char) * strlen(argv[6]) + 1);
+        	strcpy(params.serverIP, argv[6]);
+        	params.input_dir = malloc(sizeof(char) *strlen(argv[10]) + 1);
+        	strcpy(params.input_dir, argv[10]);
         	return params;
     	}
     	else 

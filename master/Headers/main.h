@@ -19,6 +19,8 @@ typedef struct
 {
 	int numWorkers;
 	int bufferSize;
+	int serverPort; 
+	char *serverIP;
 	char* input_dir;
 } Params;
 
@@ -36,6 +38,8 @@ int digitValidate( char *a );
 Params inputValidate ( int argc, char *argv[]);
 
 Directory_list* readInputDirectory( Directory_list * , char * );
+
+void send_connection_info(Worker_info * , Params);
 
 void initAllPipes( char **, char **, int);
 

@@ -11,6 +11,15 @@
 #include <dirent.h> 
 #include <sys/stat.h>
 #include <errno.h>
+#include <ctype.h>
+#include <pthread.h>
+#include <sys/socket.h>              
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>	
 #include "../Headers/hash.h"
 #include "../Headers/query_server.h"
 
@@ -22,8 +31,11 @@ typedef struct
 {
 	char fileName[50];
 	int disHashSize;
-	int countryHashSize;
 	int bucketsize;
+	int portNum;
+	int write_fd;
+	int read_fd;
+	char * ipAddress;
 } Params;
 
 
@@ -40,11 +52,11 @@ typedef struct
 
 /*** Utillity Functions ***/
 
-int readPatientRecordsFile (  Params ,  HashTable * , HashTable *, Patient_list *, int, Logfile_Info *);
+int readPatientRecordsFile (  Params ,  HashTable * , Patient_list *, int, Logfile_Info *);
 
 int digitValidate( char * );
 
-Params inputValidate ( int , char * argv[] );
+Params init_params(char *, char *, char **, char **, int);
 
 Patient line_tokenize( char * , Patient, char *, char * );
 
@@ -52,11 +64,11 @@ Patient line_tokenize( char * , Patient, char *, char * );
 
 /*** Fifo Related Functions ***/
 
-void write_summary_stats( HashTable *, char *, Date, int );
+void write_summary_stats( HashTable *, char *, Date, int, Params);
 
 char * read_from_fifo( int read_fd, int buffersize);
 
-void write_to_fifo(int  write_fd, char * message);
+void write_to_socket(int  write_fd, char * message);
 
 /*************************/
 
