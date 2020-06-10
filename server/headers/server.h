@@ -29,8 +29,7 @@ typedef struct {
 
 typedef struct {
 	Job *job_array;
-	int job_in;
-	int job_out;
+	int job_index;
 	int count;
 	int size;
 }Cycle_Buffer;
@@ -51,9 +50,9 @@ void init_cycle_buffer();
 
 int put_job(Job); //puts a job in the first available position
 
-int isEmpty();
+int buffer_isEmpty();
 
-int isFull();
+int buffer_isFull();
 
 Job get_job();
 

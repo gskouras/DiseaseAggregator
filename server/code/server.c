@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
     init_cycle_buffer();
 
-    printf("Circular buffer State is : job_in = %d, job_out = %d, count = %d, size = %d\n", circular_buffer->job_in, circular_buffer->job_out, circular_buffer->count, circular_buffer->size); 
+    printf("Circular buffer State is : job_index = %d count = %d, size = %d\n", circular_buffer->job_index, circular_buffer->count, circular_buffer->size); 
    
     for (int i = 0; i < params.numThreads; ++i)
     {
@@ -74,12 +74,6 @@ int main(int argc, char *argv[])
         if(put_job(new_job))
             printf("The new job inserted succesfully\n");
 
-
-        // char buffer[100000];
-        // read(new_sock,buffer,100000);
-
-        //printf("Buffer is %s\n",buffer);
-
         //close(new_sock); /* parent closes socket to client */
     }
 
@@ -94,17 +88,19 @@ int main(int argc, char *argv[])
 }
 
 
-
 void * handle_request()
 {
+    Job job;
     while(1)
     {
-        Job job = get_job();
+        job = get_job();
         printf("I took a job with fd = %d\n", job.fd);
         char buffer[100000];
         read(job.fd,buffer,100000);
 
         printf("Buffer is %s\n",buffer);
+
+        close(job.fd);
     }
     exit(0);
 }
@@ -112,23 +108,20 @@ void * handle_request()
 Job get_job() 
 {
     // lock mutex
-    //printf("circular_buffer->count is %d\n", circular_buffer->count);
     pthread_mutex_lock(&job_mutex);
-    //printf("Pao na paro ti douleia o counter einai %d\n", circular_buffer->count);
-    while (circular_buffer->count == 0) 
-    {    // NOTE: we use while instead of if! see above in producer code
-        pthread_cond_wait(&msg_in,&job_mutex);   
-    }
-    //printf("Pira ti douleia\n");
+
+    while (buffer_isEmpty())   
+        pthread_cond_wait(&msg_out,&job_mutex); //while buffer is empty this thread sleeps
+
     // receive message
-    Job job = circular_buffer->job_array[circular_buffer->job_out++];
-    if(circular_buffer->job_out == circular_buffer->size)
-        circular_buffer->job_out = 0;
+    Job job = circular_buffer->job_array[--circular_buffer->job_index];
+    if(buffer_isFull())
+        circular_buffer->job_index = 0;
 
     circular_buffer->count--;
     
     // signal the sender that something was removed from buffer
-    //pthread_cond_signal(&msg_out);
+    pthread_cond_signal(&msg_in);
     //printf("new job fd is %d\n", job.fd);
     pthread_mutex_unlock(&job_mutex);
 
@@ -139,39 +132,46 @@ Job get_job()
 
 /**** Cycle Buffer Functions ***/
 
+int put_job(Job job) //puts a job in the first available position
+{
+
+    pthread_mutex_lock(&job_mutex);
+
+    while (buffer_isFull())  //while buffer is full this thread sleeps
+        pthread_cond_wait(&msg_in,&job_mutex);   
+
+    circular_buffer->job_array[circular_buffer->job_index++] = job;
+    circular_buffer->count++;
+
+    pthread_cond_signal(&msg_out);
+    pthread_mutex_unlock(&job_mutex);
+    
+    return 1;
+}
+
 void init_cycle_buffer()
 {
     circular_buffer = malloc(sizeof(Cycle_Buffer));
     circular_buffer->job_array = malloc(sizeof(Job) * params.bufferSize);
-    circular_buffer->job_in = 0;
-    circular_buffer->job_out = 0;
+    circular_buffer->job_index = 0;
     circular_buffer->count = 0;
     circular_buffer->size = params.bufferSize;
 }
 
-int put_job(Job job) //puts a job in the first available position
+int buffer_isEmpty()
 {
-    int pos = circular_buffer->job_in;
-
-    if (circular_buffer->count < circular_buffer->size)
-    {
-        circular_buffer->job_array[pos] = job;
-        circular_buffer->job_in++;
-        circular_buffer->count++;
-        pthread_cond_signal(&msg_in);
+    if(circular_buffer->count == 0)
         return 1;
-    }
 
+    return 0;
 }
 
-int isEmpty()
+int buffer_isFull()
 {
+    if(circular_buffer->count == circular_buffer->size)
+        return 1;
 
-}
-
-int isFull()
-{
-
+    return 0;
 }
 
 /*************************/
