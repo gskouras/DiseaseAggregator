@@ -24,8 +24,7 @@ typedef struct
 
 typedef struct {
 	int flag; // 0 is means a job to send to workers 1 means a job that is send from workers
-	int start;
-	int tail;
+	int fd;
 }Job;
 
 typedef struct {
@@ -33,15 +32,32 @@ typedef struct {
 	int job_in;
 	int job_out;
 	int count;
+	int size;
 }Cycle_Buffer;
 
 
 
-int digitValidate(char *a);
+int digitValidate(char *);
+
+void * handle_request();
 
 Params inputValidate (int argc, char *argv[]);
 
 void perror_exit(char *);
+
+/**** Cycle Buffer Functions ***/
+
+void init_cycle_buffer();
+
+int put_job(Job); //puts a job in the first available position
+
+int isEmpty();
+
+int isFull();
+
+Job get_job();
+
+/*************************/
 
 
 #endif

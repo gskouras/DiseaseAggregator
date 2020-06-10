@@ -9,10 +9,12 @@ Log_Info log_info;
 int kill_flag;
 Directory_list d_list;
 
+volatile sig_atomic_t child_flag = 0;
+
 int main(int argc, char* argv[])
 {
 
-	// signal(SIGCHLD, worker_handler);
+	signal(SIGCHLD, worker_handler);
 	// signal(SIGINT, signal_handler);
 	// signal(SIGQUIT, signal_handler);
 
@@ -88,12 +90,9 @@ int main(int argc, char* argv[])
 
 	send_connection_info(workers_array, params);
 
-	//read_from_workers(workers_array, params);
-
 	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
 
-    //cli(workers_array, params, &kill_flag, &log_info);
-
+	getchar();
 
     for (int i = 0; i < params.numWorkers; ++i)
     {
@@ -234,7 +233,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 1;
+        params.numWorkers = 2;
         params.bufferSize = 512;
         params.serverPort = 8000;
         params.serverIP = malloc(sizeof(char) * 30);
@@ -296,6 +295,7 @@ void worker_handler( int sig )
 	pid_t pid, new_pid;
     int status;
     int index;
+    char info[50];
 
 	pid = waitpid(-1, &status, WNOHANG);
 	index = find_worker_pos(pid);
@@ -304,10 +304,8 @@ void worker_handler( int sig )
 	{
 		printf("\n\nProcces %d terminated suddenly..\n", pid);
 		printf("Creating a new proccess to replace it...\n");
-		printf("\nPrinting Summary statistics...\n");
 
 		new_pid = fork();
-
 
 		if (new_pid == 0)
 		{
@@ -339,13 +337,10 @@ void worker_handler( int sig )
 			}
 
 	        strcat(message_buffer, temp_buffer); //ston synoliko message buffer vazo ton temp
-	        //printf("message_buffer is %s\n", message_buffer );
-	        //printf("i am writing to %s\n",workers_array[index].write_fifo);
 
-	        //printf("handler write_df is %d\n", workers_array[index].write_fd);
-	       	write_to_fifo(workers_array[index].write_fd, message_buffer); //grafo se olous tous worker ta path me tis xores
-			read_from_workers(workers_array, params);			
-	        //printf("write to fifo %s countries %s\n",workers_array[index].write_fifo, message_buffer );
+	       	write_to_fifo(workers_array[index].write_fd, message_buffer); //grafo se olous tous worker ta path me tis xores		
+	        sprintf(info ,"%s$%d", params.serverIP, params.serverPort);
+			write_to_fifo(workers_array[index].write_fd, info);
 		}
 		else
 		{
@@ -354,9 +349,9 @@ void worker_handler( int sig )
 			CountryPath_Node *temp =  get_country(&workers_array[index].country_list, 0);
 			strcat(message_buffer, temp->country_path);
 			write_to_fifo(workers_array[index].write_fd, message_buffer);
-			read_from_workers(workers_array, params);
+			sprintf(info ,"%s$%d", params.serverIP, params.serverPort);
+			write_to_fifo(workers_array[index].write_fd, info);
 		}
-		printf("\nNow you can Insert Queries Again!\n");
 	}
 
 	return;

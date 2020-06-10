@@ -1,6 +1,7 @@
 #include "../Headers/worker.h"
 #include "../../code/input_list.c"
 
+void send_summary_stats(char *, Directory_list * , int, Params);
 
 char * query_handler(char * , HashTable *, HashTable * , Patient_list *, Directory_list * , int );
 
@@ -30,7 +31,7 @@ int main(int argc, char *argv[])
     int buffer_counter = 0;
     strcpy(read_fifo, argv[1]);
     strcpy(write_fifo, argv[2]);
-    char * token = NULL, *countries = NULL , *connect_info = NULL;
+    char * token = NULL, *countries = NULL , *connect_info = NULL, *summary_stats = NULL;
 
     Params params = init_params(read_fifo, write_fifo, &countries, &connect_info, buffersize);
     initHashTable(&disease_HT, params.disHashSize, params.bucketsize); 
@@ -41,6 +42,8 @@ int main(int argc, char *argv[])
     int prev_token_len = strlen(token);
     
     char *p = countries;
+
+    summary_stats = malloc(sizeof(char) * MAX_STATS);
     
     while (token)
     {   
@@ -50,7 +53,7 @@ int main(int argc, char *argv[])
         //printf("params filename of process id %u is %s\n", getpid() ,params.fileName );
         if(strlen(params.fileName)> 10)
         {
-            if(readPatientRecordsFile ( params, &disease_HT, &patient_list, params.write_fd, &log_info)==0)
+            if(readPatientRecordsFile ( params, &disease_HT, &patient_list, params.write_fd, &log_info, &summary_stats)==0)
             {
                 printf("\nAn Error Occured While Proccesing Input\n\n");
                 exit(0);
@@ -63,28 +66,67 @@ int main(int argc, char *argv[])
             prev_token_len += strlen(token);
     }
 
+    int sig_flag = 0;
+
+    //printf("%s\n",summary_stats );
+    //free(summary_stats);
     free(countries);
 
-    char * result = NULL;
 
-    int sig_flag = 0;
+
+    int worker_sock, new_sock;
+    struct sockaddr_in server, client;
+    socklen_t clientlen = sizeof(struct sockaddr_in);
+    struct sockaddr *serverptr = (struct sockaddr*)&server;
+    struct sockaddr *clientptr=(struct sockaddr *)&client;
+    struct hostent *rem;
+
+    if ((worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        perror_exit("socket");
+
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = htonl(INADDR_ANY);
+    server.sin_port = htons(INADDR_ANY);
+
+    // /* Bind socket to address */
+    if (bind(worker_sock, serverptr, sizeof(server)) < 0)
+        perror_exit("bind");
+
+    getsockname(worker_sock, (struct sockaddr *)&server, &clientlen); //takes the first available port and give it to server
+    int worker_port = ntohs(server.sin_port);
+
+    //printf("worker_port is %d\n",worker_port );
+    send_summary_stats(summary_stats, &d_list, worker_port, params);
+    
+    if (listen(worker_sock, 5) < 0) 
+        perror_exit("listen");
 
     // print_hash_table(&disease_HT);
 
+    char * result = NULL;
+    while(1) //worker is ready to receive queries
+    {
+        //printf("beno sto aenao loop\n");
+        if ((new_sock = accept(worker_sock, clientptr, &clientlen)) < 0) 
+            perror("accept");
+        // convert to client ip
+        struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
+        char *s = inet_ntoa(addr_in->sin_addr);
 
-    // while(1) //worker is ready to receive queries
-    // {
-    //     //printf("beno sto aenao loop\n");
-    //     message = read_from_fifo(params.read_fd, buffersize);
-    //     //printf("message child is ::: %s\n",message );
-    //     result = query_handler(message, &disease_HT, &country_HT, &patient_list, &d_list, params.write_fd);
-    //     //printf("result is %s\n",result );
-    //     write_to_fifo (params.write_fd, result); //to message tha prokipsei einai to apotelesma tou query
-        
-    //     // free(result);
-    //     // free(message);
-    // }
-    
+        printf("Accepted connection from %s\n", s);
+
+        char query[100000];
+        read(new_sock,query,100000);
+
+        printf("query is %s\n",query);
+
+        //printf("message child is ::: %s\n",message );
+        result = query_handler(query, &disease_HT, &country_HT, &patient_list, &d_list, params.write_fd);
+        //printf("result is %s\n",result );
+        //write_to_fifo (params.write_fd, result); //to message tha prokipsei einai to apotelesma tou query
+        close(new_sock); 
+    }
+
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);
@@ -94,7 +136,60 @@ int main(int argc, char *argv[])
 
 }
 
-int readPatientRecordsFile ( Params params, HashTable * disease_HT, Patient_list *patient_list, int write_fd, Logfile_Info *log_info)
+
+void send_summary_stats(char *summary_stats, Directory_list *d_list, int port, Params params)
+{
+    char *token = NULL;
+    int sock;
+    int length;
+    struct sockaddr_in server;
+    struct sockaddr *serverptr = (struct sockaddr*)&server;
+    struct hostent *rem;
+
+    /* Create socket */
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        perror("socket");
+    /* Find server address */
+    if ((rem = gethostbyname(params.ipAddress)) == NULL) 
+    { 
+       perror("gethostbyname"); 
+       exit(1);
+    }
+
+    server.sin_family = AF_INET; /* Internet domain */
+    memcpy(&server.sin_addr, rem->h_addr, rem->h_length);
+    server.sin_port = htons(params.server_portNum); /* Server port */
+    if (connect(sock, serverptr, sizeof(server)) < 0)
+        perror("connect");
+
+    //printf("Connecting to %s port %d\n", params.ipAddress, params.portNum);
+    CountryPath_Node* temp = NULL;
+
+    int counter = d_list->counter;
+    int index = 0;
+    //printf("counter is %d\n", counter);
+
+    while(counter > 0)
+    {
+        temp = get_country(d_list, index);
+        // printf("temp->country path is %s\n", temp->country_path);
+        token = strtok(temp->country_path, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+
+        // printf("token is %s\n", token );
+        sprintf(summary_stats, "%s$%s", summary_stats, token);
+        index++;
+        counter--;
+    }
+    //printf("port is %d\n", port);
+    sprintf(summary_stats, "%s@%d", summary_stats, port);
+    write_to_socket(sock, summary_stats);
+}
+
+
+int readPatientRecordsFile ( Params params, HashTable * disease_HT, Patient_list *patient_list, int write_fd, Logfile_Info *log_info, char ** stats)
 {
 
     struct dirent *de;
@@ -113,6 +208,7 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, Patient_list
     int line_pos;
     char file_path[200];
     char date[50];
+    // memset(*stats, '\0', sizeof(stats));
 
     strcpy(file_path, params.fileName);
 
@@ -204,17 +300,57 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, Patient_list
                 log_info->total++;
             }
             //printf("Pao na grapso\n");
-            write_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd, params);
+            char *temp_stats = NULL;
+            temp_stats = calculate_summary_stats(disease_HT, patient_list->tail->patient.country, patient_list->tail->patient.entryDate, write_fd, params);
             fclose(fp);
             strcpy(file_path, params.fileName);
            //printf("file_path is %s\n", file_path);
+            sprintf(*stats,"%s%s\n", *stats, temp_stats);
+            free(temp_stats);
         }
     }
-    // print_hash_table(disease_HT);
-
+    //print_hash_table(disease_HT);
+    //printf("%s\n", *stats);
     free(line);
     closedir(dr);   
     return 1;
+}
+
+
+char *calculate_summary_stats( HashTable * disease_HT,  char * country, Date date, int write_fd, Params params)
+{
+    char *stats = malloc(sizeof(char) * 10000);
+    // print_date(date);
+    // printf("\n");
+    // printf("%s\n",country);
+    sprintf(stats, "%d-%d-%d", date.day, date.month, date.year);
+    sprintf(stats, "%s\n%s", stats, country);
+
+    //printf("%s\n", stats);
+
+    for (int i = 0; i < disease_HT->size; ++i)
+    {       
+        if( disease_HT->lists_of_buckets[i].head != NULL)
+        {
+            //printf("eimai diaforo tou NULL\n");
+            Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
+            while(temp !=NULL)
+            {                    
+                for (int j = 0; j < temp->slot_counter; ++j)
+                {   
+                    // printf("%s\n", temp->bucket_item[j].string);
+                    sprintf(stats, "%s\n%s", stats, temp->bucket_item[j].string);
+                    sprintf(stats, "%s\nAge range 0-20 years: %d", stats, temp->bucket_item[j].age_ranges[0]);
+                    sprintf(stats, "%s\nAge range 20-40 years: %d", stats, temp->bucket_item[j].age_ranges[1]);
+                    sprintf(stats, "%s\nAge range 41-60 years: %d", stats, temp->bucket_item[j].age_ranges[2]);
+                    sprintf(stats, "%s\nAge range 60+ years: %d", stats, temp->bucket_item[j].age_ranges[3]);
+                }
+                temp = temp->next;
+            }
+        }
+    }
+
+    return stats;
 }
 
 
@@ -241,7 +377,7 @@ Params init_params( char * read_fifo, char *write_fifo, char ** countries, char 
     params.ipAddress = malloc(sizeof(char) * strlen(token) + 1);
     strcpy(params.ipAddress, token);
     token = strtok(NULL, "\n");
-    params.portNum = atoi(token);
+    params.server_portNum = atoi(token);
 
     //printf("Write_fd is %d, read_fd is %d, ip_address is %s, portNum is %d\n", params.write_fd, params.read_fd, params.ipAddress, params.portNum);
     return params;
@@ -418,70 +554,6 @@ void write_to_socket(int  write_fd, char * message)
 }
 
 
-
-void write_summary_stats( HashTable * disease_HT,  char * country, Date date, int write_fd, Params params)
-{
-    char stats[1000000];
-    // print_date(date);
-    // printf("\n");
-    // printf("%s\n",country);
-    sprintf(stats, "%d-%d-%d", date.day, date.month, date.year);
-    sprintf(stats, "%s\n%s", stats, country);
-
-    //printf("%s\n", stats);
-
-    for (int i = 0; i < disease_HT->size; ++i)
-    {       
-        if( disease_HT->lists_of_buckets[i].head != NULL)
-        {
-            //printf("eimai diaforo tou NULL\n");
-            Bucket_Node *temp = disease_HT->lists_of_buckets[i].head;
-            while(temp !=NULL)
-            {                    
-                for (int j = 0; j < temp->slot_counter; ++j)
-                {   
-                    // printf("%s\n", temp->bucket_item[j].string);
-                    sprintf(stats, "%s\n%s", stats, temp->bucket_item[j].string);
-                    sprintf(stats, "%s\nAge range 0-20 years: %d", stats, temp->bucket_item[j].age_ranges[0]);
-                    sprintf(stats, "%s\nAge range 20-40 years: %d", stats, temp->bucket_item[j].age_ranges[1]);
-                    sprintf(stats, "%s\nAge range 41-60 years: %d", stats, temp->bucket_item[j].age_ranges[2]);
-                    sprintf(stats, "%s\nAge range 60+ years: %d", stats, temp->bucket_item[j].age_ranges[3]);
-                }
-                temp = temp->next;
-            }
-        }
-    }
-
-    //printf("Stats are %s\n",stats );
-    //printf("Prin tin connect params.ipAddress is %s params.portNum is %d\n", params.ipAddress, params.portNum);
-    /*** Connect via socket to the server to send summary stats ***/
-
-    char buf[1256];
-    int sock;// = params.portNum;
-    int length;
-    struct sockaddr_in server;
-    struct sockaddr *serverptr = (struct sockaddr*)&server;
-    struct hostent *rem;
-
-
-    /* Create socket */
-    if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-        perror("socket");
-    /* Find server address */
-    if ((rem = gethostbyname(params.ipAddress)) == NULL) { 
-       perror("gethostbyname"); exit(1);
-    }
-
-    server.sin_family = AF_INET;       /* Internet domain */
-    memcpy(&server.sin_addr, rem->h_addr, rem->h_length);
-    server.sin_port = htons(params.portNum);         /* Server port */
-    if (connect(sock, serverptr, sizeof(server)) < 0)
-        perror("connect");
-    printf("Connecting to %s port %d\n", params.ipAddress, params.portNum);
-    write_to_socket(sock, stats);
-}
-
-
 int digitValidate(char *a)
 {
 	for (unsigned int i = 0; i < strlen(a); i++)
@@ -616,4 +688,11 @@ void signal_handler(int sig)
     freePatientList(&patient_list);
     freeDirList(&d_list);
 
+}
+
+
+void perror_exit(char *message)
+{
+    perror(message);
+    exit(EXIT_FAILURE);
 }

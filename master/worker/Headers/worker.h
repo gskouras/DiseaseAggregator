@@ -25,6 +25,7 @@
 
 
 #define PERMISSIONS 0666
+#define MAX_STATS 1000000
 
 
 typedef struct 
@@ -32,7 +33,7 @@ typedef struct
 	char fileName[50];
 	int disHashSize;
 	int bucketsize;
-	int portNum;
+	int server_portNum;
 	int write_fd;
 	int read_fd;
 	char * ipAddress;
@@ -52,7 +53,7 @@ typedef struct
 
 /*** Utillity Functions ***/
 
-int readPatientRecordsFile (  Params ,  HashTable * , Patient_list *, int, Logfile_Info *);
+int readPatientRecordsFile (  Params ,  HashTable * , Patient_list *, int, Logfile_Info *, char **);
 
 int digitValidate( char * );
 
@@ -64,7 +65,7 @@ Patient line_tokenize( char * , Patient, char *, char * );
 
 /*** Fifo Related Functions ***/
 
-void write_summary_stats( HashTable *, char *, Date, int, Params);
+char * calculate_summary_stats( HashTable *, char *, Date, int, Params);
 
 char * read_from_fifo( int read_fd, int buffersize);
 
@@ -75,6 +76,8 @@ void write_to_socket(int  write_fd, char * message);
 /*** Signal Handlers ****/
 
 void signal_handler( int );
+
+void perror_exit( char * );
 
 /*************************/
 
