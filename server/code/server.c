@@ -7,16 +7,22 @@ pthread_cond_t msg_in = PTHREAD_COND_INITIALIZER;
 pthread_cond_t msg_out = PTHREAD_COND_INITIALIZER;
 // mutex protecting shared memory resources
 pthread_mutex_t job_mutex = PTHREAD_MUTEX_INITIALIZER;
+// mutex for print messages in the right order
+pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/*************************/
 
 Cycle_Buffer * circular_buffer;
 
 Params params; //parameters of the programm
 
+Worker_list w_list;
+
+/*************************/
 int main(int argc, char *argv[])
 {
 	params = inputValidate(argc, argv);
+
+    initWorkertList(&w_list);
 
     printf("queryportnum %d, statisticsPortNum %d, numThreads %d, bufferSize %d \n",params.queryPortNum, params.statisticsPortNum, params.numThreads, params.bufferSize );
     int query_sock;
@@ -40,7 +46,7 @@ int main(int argc, char *argv[])
     getsockname(query_sock, (struct sockaddr *)&server, &clientlen); //takes the first available port and give it to server
     params.queryPortNum = ntohs(server.sin_port);
     /* Listen for connections */
-    if (listen(query_sock, 5) < 0) 
+    if (listen(query_sock, 10) < 0) 
         perror_exit("listen");
 
     printf("Listening for connections to port %d\n", params.queryPortNum);
@@ -67,12 +73,12 @@ int main(int argc, char *argv[])
         struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
         char *s = inet_ntoa(addr_in->sin_addr);
 
-        printf("Accepted connection from %s\n", s);
+        //printf("Accepted connection from %s\n", s);
 
         new_job.fd = new_sock;
 
-        if(put_job(new_job))
-            printf("The new job inserted succesfully\n");
+        if(!put_job(new_job))
+            printf("Error Occured while inserting a new job to the Cycle_Buffer\n");
 
         //close(new_sock); /* parent closes socket to client */
     }
@@ -82,11 +88,10 @@ int main(int argc, char *argv[])
         pthread_join(threads[i],NULL);
     }
 
-
-
     return 0;
 }
 
+/*** Request Handling Functions ***/
 
 void * handle_request()
 {
@@ -94,20 +99,98 @@ void * handle_request()
     while(1)
     {
         job = get_job();
-        printf("I took a job with fd = %d\n", job.fd);
-        char buffer[100000];
-        read(job.fd,buffer,100000);
+        if(job.flag == 1) //it means that the job came from a worker
+        {
+            handle_worker(job);
+        }
+        else if(job.flag == 0) //it means tha the job came from a client
+        {
 
-        printf("Buffer is %s\n",buffer);
+        }
 
         close(job.fd);
     }
     exit(0);
 }
 
+void handle_worker(Job job)
+{
+    char message[100000];
+    read(job.fd,message,100000);
+
+    char ** countries_array = NULL;
+    int count = 0;
+
+
+    char * stats = strtok(message, "$");
+    // char *countries = strtok(message, "$");
+    char *countries = strtok(NULL, "@");
+    char *temp_countries = malloc(sizeof(char) * strlen(countries));
+    strcpy(temp_countries, countries);
+
+    char *port = strtok(NULL, "\n");
+    int portnum = atoi(port);
+
+    int size = count_countries(countries);
+
+    countries_array = malloc(sizeof(char *) * size);
+    for (int i = 0; i < size; ++i)
+    {
+        countries_array[i] = malloc(sizeof(char) * 50);
+    }
+
+    countries = strtok(temp_countries, "$");
+    while(countries != NULL)
+    {
+        //printf("country is %s\n", countries);
+        countries_array[count] = countries;
+        count++;
+        countries = strtok(NULL, "$");
+    }
+
+    pthread_mutex_lock(&print_mutex);
+    //printf("\n\nI took a job with fd = %d MY ID IS %ld\n", job.fd, pthread_self());
+    //printf("%s\n",stats);
+
+    insertNewWorker(&w_list, countries_array, portnum, size);
+
+    //printWorkerList(&w_list);
+
+    pthread_mutex_unlock(&print_mutex);
+
+
+
+    free(temp_countries);
+}
+
+
+int count_countries( char* string)
+{
+    //printf("countries are %s\n", string);
+    int count = 0;
+    int i;
+
+    int length = strlen(string);
+
+    for (i = 0; i < length; i++)
+    {
+        if (string[i] == '$')
+        {
+            count++;
+        }
+    }
+
+    return count + 1;
+}
+
+
+/*****************************/
+
+/**** Cycle Buffer Functions ***/
+
 Job get_job() 
 {
-    // lock mutex
+
     pthread_mutex_lock(&job_mutex);
 
     while (buffer_isEmpty())   
@@ -115,26 +198,38 @@ Job get_job()
 
     // receive message
     Job job = circular_buffer->job_array[--circular_buffer->job_index];
+
     if(buffer_isFull())
         circular_buffer->job_index = 0;
 
     circular_buffer->count--;
+
+    char temp[11];
+
+    read(job.fd, temp, 10);
+
+    //printf("\n\ntemp is %s\n", temp);
+
+    char * token = strtok(temp, "$");
+
+    if(strcmp(token, "w") == 0)
+        job.flag = 1;
+
+    if(strcmp(token, "c") == 0)
+        job.flag = 0;
     
     // signal the sender that something was removed from buffer
     pthread_cond_signal(&msg_in);
-    //printf("new job fd is %d\n", job.fd);
+    printf("i get a job from the buffer\n");
+    printf("buffer count is %d\n", circular_buffer->count);
     pthread_mutex_unlock(&job_mutex);
 
     return(job);
 }
 
-
-
-/**** Cycle Buffer Functions ***/
-
 int put_job(Job job) //puts a job in the first available position
 {
-
+    usleep(10);
     pthread_mutex_lock(&job_mutex);
 
     while (buffer_isFull())  //while buffer is full this thread sleeps
@@ -142,7 +237,8 @@ int put_job(Job job) //puts a job in the first available position
 
     circular_buffer->job_array[circular_buffer->job_index++] = job;
     circular_buffer->count++;
-
+    printf("i put a job to the buffer\n");
+    printf("buffer count is %d\n", circular_buffer->count);
     pthread_cond_signal(&msg_out);
     pthread_mutex_unlock(&job_mutex);
     
@@ -198,7 +294,7 @@ Params inputValidate (int argc, char *argv[])
         params.queryPortNum = 8000;
         params.statisticsPortNum = 9000;
         params.numThreads = 2;
-        params.bufferSize = 50;
+        params.bufferSize = 4;
         return params;
     }
 
@@ -233,3 +329,5 @@ void perror_exit(char *message)
     perror(message);
     exit(EXIT_FAILURE);
 }
+
+

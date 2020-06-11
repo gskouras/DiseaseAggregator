@@ -1,10 +1,6 @@
 #include "../Headers/worker.h"
 #include "../../code/input_list.c"
 
-void send_summary_stats(char *, Directory_list * , int, Params);
-
-char * query_handler(char * , HashTable *, HashTable * , Patient_list *, Directory_list * , int );
-
 /*** Global Variables that allow signal handlers to retrive usefull Informations ***/ 
 
 Logfile_Info log_info;
@@ -23,56 +19,17 @@ int main(int argc, char *argv[])
     // signal(SIGINT, signal_handler);
     // signal(SIGQUIT, signal_handler);
 
-    // printf("Hallo from the other side id %d\n", getpid());
+    char  *countries = NULL , *connect_info = NULL, *summary_stats = NULL;
 
-    char read_fifo[100];
-    char write_fifo[100];
-    int buffersize = atoi(argv[3]);
-    int buffer_counter = 0;
-    strcpy(read_fifo, argv[1]);
-    strcpy(write_fifo, argv[2]);
-    char * token = NULL, *countries = NULL , *connect_info = NULL, *summary_stats = NULL;
+    Params params = init_params( argv[1], argv[2], &countries, &connect_info, atoi(argv[3]));
 
-    Params params = init_params(read_fifo, write_fifo, &countries, &connect_info, buffersize);
-    initHashTable(&disease_HT, params.disHashSize, params.bucketsize); 
-    initPatientList(&patient_list);
-    initDirectorytList(&d_list);
-
-    token = strtok(countries , "$");
-    int prev_token_len = strlen(token);
-    
-    char *p = countries;
-
-    summary_stats = malloc(sizeof(char) * MAX_STATS);
-    
-    while (token)
-    {   
-        strcpy(params.fileName, token);
-
-        insertNewDirectory(&d_list, params.fileName);
-        //printf("params filename of process id %u is %s\n", getpid() ,params.fileName );
-        if(strlen(params.fileName)> 10)
-        {
-            if(readPatientRecordsFile ( params, &disease_HT, &patient_list, params.write_fd, &log_info, &summary_stats)==0)
-            {
-                printf("\nAn Error Occured While Proccesing Input\n\n");
-                exit(0);
-            }
-        }
-
-        p = p + (strlen(token) +1);
-        token = strtok(p, "\n$");
-        if (token)
-            prev_token_len += strlen(token);
+    if(readInputDirs(params, &disease_HT, &patient_list, &d_list, params.write_fd, &log_info, &summary_stats, &countries)==0)
+    {
+        printf("\nAn Error Occured While Proccesing Input\n\n");
+        exit(0);            
     }
 
     int sig_flag = 0;
-
-    //printf("%s\n",summary_stats );
-    //free(summary_stats);
-    free(countries);
-
-
 
     int worker_sock, new_sock;
     struct sockaddr_in server, client;
@@ -81,27 +38,9 @@ int main(int argc, char *argv[])
     struct sockaddr *clientptr=(struct sockaddr *)&client;
     struct hostent *rem;
 
-    if ((worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        perror_exit("socket");
+    int worker_port = create_socket(&serverptr,&clientptr,&server, &client,&worker_sock,&clientlen);
 
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = htonl(INADDR_ANY);
-    server.sin_port = htons(INADDR_ANY);
-
-    // /* Bind socket to address */
-    if (bind(worker_sock, serverptr, sizeof(server)) < 0)
-        perror_exit("bind");
-
-    getsockname(worker_sock, (struct sockaddr *)&server, &clientlen); //takes the first available port and give it to server
-    int worker_port = ntohs(server.sin_port);
-
-    //printf("worker_port is %d\n",worker_port );
     send_summary_stats(summary_stats, &d_list, worker_port, params);
-    
-    if (listen(worker_sock, 5) < 0) 
-        perror_exit("listen");
-
-    // print_hash_table(&disease_HT);
 
     char * result = NULL;
     while(1) //worker is ready to receive queries
@@ -111,9 +50,9 @@ int main(int argc, char *argv[])
             perror("accept");
         // convert to client ip
         struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
-        char *s = inet_ntoa(addr_in->sin_addr);
+        char *address = inet_ntoa(addr_in->sin_addr);
 
-        printf("Accepted connection from %s\n", s);
+        printf("Accepted connection from %s\n", address);
 
         char query[100000];
         read(new_sock,query,100000);
@@ -136,56 +75,69 @@ int main(int argc, char *argv[])
 
 }
 
-
-void send_summary_stats(char *summary_stats, Directory_list *d_list, int port, Params params)
+int create_socket(struct sockaddr** serverptr, struct sockaddr** clientptr, struct sockaddr_in *server, struct sockaddr_in *client, int * worker_sock, socklen_t *clientlen)
 {
-    char *token = NULL;
-    int sock;
-    int length;
-    struct sockaddr_in server;
-    struct sockaddr *serverptr = (struct sockaddr*)&server;
-    struct hostent *rem;
+    if ((*worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        perror_exit("socket");
 
-    /* Create socket */
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        perror("socket");
-    /* Find server address */
-    if ((rem = gethostbyname(params.ipAddress)) == NULL) 
-    { 
-       perror("gethostbyname"); 
-       exit(1);
+    server->sin_family = AF_INET;
+    server->sin_addr.s_addr = htonl(INADDR_ANY);
+    server->sin_port = htons(INADDR_ANY);
+
+    // /* Bind socket to address */
+    if (bind(*worker_sock, *serverptr, sizeof(*server)) < 0)
+        perror_exit("bind");
+
+    getsockname(*worker_sock, *serverptr, clientlen); //takes the first available port and give it to server
+    int worker_port = ntohs(server->sin_port);
+
+    //printf("worker_port is %d\n",worker_port );
+    
+    if (listen(*worker_sock, 5) < 0) 
+        perror_exit("listen");
+
+    return worker_port;
+}
+
+int readInputDirs(Params params, HashTable *disease_HT, Patient_list * patient_list, Directory_list * d_list, int write_fd, Logfile_Info *log_info, char ** summary_stats, char ** countries)
+{
+
+    initHashTable(disease_HT, params.disHashSize, params.bucketsize); 
+    initPatientList(patient_list);
+    initDirectorytList(d_list);
+
+    *summary_stats = malloc(sizeof(char) * MAX_STATS);
+
+    char * token = NULL;
+    int buffer_counter = 0;
+    token = strtok(*countries , "$");
+    int prev_token_len = strlen(token);
+    
+    char *p = *countries;
+ 
+    while (token)
+    {   
+        strcpy(params.fileName, token);
+
+        insertNewDirectory(d_list, params.fileName);
+        //printf("params filename of process id %u is %s\n", getpid() ,params.fileName );
+        if(strlen(params.fileName)> 10)
+        {
+            if(readPatientRecordsFile ( params, disease_HT, patient_list, params.write_fd, log_info, summary_stats)==0)
+            {
+                printf("\nAn Error Occured While Proccesing Input\n\n");
+                exit(0);
+            }
+        }
+
+        p = p + (strlen(token) +1);
+        token = strtok(p, "\n$");
+        if (token)
+            prev_token_len += strlen(token);
     }
 
-    server.sin_family = AF_INET; /* Internet domain */
-    memcpy(&server.sin_addr, rem->h_addr, rem->h_length);
-    server.sin_port = htons(params.server_portNum); /* Server port */
-    if (connect(sock, serverptr, sizeof(server)) < 0)
-        perror("connect");
-
-    //printf("Connecting to %s port %d\n", params.ipAddress, params.portNum);
-    CountryPath_Node* temp = NULL;
-
-    int counter = d_list->counter;
-    int index = 0;
-    //printf("counter is %d\n", counter);
-
-    while(counter > 0)
-    {
-        temp = get_country(d_list, index);
-        // printf("temp->country path is %s\n", temp->country_path);
-        token = strtok(temp->country_path, "/");
-        token = strtok(NULL, "/");
-        token = strtok(NULL, "/");
-        token = strtok(NULL, "/");
-
-        // printf("token is %s\n", token );
-        sprintf(summary_stats, "%s$%s", summary_stats, token);
-        index++;
-        counter--;
-    }
-    //printf("port is %d\n", port);
-    sprintf(summary_stats, "%s@%d", summary_stats, port);
-    write_to_socket(sock, summary_stats);
+    free(*countries);
+    return 1;
 }
 
 
@@ -316,6 +268,57 @@ int readPatientRecordsFile ( Params params, HashTable * disease_HT, Patient_list
     return 1;
 }
 
+void send_summary_stats(char *summary_stats, Directory_list *d_list, int port, Params params)
+{
+    char *token = NULL;
+    int sock;
+    int length;
+    struct sockaddr_in server;
+    struct sockaddr *serverptr = (struct sockaddr*)&server;
+    struct hostent *rem;
+
+    /* Create socket */
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        perror("socket");
+    /* Find server address */
+    if ((rem = gethostbyname(params.ipAddress)) == NULL) 
+    { 
+       perror("gethostbyname"); 
+       exit(1);
+    }
+
+    server.sin_family = AF_INET; /* Internet domain */
+    memcpy(&server.sin_addr, rem->h_addr, rem->h_length);
+    server.sin_port = htons(params.server_portNum); /* Server port */
+    if (connect(sock, serverptr, sizeof(server)) < 0)
+        perror("connect");
+
+    //printf("Connecting to %s port %d\n", params.ipAddress, params.portNum);
+    CountryPath_Node* temp = NULL;
+
+    int counter = d_list->counter;
+    int index = 0;
+    //printf("counter is %d\n", counter);
+
+    while(counter > 0)
+    {
+        temp = get_country(d_list, index);
+        // printf("temp->country path is %s\n", temp->country_path);
+        token = strtok(temp->country_path, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+        token = strtok(NULL, "/");
+
+        // printf("token is %s\n", token );
+        sprintf(summary_stats, "%s$%s", summary_stats, token);
+        index++;
+        counter--;
+    }
+    //printf("port is %d\n", port);
+    sprintf(summary_stats, "%s@%d", summary_stats, port);
+    write_to_socket(sock, summary_stats);
+}
+
 
 char *calculate_summary_stats( HashTable * disease_HT,  char * country, Date date, int write_fd, Params params)
 {
@@ -364,7 +367,7 @@ Params init_params( char * read_fifo, char *write_fifo, char ** countries, char 
     //printf("write_fd is %d\n", params.write_fd);
     *countries = read_from_fifo(params.read_fd, buffersize);
 
-    printf("Message is %s\n", *countries);
+    //printf("Message is %s\n", *countries);
 
     *info = read_from_fifo(params.read_fd, buffersize);
 
@@ -546,9 +549,9 @@ void write_to_socket(int  write_fd, char * message)
     int message_len = strlen(message);
     char temp[11];
 
-    //sprintf(temp, "%d$", message_len);
+    sprintf(temp, "w$"); //w stands for worker
     //printf("message_len is %d\n", message_len);
-    //write(write_fd, temp, 10);
+    write(write_fd, temp, 10);
     //printf("message is %s\n",message );
     write(write_fd, message, message_len);
 }

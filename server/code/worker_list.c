@@ -46,7 +46,13 @@ void printWorkerList(Worker_list * list )
 	Worker_Node *temp = list->head;
 	while(temp != NULL)
 	{
-		//printf("%s\n", temp->country_path);
+		printf("I am worker with portNum %d\n",temp->portNum);
+		printf("My countries are ::: \n");
+		for (int i = 0; i < temp->country_count; ++i)
+		{
+			printf("%s ",temp->countries[i]);
+		}
+		printf("\n\n");
 		temp = temp->next;
 	}
 }

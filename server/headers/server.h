@@ -12,7 +12,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <sys/types.h>	
+#include <sys/types.h>
+#include "../headers/worker_list.h"
 
 typedef struct
 {
@@ -38,8 +39,6 @@ typedef struct {
 
 int digitValidate(char *);
 
-void * handle_request();
-
 Params inputValidate (int argc, char *argv[]);
 
 void perror_exit(char *);
@@ -57,6 +56,13 @@ int buffer_isFull();
 Job get_job();
 
 /*************************/
+
+void * handle_request();
+
+void handle_worker(Job job);
+
+int count_countries( char* );
+
 
 
 #endif

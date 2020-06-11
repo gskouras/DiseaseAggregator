@@ -22,6 +22,7 @@
 #include <sys/types.h>	
 #include "../Headers/hash.h"
 #include "../Headers/query_server.h"
+#include "../../headers/input_list.h"
 
 
 #define PERMISSIONS 0666
@@ -49,9 +50,9 @@ typedef struct
 } Logfile_Info;
 
 
-
-
 /*** Utillity Functions ***/
+
+int readInputDirs(Params , HashTable *, Patient_list *, Directory_list *, int , Logfile_Info *, char **, char **);
 
 int readPatientRecordsFile (  Params ,  HashTable * , Patient_list *, int, Logfile_Info *, char **);
 
@@ -61,17 +62,27 @@ Params init_params(char *, char *, char **, char **, int);
 
 Patient line_tokenize( char * , Patient, char *, char * );
 
+char * query_handler(char * , HashTable *, HashTable * , Patient_list *, Directory_list * , int );
+
 /****************************/
 
 /*** Fifo Related Functions ***/
 
-char * calculate_summary_stats( HashTable *, char *, Date, int, Params);
+char * read_from_fifo( int read_fd, int buffersize );
 
-char * read_from_fifo( int read_fd, int buffersize);
+char * calculate_summary_stats( HashTable *, char *, Date, int, Params );
 
-void write_to_socket(int  write_fd, char * message);
+void send_summary_stats(char *, Directory_list * , int, Params );
 
 /*************************/
+
+/*** Socket Related Functions ***/
+
+int create_socket( struct sockaddr**, struct sockaddr** , struct sockaddr_in *, struct sockaddr_in *, int * , socklen_t * );
+
+void write_to_socket(int  write_fd, char * message );
+
+/***************************/
 
 /*** Signal Handlers ****/
 
@@ -80,5 +91,6 @@ void signal_handler( int );
 void perror_exit( char * );
 
 /*************************/
+
 
 #endif

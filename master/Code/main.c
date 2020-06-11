@@ -13,7 +13,6 @@ volatile sig_atomic_t child_flag = 0;
 
 int main(int argc, char* argv[])
 {
-
 	signal(SIGCHLD, worker_handler);
 	// signal(SIGINT, signal_handler);
 	// signal(SIGQUIT, signal_handler);
@@ -233,7 +232,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 1;
+        params.numWorkers = 5;
         params.bufferSize = 512;
         params.serverPort = 8000;
         params.serverIP = malloc(sizeof(char) * 30);
