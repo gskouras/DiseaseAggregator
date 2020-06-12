@@ -234,7 +234,7 @@ Params inputValidate (int argc, char *argv[])
     {
         params.numWorkers = 5;
         params.bufferSize = 512;
-        params.serverPort = 8000;
+        params.serverPort = 9000;
         params.serverIP = malloc(sizeof(char) * 30);
         strcpy(params.serverIP,  "127.0.0.1");
         params.input_dir = malloc(sizeof(char) *25);

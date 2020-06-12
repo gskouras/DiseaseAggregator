@@ -25,37 +25,45 @@ int main(int argc, char *argv[])
     initWorkertList(&w_list);
 
     printf("queryportnum %d, statisticsPortNum %d, numThreads %d, bufferSize %d \n",params.queryPortNum, params.statisticsPortNum, params.numThreads, params.bufferSize );
-    int query_sock;
+    int worker_sock, client_sock;
     struct sockaddr_in server, client;
     socklen_t clientlen = sizeof(struct sockaddr_in);
     struct sockaddr *serverptr = (struct sockaddr*)&server;
     struct sockaddr *clientptr=(struct sockaddr *)&client;
     struct hostent *rem;
 
-    if ((query_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    //create_passive_endpoints(&serverptr,&clientptr,&server, &client,&worker_sock, &client_sock, &clientlen, params);
+    if ((worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 || (client_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
         perror_exit("socket");
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = htonl(INADDR_ANY);
-    server.sin_port = htons(params.queryPortNum);
+    server.sin_port = htons(params.statisticsPortNum);
 
     /* Bind socket to address */
-    if (bind(query_sock, serverptr, sizeof(server)) < 0)
+    if (bind(worker_sock, serverptr, sizeof(server)) < 0) 
         perror_exit("bind");
 
-    getsockname(query_sock, (struct sockaddr *)&server, &clientlen); //takes the first available port and give it to server
+    server.sin_port = htons(params.queryPortNum);
+
+    if (bind(client_sock, serverptr, sizeof(server)) < 0) 
+        perror_exit("bind");
+
+    getsockname(worker_sock, (struct sockaddr *)&server, &clientlen); //takes the first available port and give it to server
+    params.statisticsPortNum = ntohs(server.sin_port);
+
+    getsockname(client_sock, (struct sockaddr *)&server, &clientlen); //takes the first available port and give it to server
     params.queryPortNum = ntohs(server.sin_port);
     /* Listen for connections */
-    if (listen(query_sock, 10) < 0) 
+    if (listen(worker_sock, 10) < 0 || listen(client_sock, 10) < 0) 
         perror_exit("listen");
 
-    printf("Listening for connections to port %d\n", params.queryPortNum);
+    printf("Listening for worker connections to port %d\n", params.statisticsPortNum);
+    printf("Listening for client connections to port %d\n", params.queryPortNum);
 
     pthread_t threads[params.numThreads];
 
     init_cycle_buffer();
-
-    printf("Circular buffer State is : job_index = %d count = %d, size = %d\n", circular_buffer->job_index, circular_buffer->count, circular_buffer->size); 
    
     for (int i = 0; i < params.numThreads; ++i)
     {
@@ -64,23 +72,17 @@ int main(int argc, char *argv[])
 
     int new_sock;
     Job new_job;
+
+    Socket_fd socket_fds[FD_POOL];
+
     while (1) 
     {
-        /* accept connection */
-        if ((new_sock = accept(query_sock, clientptr, &clientlen)) < 0) 
-            perror("accept");
-        // convert to client ip
-        struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
-        char *s = inet_ntoa(addr_in->sin_addr);
-
-        //printf("Accepted connection from %s\n", s);
+        new_sock = accept_connection(&clientptr, &clientlen, socket_fds,  worker_sock, client_sock);
 
         new_job.fd = new_sock;
 
         if(!put_job(new_job))
             printf("Error Occured while inserting a new job to the Cycle_Buffer\n");
-
-        //close(new_sock); /* parent closes socket to client */
     }
 
     for (int i = 0; i < params.numThreads; ++i)
@@ -89,6 +91,82 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+
+int accept_connection(struct sockaddr** clientptr,  socklen_t *clientlen, Socket_fd * socket_fds, int worker_sock, int client_sock)
+{
+    struct pollfd fdarray[FD_POOL];
+    initSocketFd( socket_fds, worker_sock, client_sock );
+    int new_sock;
+    int i;
+    while(checkAllFlags(socket_fds))
+    {
+        for (i = 0; i < FD_POOL; i++)
+        {
+            fdarray[i].fd = socket_fds[i].fd;
+            fdarray[i].events = POLLIN;
+        }
+
+        poll(fdarray, FD_POOL, -1);
+        //printf("Infinite\n");
+        for (i = 0; i < FD_POOL; i++)
+        {
+            
+            if((fdarray[i].revents & POLLIN))
+            {
+                if(fdarray[i].fd ==  socket_fds[i].fd)
+                {   
+                    /* accept connection */
+                    if ((new_sock = accept(socket_fds[i].fd, *clientptr, clientlen)) < 0)
+                            perror("accept");
+                    // convert to client ip
+                    struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
+                    char *s = inet_ntoa(addr_in->sin_addr);
+
+                    printf("Accepted connection from %s\n", s);
+                    socket_fds[i].flag = 0;
+                    return new_sock;                    
+                }               
+            }
+            else if((fdarray[i].revents & POLLHUP)) // exei kleisei to pipe apo to allo meros
+                socket_fds[i].flag = 1;
+        }
+    }
+}
+
+
+int create_passive_endpoints(struct sockaddr** serverptr, struct sockaddr** clientptr, struct sockaddr_in *server, struct sockaddr_in *client, int * worker_sock, int *client_sock, socklen_t *clientlen, Params params)
+{
+ if ((*worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 || (*client_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
+        perror_exit("socket");
+
+    server->sin_family = AF_INET;
+    server->sin_addr.s_addr = htonl(INADDR_ANY);
+    server->sin_port = htons(params.statisticsPortNum);
+
+    /* Bind socket to address */
+    if (bind(*worker_sock, *serverptr, sizeof(*server)) < 0) 
+        perror_exit("bind");
+
+    getsockname(*worker_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
+    params.statisticsPortNum = ntohs(server->sin_port);
+
+    server->sin_port = htons(params.queryPortNum);
+
+    if (bind(*client_sock, *serverptr, sizeof(*server)) < 0) 
+        perror_exit("bind");
+
+    getsockname(*client_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
+    params.queryPortNum = ntohs(server->sin_port);
+    /* Listen for connections */
+    if (listen(*worker_sock, 10) < 0 || listen(*client_sock, 10) < 0) 
+        perror_exit("listen");
+
+    printf("Listening for worker connections to port %d\n", params.statisticsPortNum);
+    printf("Listening for client connections to port %d\n", params.queryPortNum);
+
+    return 1;
 }
 
 /*** Request Handling Functions ***/
@@ -120,7 +198,6 @@ void handle_worker(Job job)
 
     char ** countries_array = NULL;
     int count = 0;
-
 
     char * stats = strtok(message, "$");
     // char *countries = strtok(message, "$");
@@ -154,11 +231,7 @@ void handle_worker(Job job)
 
     insertNewWorker(&w_list, countries_array, portnum, size);
 
-    //printWorkerList(&w_list);
-
     pthread_mutex_unlock(&print_mutex);
-
-
 
     free(temp_countries);
 }
@@ -220,8 +293,6 @@ Job get_job()
     
     // signal the sender that something was removed from buffer
     pthread_cond_signal(&msg_in);
-    printf("i get a job from the buffer\n");
-    printf("buffer count is %d\n", circular_buffer->count);
     pthread_mutex_unlock(&job_mutex);
 
     return(job);
@@ -237,8 +308,6 @@ int put_job(Job job) //puts a job in the first available position
 
     circular_buffer->job_array[circular_buffer->job_index++] = job;
     circular_buffer->count++;
-    printf("i put a job to the buffer\n");
-    printf("buffer count is %d\n", circular_buffer->count);
     pthread_cond_signal(&msg_out);
     pthread_mutex_unlock(&job_mutex);
     
@@ -272,7 +341,7 @@ int buffer_isFull()
 
 /*************************/
 
-
+/*** Utillity Functions ***/
 
 int digitValidate(char *a)
 {
@@ -330,4 +399,26 @@ void perror_exit(char *message)
     exit(EXIT_FAILURE);
 }
 
+
+int checkAllFlags(Socket_fd * socket_fds) //return 1 oso kati den exei diavastei
+{
+    for (int i = 0; i < FD_POOL; ++i)
+    {
+        if(socket_fds[i].flag != 1)
+            return 0;
+    }
+    return 1;
+}
+
+void initSocketFd(Socket_fd * socket_fds, int worker_sock, int client_sock)
+{
+    socket_fds[0].fd = worker_sock;
+    socket_fds[1].fd = client_sock;
+    for (int i = 0; i < FD_POOL; ++i)
+    {
+        socket_fds[i].flag = 1; //1 simainei oti den exei diavastei
+    }
+}
+
+/*************************************/
 
