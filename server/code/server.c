@@ -10,6 +10,8 @@ pthread_mutex_t job_mutex = PTHREAD_MUTEX_INITIALIZER;
 // mutex for print messages in the right order
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_mutex_t p_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 Cycle_Buffer * circular_buffer;
 
@@ -124,12 +126,12 @@ int accept_connection(struct sockaddr** clientptr,  socklen_t *clientlen, Socket
                     struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
                     char *s = inet_ntoa(addr_in->sin_addr);
 
-                    printf("Accepted connection from %s\n", s);
+                    //printf("Accepted connection from %s\n", s);
                     socket_fds[i].flag = 0;
                     return new_sock;                    
                 }               
             }
-            else if((fdarray[i].revents & POLLHUP)) // exei kleisei to pipe apo to allo meros
+            else if((fdarray[i].revents & POLLHUP)) 
                 socket_fds[i].flag = 1;
         }
     }
@@ -183,7 +185,11 @@ void * handle_request()
         }
         else if(job.flag == 0) //it means tha the job came from a client
         {
-
+            char mess[100];
+            read(job.fd, mess, 100);
+            pthread_mutex_lock(&p_mutex);
+            printf("%s\n",mess );
+            pthread_mutex_unlock(&p_mutex);
         }
 
         close(job.fd);
