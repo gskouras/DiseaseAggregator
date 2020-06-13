@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
 
         printf("Accepted connection from %s\n", address);
 
-        char query[100000];
-        read(new_sock,query,100000);
+        char query[200];
+        read(new_sock,query,200);
 
         printf("query is %s\n",query);
 
@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
         result = query_handler(query, &disease_HT, &country_HT, &patient_list, &d_list, params.write_fd);
         //printf("result is %s\n",result );
         //write_to_fifo (params.write_fd, result); //to message tha prokipsei einai to apotelesma tou query
+        write(new_sock, result, 50);
         close(new_sock); 
     }
 
@@ -91,7 +92,7 @@ int create_socket(struct sockaddr** serverptr, struct sockaddr** clientptr, stru
     getsockname(*worker_sock, *serverptr, clientlen); //takes the first available port and give it to server
     int worker_port = ntohs(server->sin_port);
 
-    //printf("worker_port is %d\n",worker_port );
+    printf("worker_port is %d\n",worker_port );
     
     if (listen(*worker_sock, 5) < 0) 
         perror_exit("listen");

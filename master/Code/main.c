@@ -232,7 +232,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 5;
+        params.numWorkers = 1;
         params.bufferSize = 512;
         params.serverPort = 9000;
         params.serverIP = malloc(sizeof(char) * 30);

@@ -1,0 +1,33 @@
+#ifndef QUERY_HANDLER_H_
+#define QUERY_HANDLER_H_
+
+#include <stdio.h>
+#include <ctype.h> 
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <signal.h> 
+#include <dirent.h> 
+#include <sys/stat.h>
+#include <errno.h>
+#include <ctype.h>
+#include <pthread.h>
+#include <sys/socket.h>              
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>	
+#include "./server.h"
+
+
+
+char * write_to_worker(int , char * , Worker_list *);
+
+
+int get_worker_port(Worker_list *, int );
+
+
+#endif

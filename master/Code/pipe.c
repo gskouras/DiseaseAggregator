@@ -491,8 +491,6 @@ void write_to_fifo(int  write_fd, char * message)
 
 ///////******* Utillity Fucntions ******///////
 
-
-
 int find_worker_country(Worker_info * workers_array, int workers, char * country)
 {
    //printf("country is(in find worker country) ::: %s\n", country);

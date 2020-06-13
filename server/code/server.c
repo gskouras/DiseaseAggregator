@@ -10,9 +10,6 @@ pthread_mutex_t job_mutex = PTHREAD_MUTEX_INITIALIZER;
 // mutex for print messages in the right order
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-pthread_mutex_t p_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-
 Cycle_Buffer * circular_buffer;
 
 Params params; //parameters of the programm
@@ -179,23 +176,36 @@ void * handle_request()
     while(1)
     {
         job = get_job();
-        if(job.flag == 1) //it means that the job came from a worker
-        {
-            handle_worker(job);
-        }
-        else if(job.flag == 0) //it means tha the job came from a client
-        {
-            char mess[100];
-            read(job.fd, mess, 100);
-            pthread_mutex_lock(&p_mutex);
-            printf("%s\n",mess );
-            pthread_mutex_unlock(&p_mutex);
-        }
 
-        close(job.fd);
+        if(job.flag == 1) //it means that the job came from a worker
+            handle_worker(job);
+
+        else if(job.flag == 0) //it means tha the job came from a client
+            handle_client(job);
+
+        //close(job.fd);
     }
     exit(0);
+    //close(job.fd);
 }
+
+
+
+void handle_client(Job job)
+{
+    // pthread_mutex_lock(&print_mutex);
+    static int i = 1;
+    char mess[100];
+    read(job.fd, mess, 100);
+    //printf("i is %d ### %s\n",i, mess );
+    char * response = write_to_worker(job.fd, mess, &w_list);
+    // pthread_mutex_unlock(&print_mutex);
+    write(job.fd, response, 50);
+   //free(response);
+    close(job.fd);
+    i++;
+}
+
 
 void handle_worker(Job job)
 {
@@ -368,7 +378,7 @@ Params inputValidate (int argc, char *argv[])
     {
         params.queryPortNum = 8000;
         params.statisticsPortNum = 9000;
-        params.numThreads = 2;
+        params.numThreads = 1;
         params.bufferSize = 4;
         return params;
     }

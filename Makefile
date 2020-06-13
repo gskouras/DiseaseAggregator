@@ -38,14 +38,17 @@ input_list.o:	./master/code/input_list.c
 
 
 #target to compile server files seperately#
-server: server.o worker_list.o
-	gcc -o servers server.o worker_list.o -pthread -Wall
+server: server.o worker_list.o query_handler.o
+	gcc -o servers server.o worker_list.o query_handler.o -pthread -Wall
 
 server.o:	./server/code/server.c
 	gcc -c -g ./server/code/server.c
 
 worker_list.o: ./server/code/worker_list.c
 	gcc -g -c  ./server/code/worker_list.c
+
+query_handler.o: ./server/code/query_handler.c
+	gcc -g -c  ./server/code/query_handler.c
 
 #target to compile client files seperately#
 client: client.o

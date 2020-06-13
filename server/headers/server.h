@@ -1,5 +1,5 @@
-#ifndef SERVE_H_
-#define SERVE_H_
+#ifndef SERVER_H_
+#define SERVER_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +14,8 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <poll.h>
-#include "../headers/worker_list.h"
+#include "./worker_list.h"
+#include "./query_handler.h"
 
 
 #define FD_POOL 2
@@ -75,6 +76,8 @@ int create_passive_endpoints( struct sockaddr**, struct sockaddr** , struct sock
 void * handle_request();
 
 void handle_worker(Job job);
+
+void handle_client(Job job);
 
 int count_countries( char* );
 
