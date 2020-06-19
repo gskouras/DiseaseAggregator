@@ -1,2 +1,50 @@
-/diseaseFrequency HIV 03-05-2019 06-05-2022  
-/diseaseFrequency HIV 19-05-2017 26-09-2022 Nigeria 
+/searchPatientRecord 40
+/numPatientDischarges Salmonella 24-02-2017 06-01-2021 Seychelles
+/diseaseFrequency MRSA 28-04-2020 07-01-2021
+/topk-AgeRanges 1 Montenegro Meningitis 24-07-2019 01-01-2021
+/diseaseFrequency COVID-19 01-12-2017 01-01-2021
+/numPatientAdmissions COVID-19 10-01-2016 04-01-2021
+/topk-AgeRanges 4 Nigeria Hepatitis 21-07-2015 09-01-2021
+/numPatientAdmissions HIV 26-07-2020 08-01-2021
+/numPatientAdmissions Epileps 10-04-2019 08-01-2021 Montenegro
+/numPatientDischarges Hepatitis 23-08-2015 04-01-2021 Seychelles
+/diseaseFrequency MERS 21-12-2016 03-01-2021 Nigeria
+/numPatientDischarges SARS 07-03-2015 01-01-2021
+/searchPatientRecord 274
+/numPatientAdmissions Epileps 03-01-2020 07-01-2021 
+/diseaseFrequency Epileps 01-08-2016 02-01-2021
+/topk-AgeRanges 3 Israel Ebola 12-06-2017 02-01-2021
+/diseaseFrequency Hepatitis 30-01-2015 06-01-2021 Montenegro
+/numPatientDischarges HIV 19-09-2017 06-01-2021
+/numPatientDischarges Ebola 22-11-2018 05-01-2021 Nigeria
+/topk-AgeRanges 3 Montenegro Meningitis 02-06-2020 08-01-2021
+/topk-AgeRanges 2 Seychelles Tuberculosis 13-11-2018 05-01-2021
+/diseaseFrequency Cancer 13-07-2018 07-01-2021 Israel
+/numPatientDischarges SARS 26-03-2018 01-01-2021 Montenegro
+/diseaseFrequency Zika-Virus 16-10-2017 08-01-2021 Israel
+/searchPatientRecord 238
+/numPatientDischarges HPV 12-11-2019 09-01-2021 Montenegro
+/numPatientAdmissions Heart-Disease 27-12-2018 04-01-2021 Montenegro
+/searchPatientRecord 190
+/numPatientAdmissions Zika-Virus 09-05-2017 06-01-2021 Nigeria
+/numPatientDischarges Epileps 30-10-2018 02-01-2021 Argentina
+/diseaseFrequency SARS 09-10-2016 04-01-2021
+/numPatientAdmissions Zika-Virus 28-09-2016 01-01-2021 Montenegro
+/searchPatientRecord 17
+/topk-AgeRanges 2 Montenegro Zika-Virus 05-05-2018 01-01-2021
+/numPatientDischarges Stroke 15-12-2018 06-01-2021 Jamaica
+/topk-AgeRanges 4 Jamaica MRSA 23-11-2016 09-01-2021
+/numPatientDischarges Stroke 22-11-2015 03-01-2021 Seychelles
+/numPatientAdmissions Heart-Disease 01-07-2019 08-01-2021
+/numPatientDischarges Tuberculosis 29-07-2018 09-01-2021 Argentina
+/diseaseFrequency SARS 22-10-2019 08-01-2021 Argentina
+/numPatientAdmissions HIV 25-01-2020 06-01-2021 
+/searchPatientRecord 867
+/numPatientDischarges Tuberculosis 17-09-2017 01-01-2021 
+/numPatientAdmissions COVID-19 23-12-2000 04-01-2021 
+/topk-AgeRanges 3 Israel MERS 05-11-2016 01-01-2021
+/topk-AgeRanges 2 Seychelles Hepatitis 05-06-2018 01-01-2021
+/searchPatientRecord 217
+/searchPatientRecord 520
+/searchPatientRecord 918
+/searchPatientRecord 534 

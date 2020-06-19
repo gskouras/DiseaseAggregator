@@ -52,18 +52,18 @@ int main(int argc, char *argv[])
         struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
         char *address = inet_ntoa(addr_in->sin_addr);
 
-        printf("Accepted connection from %s\n", address);
+        //printf("Accepted connection from %s and new sock is %d\n", address, new_sock);
 
         char query[200];
         read(new_sock,query,200);
 
-        printf("query is %s\n",query);
+        //printf("Query received from worker with pid %d is %s\n",getpid() , query);
 
-        //printf("message child is ::: %s\n",message );
         result = query_handler(query, &disease_HT, &country_HT, &patient_list, &d_list, params.write_fd);
-        //printf("result is %s\n",result );
-        //write_to_fifo (params.write_fd, result); //to message tha prokipsei einai to apotelesma tou query
-        write(new_sock, result, 50);
+        //printf("result is %s\n",result);
+        
+        write(new_sock, result, 200);
+        //free(result);
         close(new_sock); 
     }
 
@@ -107,7 +107,7 @@ int readInputDirs(Params params, HashTable *disease_HT, Patient_list * patient_l
     initPatientList(patient_list);
     initDirectorytList(d_list);
 
-    *summary_stats = malloc(sizeof(char) * MAX_STATS);
+    *summary_stats = calloc(sizeof(char) , MAX_STATS);
 
     char * token = NULL;
     int buffer_counter = 0;
@@ -137,6 +137,7 @@ int readInputDirs(Params params, HashTable *disease_HT, Patient_list * patient_l
             prev_token_len += strlen(token);
     }
 
+    //printDirectoryList(d_list);
     free(*countries);
     return 1;
 }
@@ -295,17 +296,18 @@ void send_summary_stats(char *summary_stats, Directory_list *d_list, int port, P
         perror("connect");
 
     //printf("Connecting to %s port %d\n", params.ipAddress, params.portNum);
-    CountryPath_Node* temp = NULL;
+    CountryPath_Node* temp_node = NULL;
 
     int counter = d_list->counter;
     int index = 0;
     //printf("counter is %d\n", counter);
-
+    char temp_path[50];
     while(counter > 0)
     {
-        temp = get_country(d_list, index);
+        temp_node = get_country(d_list, index);
+        strcpy(temp_path, temp_node->country_path);
         // printf("temp->country path is %s\n", temp->country_path);
-        token = strtok(temp->country_path, "/");
+        token = strtok(temp_path, "/");
         token = strtok(NULL, "/");
         token = strtok(NULL, "/");
         token = strtok(NULL, "/");
@@ -372,7 +374,7 @@ Params init_params( char * read_fifo, char *write_fifo, char ** countries, char 
 
     *info = read_from_fifo(params.read_fd, buffersize);
 
-    printf("Connection info are %s\n", *info);
+    // printf("Connection info are %s\n", *info);
     
     params.disHashSize = 15;
     params.bucketsize = 512;
@@ -419,6 +421,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
             else
             {
                 char * result = patient_stringify(patient); 
+                //printf("result is %s\n", result);
                 return  result;
             }   
             //printf("result before return is %s\n", result);           
@@ -428,27 +431,29 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
             int flag = 1;
             char *token = NULL;
             //printf("strlen of input is %ld\n",strlen(input));
-            if (strlen(input) < 30)
+            if (check_for_country(input))
             {
                 int index = 0;
-                char * response = malloc(sizeof(char)* 100);
+                char * response = malloc(sizeof(char)* 200);
                 strcpy(response, "");
             
-                CountryPath_Node* temp = NULL;
-
+                CountryPath_Node* temp_node = NULL;
+                //printf("Input is %s\n", input);
                 int counter = dir_list->counter;
                 //printf("counter is %d\n", counter);
-        
+                //printf("o xristis den exei dosei xora!!!\n");
+                char temp_country[50];
                 while(counter > 0)
                 {
-                    temp = get_country(dir_list, index);
-                    // printf("temp->country path is %s\n", temp->country_path);
-                    token = strtok(temp->country_path, "/");
+                    temp_node = get_country(dir_list, index);
+                    strcpy(temp_country, temp_node->country_path);
+                    //printf("temp->country path is %s\n", temp->country_path);
+                    token = strtok(temp_country, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
 
-                    // printf("token is %s\n", token );
+                    //printf("token is %s\n", token );
                     char * result = numPatientAdmissions(input, disease_HT, list, token, flag);
                     sprintf(response, "%s\n%s", response, result);
                     free(result);
@@ -457,7 +462,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
                 }
                 return response;
             }
-            else if(strlen(input) >= 30)
+            else
             {
                 return numPatientAdmissions(input, disease_HT, list, token, flag);
             }
@@ -466,22 +471,23 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
         {
             int flag = 0;
             char *token = NULL;
-            if (strlen(input) < 30)
+            if (check_for_country(input))
             {
                 int index = 0;
-                char * response = malloc(sizeof(char)* 100);
+                char * response = malloc(sizeof(char)* 200);
                 strcpy(response, "");
             
-                CountryPath_Node* temp = NULL;
-
+                CountryPath_Node* temp_node = NULL;
+                //printf("i am in patient dishargers\n");
                 int counter = dir_list->counter;
                 //printf("counter is %d\n", counter);
-        
+                char temp_country[50];
                 while(counter > 0)
                 {
-                    temp = get_country(dir_list, index);
+                    temp_node = get_country(dir_list, index);
+                    strcpy(temp_country,temp_node->country_path);
                     // printf("temp->country path is %s\n", temp->country_path);
-                    token = strtok(temp->country_path, "/");
+                    token = strtok(temp_node->country_path, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
@@ -511,37 +517,29 @@ char * read_from_fifo( int read_fd, int buffersize)
     char * token = NULL , *p = NULL, *buffer = NULL;
 
     char temp[11];
+    memset(temp, '\0', sizeof(temp));
 
     if(read(read_fd, temp, 10)==0)
         perror("Error");
 
-
     token = strtok(temp, "$");
     input_size = atoi(token); //tora ksero posa byte tha mou steilei
-    // printf("input_size is %d\n", input_size);
-    buffer = malloc(sizeof(char) * (input_size) + 1);
+    buffer = calloc(sizeof(char) , (input_size) + 1);
+    memset(buffer, '\0', sizeof(buffer));
     p = buffer;
 
     while(buffer_counter < input_size)
     {
-        // printf("Starting to read the message...\n");
         bytes_in = read( read_fd, p, buffersize );//printf("bytes_in = %d\n", bytes_in);
-        // if (bytes_in == 0)
-        // {
-        //     printf("i reead girise 0\n");
-        //     return "Lathos";
-        // }
+
         if(buffer_counter + bytes_in > input_size)
             bytes_in = input_size-buffer_counter;
         
         p += bytes_in;
         buffer_counter += bytes_in;
-        // printf("Bytes in are: %d\n", bytes_in);
     }
-    // printf("End of read\n");
 
     buffer[input_size]='\0';
-    // printf("I receive your message :::: %s\n", buffer);
     return buffer;
 }
 
@@ -549,6 +547,7 @@ void write_to_socket(int  write_fd, char * message)
 {
     int message_len = strlen(message);
     char temp[11];
+    memset(temp, '\0', sizeof(temp));
 
     sprintf(temp, "w$"); //w stands for worker
     //printf("message_len is %d\n", message_len);
@@ -700,3 +699,14 @@ void perror_exit(char *message)
     perror(message);
     exit(EXIT_FAILURE);
 }
+
+
+
+
+
+
+
+
+
+
+

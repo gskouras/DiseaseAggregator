@@ -20,14 +20,23 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>	
+#include <sys/ioctl.h>
+#include <linux/sockios.h>
 #include "./server.h"
 
 
 
-char * write_to_worker(int , char * , Worker_list *);
+void write_to_worker(int , char * , Worker_list *);
 
+int find_worker_country(Worker_list * , char * );
 
 int get_worker_port(Worker_list *, int );
+
+char * get_worker_ip( Worker_list *, int );
+
+int connect_to_worker( int , char * );
+
+int check_for_country( char * );
 
 
 #endif

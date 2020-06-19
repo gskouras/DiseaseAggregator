@@ -12,6 +12,7 @@ typedef struct Worker_Node
 	char ** countries;
 	int portNum;
 	int country_count;
+	char *ip;
 	struct Worker_Node *next;
 } Worker_Node;
 
@@ -25,14 +26,14 @@ typedef struct
 
 /***** Constructors *****/
 
-Worker_Node *createWorkerNode( char ** , int, int  );
+Worker_Node *createWorkerNode( char ** , int, int, char * );
 
 void initWorkertList(Worker_list *);
 
 /****************************/
 
 /**** Date List Functions *****/
-void insertNewWorker( Worker_list * , char ** , int, int );
+void insertNewWorker( Worker_list * , char ** , int, int, char *);
 
 void printWorkerList( Worker_list * );
 

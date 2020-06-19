@@ -6,8 +6,6 @@ pthread_cond_t send_message = PTHREAD_COND_INITIALIZER;
 // mutex protecting shared memory resources
 pthread_mutex_t query_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int count = 0;
-
 int flag = 0;
 
 Params params;
@@ -18,10 +16,135 @@ int main(int argc, char *argv[])
 {
 	params = inputValidate(argc, argv);
 
+    printf("params num/Threads are %d\n", params.numThreads);
+
+    int queries = count_queries(params.queryFile);
+
     readQueryFile(params);
+
+    pthread_t  threads[params.numThreads];
+
+    int thread_id = 0;
+
+    int counter = 0;
+
+    int remaining_queries = q_array->total;
+
+    int i;
+
+    for (i = 0; i < q_array->total; ++i)
+    {
+        while(params.numThreads > counter)
+        {
+            if(remaining_queries >= params.numThreads)
+            {
+                // printf("||||%s|||\n",  q_array->queries[i]);
+               pthread_create(&threads[thread_id], NULL, send_query, q_array->queries[i]);
+
+                thread_id++;
+                i++; 
+                counter++;
+
+                if(params.numThreads == counter)
+                {   
+                    //printf("\nKano broadcast sta thread\n");
+                    // printf("\n");
+                    pthread_cond_broadcast(&send_message);
+                    flag = 1;
+                    printf("\n");
+                    if(remaining_queries >= params.numThreads)
+                    {
+                        // printf("remaining_queries are %d\n",remaining_queries );
+                        for (int i = 0; i < params.numThreads; ++i)
+                        {
+                            pthread_join(threads[i], NULL);
+                            remaining_queries--;
+                            //printf("Perimeno na teliosei to %d thread me id %d\n",i, thread_id );
+                        }
+                    usleep(1000);                    
+                    }
+                    thread_id = 0;
+                }
+            } 
+            else
+            {      
+                if(remaining_queries == 0)
+                    exit(0);
+
+                for (int j = i; j < q_array->total; j++)
+                {
+                    pthread_create(&threads[thread_id], NULL, send_query, q_array->queries[j]);  
+                }
+                pthread_cond_broadcast(&send_message);
+                flag = 1;
+                printf("\n");
+                for (int i = 0; i < remaining_queries; ++i)
+                {
+                    pthread_join(threads[i], NULL);
+                    remaining_queries--;
+                }
+                usleep(1000);
+            }   
+
+            flag = 0;          
+        }
+        i--;
+        counter = 0;
+
+    }
+
 
 	return 0;
 }
+
+
+void * send_query(void * args)
+{
+    //printf("Irtha na perimeno me thread id %ld\n", pthread_self());
+    // usleep(1000);
+    while(flag = 0)
+    {
+        pthread_cond_wait(&send_message, &query_mutex); //while buffer is empty this thread sleeps
+    }
+    int sock;
+    struct sockaddr_in server;
+    struct sockaddr *serverptr = (struct sockaddr*)&server;
+    struct hostent *rem;
+
+    // /* Create socket */
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        perror("socket");
+    /* Find server address */
+    if ((rem = gethostbyname(params.servIP)) == NULL) 
+    { 
+       perror("gethostbyname"); 
+       exit(1);
+    }
+    server.sin_family = AF_INET;  /*Internet domain*/ 
+    memcpy(&server.sin_addr, rem->h_addr, rem->h_length);
+    server.sin_port = htons(params.servPort); /* Server port */
+    if (connect(sock, serverptr, sizeof(server)) < 0)
+        perror("connect");
+    //printf("Connecting to %s port %d\n", params.servIP, params.servPort);
+
+    
+    write_to_socket(sock, (char *)args);
+    // pthread_mutex_unlock(&query_mutex);
+
+
+    char response[200];
+    
+    pthread_mutex_lock(&query_mutex);
+    read(sock, response, 200);
+    printf("%s\n", (char*)args);
+    printf("%s\n", response);
+    // printf("%ld : %s\n", pthread_self(), (char *)args );
+    close(sock);
+    pthread_mutex_unlock(&query_mutex);
+    pthread_exit(NULL);
+}
+
+
 
 
 void readQueryFile(Params params)
@@ -44,85 +167,24 @@ void readQueryFile(Params params)
 
     initQueryArray(queries);
     int i = 0;
-
+    int count = 0;
     while ((nread = getline(&line, &len, fp)) != -1) 
     {   
         char * query = strtok(line, "\n");
-        strcpy(q_array->queries[count] , query);
-        pthread_create(&thread[count],NULL,send_query,q_array->queries[count]);  
-
-        if ( count == params.numThreads)
-        {
-            flag = 1;
-            pthread_cond_broadcast(&send_message);
-            for (int i = 0; i < count; ++i)
-            {       
-                pthread_join(thread[i],NULL);
-            }
-            count = -1;
-        }
-        flag = 0;
-        count++; 
+        line[strlen(line) - 1] = '\0';
+        strcpy(q_array->queries[count] , line);
+        count++;
     }  
 
     free(line);
     fclose(fp);
 }
 
-
-
-void * send_query(void * args)
-{
-    //printf("counter is %dargs is %s\n", count, (char*)args);
-    //printf("flag is %d\n",flag );
-    pthread_mutex_lock(&query_mutex);
-
-    while(flag == 0)
-    {
-        pthread_cond_wait(&send_message, &query_mutex); //while buffer is empty this thread sleeps
-    }
-
-    int sock;
-    struct sockaddr_in server;
-    struct sockaddr *serverptr = (struct sockaddr*)&server;
-    struct hostent *rem;
-
-    /* Create socket */
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        perror("socket");
-    /* Find server address */
-    if ((rem = gethostbyname(params.servIP)) == NULL) 
-    { 
-       perror("gethostbyname"); 
-       exit(1);
-    }
-
-    server.sin_family = AF_INET; /* Internet domain */
-    memcpy(&server.sin_addr, rem->h_addr, rem->h_length);
-    server.sin_port = htons(params.servPort); /* Server port */
-    if (connect(sock, serverptr, sizeof(server)) < 0)
-        perror("connect");
-    //printf("Connecting to %s port %d\n", params.servIP, params.servPort);
-
-
-    write_to_socket(sock, (char *)args);
-
-    char response[100];
-    read(sock, response, 100);
-
-    printf("response is %s\n", response);
-
-    //printf("I am thread with id %ld and my query is %s\n",pthread_self(), (char *)args );
-    pthread_mutex_unlock(&query_mutex);
-    pthread_exit(NULL);
-}
-
-
-
 void write_to_socket(int socket_fd, char * message)
 {
     int message_len = strlen(message);
     char temp[11];
+    memset(temp, '\0', sizeof(temp));
 
     sprintf(temp, "c$"); //w stands for worker
     //printf("message_len is %d\n", message_len);
@@ -137,7 +199,7 @@ void initQueryArray(int size)
     q_array->queries = malloc(sizeof(char*) * size);
     for(int i = 0; i < size; ++i)
     {
-        q_array->queries[i] = malloc(sizeof(char) * 100);
+        q_array->queries[i] = calloc(sizeof(char) , 100);
     }
     q_array->total = size;
     q_array->current = 0;
@@ -180,7 +242,7 @@ Params inputValidate (int argc, char *argv[])
     {
         params.queryFile = malloc(sizeof(char) *25);
         strcpy(params.queryFile, "./resources/queryFile");
-        params.numThreads = 1;
+        params.numThreads = 2;
         params.servPort = 8000;
         params.servIP = malloc(sizeof(char) * 20);
         strcpy(params.servIP, "127.0.0.1");

@@ -1,18 +1,19 @@
 #include "../headers/worker_list.h"
 
-Worker_Node *createWorkerNode(  char ** countries, int portNum, int country_count )
+Worker_Node *createWorkerNode(  char ** countries, int portNum, int country_count, char *ip )
 {
 	Worker_Node *new_node= malloc(sizeof(Worker_Node));
 	new_node->portNum = portNum;
 	new_node->country_count = country_count;
-	new_node->countries= malloc(sizeof(char) * country_count);
+	new_node->countries= calloc(sizeof(char*) , country_count);
 	
 	for (int i = 0; i < country_count; ++i)
 	{
-		new_node->countries[i] = malloc(sizeof(char) * strlen(countries[i]) + 1);
-		strncpy(new_node->countries[i] , countries[i], strlen(countries[i]));
+		new_node->countries[i] = calloc(sizeof(char) , strlen(countries[i]) + 1);
+		strcpy(new_node->countries[i] , countries[i]);
 	}
-
+	new_node->ip = calloc(sizeof(char) , strlen(ip) + 1);
+	strcpy(new_node->ip, ip);
 	new_node->next = NULL;
 	return new_node;
 }
@@ -24,9 +25,9 @@ void initWorkertList(Worker_list *this_list)
 	this_list->counter = 0;
 }
 
-void insertNewWorker(Worker_list * list, char ** countries, int portNum, int country_count)
+void insertNewWorker(Worker_list * list, char ** countries, int portNum, int country_count, char *ip)
 {
-	Worker_Node *new_worker = createWorkerNode(countries, portNum, country_count);
+	Worker_Node *new_worker = createWorkerNode(countries, portNum, country_count, ip);
 	if (list->counter == 0)
 	{
 		list->head = new_worker;

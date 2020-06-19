@@ -32,6 +32,9 @@ unsigned int calculate_patient_chars( Patient ); //calculate how many charactes 
 
 int max_index(int *, int ); //find the index of a maximum element of the array
 
+int check_for_country( char * );
+
+
 /*********************/
 
 #endif

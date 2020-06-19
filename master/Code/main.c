@@ -91,8 +91,8 @@ int main(int argc, char* argv[])
 
 	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
 
-	getchar();
-
+	getchar(); 
+	
     for (int i = 0; i < params.numWorkers; ++i)
     {
     	pid = wait(&status);
@@ -232,7 +232,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 1;
+        params.numWorkers = 4;
         params.bufferSize = 512;
         params.serverPort = 9000;
         params.serverIP = malloc(sizeof(char) * 30);

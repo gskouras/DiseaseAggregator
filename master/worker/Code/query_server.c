@@ -55,16 +55,16 @@ char * diseaseFrequency( char * input, HashTable * disease_HT, Patient_list *lis
 
 	if(!found)
 	{
-		result = malloc(sizeof(char)* 2);
+		result = malloc(sizeof(char)* 50);
 		sprintf(result, "0");
 		free(disease);
 		free(country);
 		return result;
 	}
 	
-	result = malloc(sizeof(char)* 10);
+	result = malloc(sizeof(char)* 200);
 	sprintf(result, "%d", counter);
-
+	// printf("counterr issss %d\n", counter);
 	free(disease);
 	free(country);
 	return result;
@@ -86,7 +86,7 @@ char * topAgeRanges(char *input, HashTable * disease_HT, Patient_list *list)
 
 	if(date_cmp(d1, d2) == 1) //date 2 is bigger	
 	{
-		printf("First Date must be smaller than second Date\n");
+		//printf("First Date must be smaller than second Date\n");
 		result = malloc(sizeof(char)* 2);
 		sprintf(result, "0");
 		free(disease);
@@ -119,7 +119,7 @@ char * topAgeRanges(char *input, HashTable * disease_HT, Patient_list *list)
 	if(!found)
 	{
 		//printf("didnt found!!!\n");
-		result = malloc(sizeof(char)* 2);
+		result = malloc(sizeof(char)* 50);
 		sprintf(result, "0");
 		free(disease);
 		return result;
@@ -132,7 +132,7 @@ char * topAgeRanges(char *input, HashTable * disease_HT, Patient_list *list)
 		sum += age_ranges[i];
 	}
 
-	result = malloc(sizeof(char)* 50);
+	result = malloc(sizeof(char)* 200);
 	memset(result, '\0', sizeof(result));
 
 	for (int i = 0; i < k; ++i)
@@ -172,11 +172,12 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	int counter = 0;
 	int found = 0;
 
-	// printf("NumPAtient received your queryL:::::: %s \n", input);
+	//printf("NumPAtient received your queryL:::::: %s \n", input);
 	char temp_input[50];
 	strcpy(temp_input , input);
 
 	df_tokenize(temp_input, &disease, &temp_country, &d1, &d2);
+
 
 
 	if(record_exist(disease, disease_HT)) //find if given disease exist
@@ -194,15 +195,18 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 				}
 				else
 				{	
+					
+					//printf("country is %s and themp_country is %s\n", country, temp_country);
 					if(country != NULL)
-					{						
+					{	
+						//printf("O xristis edose xora\n");					
 						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, country, &counter, flag);	
 						found = 1;
 						break;
 					}
 					else if(temp_country != NULL)
 					{
-
+						//printf("O xristis dn edose xora\n");
 						tree_search_Country_dateRange(temp->bucket_item[i].root, d1, d2, temp_country, &counter, flag);				
 						found = 1;
 					}
@@ -214,7 +218,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 
 	if(!found)
 	{
-		result = malloc(sizeof(char)* 2);
+		result = malloc(sizeof(char)* 50);
 		sprintf(result, "0");
 		free(disease);
 		return result;
@@ -222,7 +226,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	
 	if(country)
 	{
-		result = malloc(sizeof(char)* 10);
+		result = malloc(sizeof(char)* 200);
 		sprintf(result, "%s : ", country);
 		sprintf(result, "%s%d", result, counter);
 		free(disease);
@@ -230,7 +234,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	}
 	else if(temp_country)
 	{
-		result = malloc(sizeof(char)* 10);
+		result = malloc(sizeof(char)* 200);
 		sprintf(result, "%s : ", temp_country);
 		sprintf(result, "%s%d", result, counter);
 		free(disease);
@@ -246,7 +250,6 @@ Patient searchPatientRecord(char * input, Patient_list * list)
 	Patient_Node *temp = list->head;
 	Patient dummy;
 	dummy.recordID = 0;
-
 	while(temp != NULL)
 	{	
 		if(strcmp(temp->patient.recordID, input)==0)
@@ -271,7 +274,7 @@ Patient searchPatientRecord(char * input, Patient_list * list)
 char * patient_stringify(Patient patient)
 {
 	unsigned int message_length = calculate_patient_chars(patient);
-	char *result = malloc(sizeof(char) * (message_length));
+	char *result = malloc(sizeof(char) * 1000);
 	sprintf(result, "%s", patient.recordID);
 	sprintf(result, "%s %s", result, patient.firstName);
 	sprintf(result, "%s %s", result, patient.lastName);
@@ -351,7 +354,7 @@ void dateTokenize( char * input, Date *d1, Date *d2)
 
 void df_tokenize (char *input, char ** disease_holder, char ** country_holder, Date *d1, Date *d2)	//printf(" disease holder is%s\n", *disease_holder );
 {	
-	if (strlen(input) < 30) //tokenize without country name
+	if (check_for_country(input)) //tokenize without country name
 	{
 		char *token = strtok( input, " ");
 	
@@ -430,3 +433,26 @@ void topK_tokenize(char * input, char ** country, char ** disease, Date * d1, Da
     d2->year = atoi (token);  
 
 }
+
+int check_for_country( char * query)
+{
+    char temp[100];
+    //printf("query is %s\n", query);
+    strcpy(temp, query);
+    char * token = NULL;
+    int count = 0;
+
+    token = strtok(temp, " ");
+    while(token !=NULL)
+    {
+        token = strtok(NULL, " ");
+        count++;
+    }
+    //printf("counter is %d\n", count);
+    if (count == 3)
+        return 1;
+
+    if(count == 4)
+        return 0;
+}
+

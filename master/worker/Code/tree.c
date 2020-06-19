@@ -171,7 +171,7 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
 
 	Date enter, exit;
 
-	///printf("The given range is between "); print_date(d1);printf("-"); print_date(d2); printf("\n");
+	//printf("COUNTRY IS %s. The given range is between ", country); print_date(d1);printf("-"); print_date(d2); printf("\n");
 
 	/* Since the desired o/p is sorted, recurse for left subtree first 
     If root->data is greater than k1, then only we can get o/p keys 
@@ -185,15 +185,19 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
 		Date_Node *temp = this->date_list.head;
 		while(temp != NULL)
 		{
+
 			exit = temp->patient_node->patient.exitDate;
 			enter = temp->patient_node->patient.entryDate;
-			if(strcmp(temp->patient_node->patient.country, country)== 0)
-			{						
+			// printf("HALOOO\n");
+			if(strcmp(temp->patient_node->patient.country, country) == 0)
+			{		
+				//printf("edo beno????\n");				
+				//printf("i am comparing %s with %s\n",temp->patient_node->patient.country, country);
 				if(date_cmp(enter, exit) == 1 && flag == 1) //this means that the patient has no exit date
 				{
 					//printPatientData(temp->patient_node->patient);
 					*counter = *counter + 1;
-					//printf("counter is %d\n", *counter);
+					// printf("counter is %d\n", *counter);
 				}	
 				else if(date_cmp(enter, exit) == 0 && flag == 0)
 				{

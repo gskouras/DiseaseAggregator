@@ -74,14 +74,51 @@ int main(int argc, char *argv[])
 
     Socket_fd socket_fds[FD_POOL];
 
+    char ip[30];
     while (1) 
     {
-        new_sock = accept_connection(&clientptr, &clientlen, socket_fds,  worker_sock, client_sock);
+        // new_sock = accept_connection(&clientptr, &clientlen, socket_fds,  worker_sock, client_sock, &ip);
+        struct pollfd fdarray[FD_POOL];
+        initSocketFd( socket_fds, worker_sock, client_sock );
+        // int new_sock;
+        int i;
+        while(checkAllFlags(socket_fds))
+        {
+            for (i = 0; i < FD_POOL; i++)
+            {
+                fdarray[i].fd = socket_fds[i].fd;
+                fdarray[i].events = POLLIN;
+            }
 
-        new_job.fd = new_sock;
+            poll(fdarray, FD_POOL, -1);
+            //printf("Infinite\n");
+            for (i = 0; i < FD_POOL; i++)
+            {                
+                if((fdarray[i].revents & POLLIN))
+                {
+                    if(fdarray[i].fd ==  socket_fds[i].fd)
+                    {   
+                        /* accept connection */
+                       if ((new_sock = accept(socket_fds[i].fd, clientptr, &clientlen)) < 0) 
+                            perror("Cannot accept new client");
+                        // convert to client ip
+                        struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
+                        char *s = inet_ntoa(addr_in->sin_addr);
+                        strcpy(ip, s);
+                        new_job.fd = new_sock;
+                        new_job.ip = ip;
 
-        if(!put_job(new_job))
-            printf("Error Occured while inserting a new job to the Cycle_Buffer\n");
+                        if(!put_job(new_job))
+                            printf("Error Occured while inserting a new job to the Cycle_Buffer\n");
+                        socket_fds[i].flag = 0;
+                        // close(socket_fds[i].fd);                 
+                    }               
+                }
+                else if((fdarray[i].revents & POLLHUP)) 
+                    socket_fds[i].flag = 1;
+            }
+        }
+
     }
 
     for (int i = 0; i < params.numThreads; ++i)
@@ -93,80 +130,6 @@ int main(int argc, char *argv[])
 }
 
 
-int accept_connection(struct sockaddr** clientptr,  socklen_t *clientlen, Socket_fd * socket_fds, int worker_sock, int client_sock)
-{
-    struct pollfd fdarray[FD_POOL];
-    initSocketFd( socket_fds, worker_sock, client_sock );
-    int new_sock;
-    int i;
-    while(checkAllFlags(socket_fds))
-    {
-        for (i = 0; i < FD_POOL; i++)
-        {
-            fdarray[i].fd = socket_fds[i].fd;
-            fdarray[i].events = POLLIN;
-        }
-
-        poll(fdarray, FD_POOL, -1);
-        //printf("Infinite\n");
-        for (i = 0; i < FD_POOL; i++)
-        {
-            
-            if((fdarray[i].revents & POLLIN))
-            {
-                if(fdarray[i].fd ==  socket_fds[i].fd)
-                {   
-                    /* accept connection */
-                    if ((new_sock = accept(socket_fds[i].fd, *clientptr, clientlen)) < 0)
-                            perror("accept");
-                    // convert to client ip
-                    struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
-                    char *s = inet_ntoa(addr_in->sin_addr);
-
-                    //printf("Accepted connection from %s\n", s);
-                    socket_fds[i].flag = 0;
-                    return new_sock;                    
-                }               
-            }
-            else if((fdarray[i].revents & POLLHUP)) 
-                socket_fds[i].flag = 1;
-        }
-    }
-}
-
-
-int create_passive_endpoints(struct sockaddr** serverptr, struct sockaddr** clientptr, struct sockaddr_in *server, struct sockaddr_in *client, int * worker_sock, int *client_sock, socklen_t *clientlen, Params params)
-{
- if ((*worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 || (*client_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
-        perror_exit("socket");
-
-    server->sin_family = AF_INET;
-    server->sin_addr.s_addr = htonl(INADDR_ANY);
-    server->sin_port = htons(params.statisticsPortNum);
-
-    /* Bind socket to address */
-    if (bind(*worker_sock, *serverptr, sizeof(*server)) < 0) 
-        perror_exit("bind");
-
-    getsockname(*worker_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
-    params.statisticsPortNum = ntohs(server->sin_port);
-
-    server->sin_port = htons(params.queryPortNum);
-
-    if (bind(*client_sock, *serverptr, sizeof(*server)) < 0) 
-        perror_exit("bind");
-
-    getsockname(*client_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
-    params.queryPortNum = ntohs(server->sin_port);
-    /* Listen for connections */
-    if (listen(*worker_sock, 10) < 0 || listen(*client_sock, 10) < 0) 
-        perror_exit("listen");
-
-    printf("Listening for worker connections to port %d\n", params.statisticsPortNum);
-    printf("Listening for client connections to port %d\n", params.queryPortNum);
-
-    return 1;
-}
 
 /*** Request Handling Functions ***/
 
@@ -182,11 +145,7 @@ void * handle_request()
 
         else if(job.flag == 0) //it means tha the job came from a client
             handle_client(job);
-
-        //close(job.fd);
     }
-    exit(0);
-    //close(job.fd);
 }
 
 
@@ -196,32 +155,34 @@ void handle_client(Job job)
     // pthread_mutex_lock(&print_mutex);
     static int i = 1;
     char mess[100];
+    memset(mess, '\0', sizeof(mess));
+    // pthread_mutex_lock(&print_mutex); 
     read(job.fd, mess, 100);
-    //printf("i is %d ### %s\n",i, mess );
-    char * response = write_to_worker(job.fd, mess, &w_list);
+    // printf("i is %d ### %s\n",i++, mess );
+    write_to_worker(job.fd, mess, &w_list);
+    // close(job.fd);
     // pthread_mutex_unlock(&print_mutex);
-    write(job.fd, response, 50);
-   //free(response);
-    close(job.fd);
-    i++;
 }
 
 
 void handle_worker(Job job)
 {
     char message[100000];
+    memset(message, '\0', sizeof(message));
     read(job.fd,message,100000);
 
     char ** countries_array = NULL;
+    char *port = NULL;
     int count = 0;
 
     char * stats = strtok(message, "$");
     // char *countries = strtok(message, "$");
     char *countries = strtok(NULL, "@");
-    char *temp_countries = malloc(sizeof(char) * strlen(countries));
+    char *temp_countries = calloc(sizeof(char) , strlen(countries) + 1);
     strcpy(temp_countries, countries);
 
-    char *port = strtok(NULL, "\n");
+    port = strtok(NULL, "\n");
+    printf("port is %s\n", port);
     int portnum = atoi(port);
 
     int size = count_countries(countries);
@@ -243,10 +204,10 @@ void handle_worker(Job job)
 
     pthread_mutex_lock(&print_mutex);
     //printf("\n\nI took a job with fd = %d MY ID IS %ld\n", job.fd, pthread_self());
-    //printf("%s\n",stats);
+    printf("%s\n",stats);
 
-    insertNewWorker(&w_list, countries_array, portnum, size);
-
+    insertNewWorker(&w_list, countries_array, portnum, size, job.ip);
+    close(job.fd);
     pthread_mutex_unlock(&print_mutex);
 
     free(temp_countries);
@@ -300,13 +261,14 @@ Job get_job()
     //printf("\n\ntemp is %s\n", temp);
 
     char * token = strtok(temp, "$");
+    if (token != NULL)
+    {
+        if(strcmp(token, "c") == 0)
+            job.flag = 0;
 
-    if(strcmp(token, "w") == 0)
-        job.flag = 1;
-
-    if(strcmp(token, "c") == 0)
-        job.flag = 0;
-    
+        if(strcmp(token, "w") == 0)
+            job.flag = 1;
+    }
     // signal the sender that something was removed from buffer
     pthread_cond_signal(&msg_in);
     pthread_mutex_unlock(&job_mutex);
@@ -364,7 +326,9 @@ int digitValidate(char *a)
 	for (unsigned int i = 0; i < strlen(a); i++)
 	{
 		if(!isdigit(a[i]))
+        {
 			return -1;
+        }
 	}
 	return 0;
 }
@@ -378,8 +342,8 @@ Params inputValidate (int argc, char *argv[])
     {
         params.queryPortNum = 8000;
         params.statisticsPortNum = 9000;
-        params.numThreads = 1;
-        params.bufferSize = 4;
+        params.numThreads = 4;
+        params.bufferSize = 10;
         return params;
     }
 
@@ -438,3 +402,83 @@ void initSocketFd(Socket_fd * socket_fds, int worker_sock, int client_sock)
 
 /*************************************/
 
+
+
+
+// int accept_connection(struct sockaddr** clientptr,  socklen_t *clientlen, Socket_fd * socket_fds, int worker_sock, int client_sock, char **ip)
+// {
+//     struct pollfd fdarray[FD_POOL];
+//     initSocketFd( socket_fds, worker_sock, client_sock );
+//     int new_sock;
+//     int i;
+//     while(checkAllFlags(socket_fds))
+//     {
+//         for (i = 0; i < FD_POOL; i++)
+//         {
+//             fdarray[i].fd = socket_fds[i].fd;
+//             fdarray[i].events = POLLIN;
+//         }
+
+//         poll(fdarray, FD_POOL, -1);
+//         //printf("Infinite\n");
+//         for (i = 0; i < FD_POOL; i++)
+//         {
+            
+//             if((fdarray[i].revents & POLLIN))
+//             {
+//                 if(fdarray[i].fd ==  socket_fds[i].fd)
+//                 {   
+//                     /* accept connection */
+//                     if ((new_sock = accept(socket_fds[i].fd, *clientptr, clientlen)) < 0)
+//                             perror("accept");
+//                     // convert to client ip
+//                     struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
+//                     char *s = inet_ntoa(addr_in->sin_addr);
+//                     getpeername(new_sock, addr_in, clientlen);
+//                     *ip = malloc(sizeof(char) * 50);
+//                     strcpy(*ip, s);
+
+//                     //printf("Accepted connection from %s\n", s);
+//                     socket_fds[i].flag = 0;
+//                     return new_sock;                    
+//                 }               
+//             }
+//             else if((fdarray[i].revents & POLLHUP)) 
+//                 socket_fds[i].flag = 1;
+//         }
+//     }
+// }
+
+
+// int create_passive_endpoints(struct sockaddr** serverptr, struct sockaddr** clientptr, struct sockaddr_in *server, struct sockaddr_in *client, int * worker_sock, int *client_sock, socklen_t *clientlen, Params params)
+// {
+//  if ((*worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 || (*client_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
+//         perror_exit("socket");
+
+//     server->sin_family = AF_INET;
+//     server->sin_addr.s_addr = htonl(INADDR_ANY);
+//     server->sin_port = htons(params.statisticsPortNum);
+
+//     /* Bind socket to address */
+//     if (bind(*worker_sock, *serverptr, sizeof(*server)) < 0) 
+//         perror_exit("bind");
+
+//     getsockname(*worker_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
+//     params.statisticsPortNum = ntohs(server->sin_port);
+
+//     server->sin_port = htons(params.queryPortNum);
+
+//     if (bind(*client_sock, *serverptr, sizeof(*server)) < 0) 
+//         perror_exit("bind");
+
+//     getsockname(*client_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
+//     params.queryPortNum = ntohs(server->sin_port);
+//     /* Listen for connections */
+//     if (listen(*worker_sock, 10) < 0 || listen(*client_sock, 10) < 0) 
+//         perror_exit("listen");
+
+//     printf("Listening for worker connections to port %d\n", params.statisticsPortNum);
+//     printf("Listening for client connections to port %d\n", params.queryPortNum);
+
+//     return 1;
+// }

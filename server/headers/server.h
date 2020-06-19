@@ -38,6 +38,7 @@ typedef struct
 typedef struct {
 	int flag; // 0 is means a job to send to workers 1 means a job that is send from workers
 	int fd;
+	char * ip;
 }Job;
 
 typedef struct {
@@ -69,7 +70,7 @@ Job get_job();
 
 /*************************/
 
-int accept_connection(struct sockaddr**, socklen_t *, Socket_fd *, int , int );
+int accept_connection(struct sockaddr**, socklen_t *, Socket_fd *, int , int, char ** );
 
 int create_passive_endpoints( struct sockaddr**, struct sockaddr** , struct sockaddr_in *, struct sockaddr_in *, int * , int *, socklen_t * , Params);
 
