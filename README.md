@@ -1,6 +1,6 @@
 ## Disease Aggregator
 
-### [System Programming](http://cgi.di.uoa.gr/~mema/courses/k24/k24.html) - [Second Assigment](./resources/lib/hw3-spring-2020.pdf)
+### [System Programming](http://cgi.di.uoa.gr/~mema/courses/k24/k24.html) - [Third Assigment](./resources/lib/hw3-spring-2020.pdf)
 
 The aim of this project is to get familiarize with thread programming and network communication, get acquainted with creating proccesses making use of the fork/exec system calls, inter-process communication(IPC) via named pipes and signalsthe use of low-level I\O. 
 
@@ -11,7 +11,7 @@ As part of this work i implemented a distributed information processing software
 
 ## Implementation
 
-#### Master
+### Master
 
 First of all the application starts numWorkers Workers child processes and distributes subdirectories with the countries evenly to all worker proccesses and inform each Worker via named pipe for  the subdirectories which he will be undertaken.
 
@@ -25,7 +25,7 @@ When this procedure finish, worker process receives [queries](./resources/lib/ma
 
 Parent process finally waits to fork a new Worker process in case an existing Worker suddenly terminates.
 
-#### Server
+### Server
 
 When the Server starts, the original thread should create numThreads threads. The main process thread is listening to ports queryPortNum and statisticsPortNum, accepts connections with the accept () system call and place the socket descriptors correspond to the connections in a circular size buffer defined by bufferSize. 
 
@@ -42,13 +42,14 @@ The overall architectural design of the Project is depicted below.
 
 >![alt text](./resources/lib/overall.jpg "Overall")
 
-### Compilation and Running
+## Compilation and Running
 
-Compile
+#### Compile
 ```bash
-make
+ make
 ```
-Execution with personalized parameters
+#### Execution with personalized parameters
+
  ```bash
   ./master –w numWorkers -b bufferSize –s serverIP –p serverPort -i input_dir
  ```
@@ -64,17 +65,17 @@ where -q is the port to communicate with client, -s the port to communicate with
  ```
 where -q is the name of the file which contains the queries, -w is the number of client's threads, -sp is the port the server is listening for connections with the client and -sip is the server's IP address
 
-### Scripts
+## Scripts
 
 The input directory can me mannually created by running the shell script files_create.sh executable(./resources/scripts/input_generator/create_file)
 
-Execution
+#### Execution
  ```bash
   ./create_files.sh diseaseFile countriesFile input_dir numFilesPerDirectory numRecordsPerFile
  ```
 Also there is an option to generate random queries that can be sent to the servers by running the python script generator.py(./resources/scripts/query_generator/generator.py)
 
-Execution
+#### Execution
  ```bash
   python generator.py
  ```
