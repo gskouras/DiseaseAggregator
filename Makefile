@@ -25,7 +25,7 @@ query_server.o: ./master/worker/Code/query_server.c
 
 # Target to compile Aggregator files seperately#
 master: main.o pipe.o input_list.o
-	gcc -o masters main.o pipe.o input_list.o -g -Wall
+	gcc -o master main.o pipe.o input_list.o -g -Wall
 
 main.o:	 ./master/code/main.c
 	gcc -c -g ./master/code/main.c
@@ -39,7 +39,7 @@ input_list.o:	./master/code/input_list.c
 
 #target to compile server files seperately#
 server: server.o worker_list.o query_handler.o
-	gcc -o servers server.o worker_list.o query_handler.o -pthread -Wall
+	gcc -o whoServer server.o worker_list.o query_handler.o -pthread -Wall
 
 server.o:	./server/code/server.c
 	gcc -c -g ./server/code/server.c
@@ -52,7 +52,7 @@ query_handler.o: ./server/code/query_handler.c
 
 #target to compile client files seperately#
 client: client.o
-	gcc -o clients client.o -pthread -Wall
+	gcc -o whoclient client.o -pthread -Wall
 
 client.o:	./client/code/client.c
 	gcc -c -g ./client/code/client.c
