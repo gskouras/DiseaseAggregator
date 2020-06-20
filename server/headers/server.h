@@ -50,11 +50,13 @@ typedef struct {
 
 
 
-int digitValidate(char *);
+int digitValidate( char *);
 
-Params inputValidate (int argc, char *argv[]);
+Params inputValidate ( int , char **);
 
-void perror_exit(char *);
+void perror_exit( char *);
+
+void signal_handler( int );
 
 /**** Cycle Buffer Functions ***/
 
@@ -76,18 +78,18 @@ int create_passive_endpoints( struct sockaddr**, struct sockaddr** , struct sock
 
 void * handle_request();
 
-void handle_worker(Job job);
+void handle_worker( Job );
 
-void handle_client(Job job);
+void handle_client( Job );
 
 int count_countries( char* );
 
 
 /*** Poll() helper functions ***/
 
-int checkAllFlags(Socket_fd * socket_fds); //return 1 oso kati den exei diavastei
+int checkAllFlags( Socket_fd * ); //return 1 oso kati den exei diavastei
 
-void initSocketFd(Socket_fd * socket_fds, int, int);
+void initSocketFd( Socket_fd * , int, int);
 
  /****************************/
 

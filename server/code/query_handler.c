@@ -47,7 +47,7 @@ void write_to_worker(int client_fd, char * query, Worker_list *w_list)
 
 						write(new_sock, temp_query, 200);
 						char *response = malloc(sizeof(char) * 200);
-
+                        usleep(100);
 						read(new_sock,response, 200);
                         close(new_sock);
 						// printf("response is %s\n", response);
@@ -94,6 +94,7 @@ void write_to_worker(int client_fd, char * query, Worker_list *w_list)
                     {
                         new_sock = connect_to_worker( portNum, ip );
                         write(new_sock, temp_query, 200);
+                        usleep(100);
                         char *response = malloc(sizeof(char) * 200);
                         read(new_sock,response, 200);
                         close(new_sock);
@@ -149,6 +150,7 @@ void write_to_worker(int client_fd, char * query, Worker_list *w_list)
 
                 new_sock = connect_to_worker( portNum, ip );
                 write(new_sock, temp_query, 200);
+                usleep(100);
                 char *response = malloc(sizeof(char) * 200);
                 read(new_sock,response, 200);
                 close(new_sock);
@@ -201,6 +203,7 @@ void write_to_worker(int client_fd, char * query, Worker_list *w_list)
 
                     write(new_sock, temp_query, 200);
                     char *response = malloc(sizeof(char) * 200);
+                    usleep(100);
 
                     read(new_sock,response, 200);
                     close(new_sock);
@@ -259,6 +262,7 @@ void write_to_worker(int client_fd, char * query, Worker_list *w_list)
 
                         write(new_sock, temp_query, 200);
                         char *response = malloc(sizeof(char) * 200);
+                        usleep(100);
 
                         read(new_sock,response, 200);
                         // printf("response is %s\n", response);
@@ -307,6 +311,7 @@ void write_to_worker(int client_fd, char * query, Worker_list *w_list)
                         new_sock = connect_to_worker( portNum, ip );
                         write(new_sock, temp_query, 200);
                         char *response = malloc(sizeof(char) * 200);
+                        usleep(100);
                         read(new_sock,response, 200);
                         close(new_sock);
                         // pthread_mutex_lock(&handler_mutex);

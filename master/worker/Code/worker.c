@@ -16,7 +16,7 @@ HashTable country_HT;
 
 int main(int argc, char *argv[])
 {
-    // signal(SIGINT, signal_handler);
+    signal(SIGINT, signal_handler);
     // signal(SIGQUIT, signal_handler);
 
     char  *countries = NULL , *connect_info = NULL, *summary_stats = NULL;
@@ -28,8 +28,6 @@ int main(int argc, char *argv[])
         printf("\nAn Error Occured While Proccesing Input\n\n");
         exit(0);            
     }
-
-    int sig_flag = 0;
 
     int worker_sock, new_sock;
     struct sockaddr_in server, client;
@@ -57,13 +55,14 @@ int main(int argc, char *argv[])
         char query[200];
         read(new_sock,query,200);
 
-        //printf("Query received from worker with pid %d is %s\n",getpid() , query);
+        printf("Query received from worker with pid %d is %s\n",getpid() , query);
 
-        result = query_handler(query, &disease_HT, &country_HT, &patient_list, &d_list, params.write_fd);
-        //printf("result is %s\n",result);
+        result = query_handler(query, &disease_HT, &country_HT, &patient_list, &d_list, params.write_fd);        
+        usleep(10);
+        printf("result is %s\n\n",result);
         
         write(new_sock, result, 200);
-        //free(result);
+        free(result);
         close(new_sock); 
     }
 
@@ -433,27 +432,25 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
             //printf("strlen of input is %ld\n",strlen(input));
             if (check_for_country(input))
             {
+                //sleep(1);
                 int index = 0;
                 char * response = malloc(sizeof(char)* 200);
                 strcpy(response, "");
             
                 CountryPath_Node* temp_node = NULL;
-                //printf("Input is %s\n", input);
+                // printf("Input is %s\n", input);
                 int counter = dir_list->counter;
-                //printf("counter is %d\n", counter);
-                //printf("o xristis den exei dosei xora!!!\n");
+                // printf("counter is %d\n", counter);
+                // printf("o xristis den exei dosei xora!!!\n");
                 char temp_country[50];
                 while(counter > 0)
                 {
                     temp_node = get_country(dir_list, index);
                     strcpy(temp_country, temp_node->country_path);
-                    //printf("temp->country path is %s\n", temp->country_path);
                     token = strtok(temp_country, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
-
-                    //printf("token is %s\n", token );
                     char * result = numPatientAdmissions(input, disease_HT, list, token, flag);
                     sprintf(response, "%s\n%s", response, result);
                     free(result);
@@ -464,6 +461,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
             }
             else
             {
+                //printf("o xristis exei dosei xora me query |%s|\n", input);
                 return numPatientAdmissions(input, disease_HT, list, token, flag);
             }
         } 
@@ -475,7 +473,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
             {
                 int index = 0;
                 char * response = malloc(sizeof(char)* 200);
-                strcpy(response, "");
+                memset(response, '\0', sizeof(response));
             
                 CountryPath_Node* temp_node = NULL;
                 //printf("i am in patient dishargers\n");
@@ -487,7 +485,7 @@ char * query_handler(char * message, HashTable * disease_HT, HashTable * country
                     temp_node = get_country(dir_list, index);
                     strcpy(temp_country,temp_node->country_path);
                     // printf("temp->country path is %s\n", temp->country_path);
-                    token = strtok(temp_node->country_path, "/");
+                    token = strtok(temp_country, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
                     token = strtok(NULL, "/");
@@ -653,39 +651,6 @@ Patient line_tokenize(char *line, Patient patient, char * date, char * country )
 void signal_handler(int sig)
 {
     sleep(1); 
-    char buffer[30] = "";
-
-    sprintf(buffer, "log_file_worker.");
-    sprintf(buffer + strlen(buffer), "%u", getpid());
-
-    FILE *fp = fopen(buffer, "w");
-
-    CountryPath_Node* temp = NULL;
-    int counter = d_list.counter;
-    char *token = NULL;
-    int index = 0;
-        
-    while(counter > 0)
-    {
-        temp = get_country(&d_list, index);
-        //printf("temp->country path is %s\n", temp->country_path);
-        token = strtok(temp->country_path, "/");
-        token = strtok(NULL, "/");
-        token = strtok(NULL, "/");
-        token = strtok(NULL, "/");
-
-        //printf("token is %s\n", token );
-        fprintf(fp, "%s\n", token);
-        index++;
-        counter--;
-    }
-
-    fprintf(fp, "Total: %d\n", log_info.total);
-    fprintf(fp, "Success: %d\n", log_info.success);
-    fprintf(fp, "Fail: %d\n" , log_info.fail);
-
-    fclose(fp);
-
     destroyHashTable(&disease_HT);
     destroyHashTable(&country_HT);
     freePatientList(&patient_list);

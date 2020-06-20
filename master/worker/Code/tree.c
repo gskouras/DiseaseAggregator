@@ -192,7 +192,7 @@ void tree_search_Country_dateRange (Tree_Node * this, Date d1, Date d2, char * c
 			if(strcmp(temp->patient_node->patient.country, country) == 0)
 			{		
 				//printf("edo beno????\n");				
-				//printf("i am comparing %s with %s\n",temp->patient_node->patient.country, country);
+				//printf("i am comparing |%s| with |%s|\n",temp->patient_node->patient.country, country);
 				if(date_cmp(enter, exit) == 1 && flag == 1) //this means that the patient has no exit date
 				{
 					//printPatientData(temp->patient_node->patient);

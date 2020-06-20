@@ -16,9 +16,13 @@ Params params; //parameters of the programm
 
 Worker_list w_list;
 
+volatile sig_atomic_t kill_flag = 0;
+
 /*************************/
 int main(int argc, char *argv[])
 {
+
+    signal(SIGINT, signal_handler);
 	params = inputValidate(argc, argv);
 
     initWorkertList(&w_list);
@@ -54,7 +58,7 @@ int main(int argc, char *argv[])
     getsockname(client_sock, (struct sockaddr *)&server, &clientlen); //takes the first available port and give it to server
     params.queryPortNum = ntohs(server.sin_port);
     /* Listen for connections */
-    if (listen(worker_sock, 10) < 0 || listen(client_sock, 10) < 0) 
+    if (listen(worker_sock, 50) < 0 || listen(client_sock, 50) < 0) 
         perror_exit("listen");
 
     printf("Listening for worker connections to port %d\n", params.statisticsPortNum);
@@ -160,7 +164,7 @@ void handle_client(Job job)
     read(job.fd, mess, 100);
     // printf("i is %d ### %s\n",i++, mess );
     write_to_worker(job.fd, mess, &w_list);
-    // close(job.fd);
+    close(job.fd);
     // pthread_mutex_unlock(&print_mutex);
 }
 
@@ -342,8 +346,8 @@ Params inputValidate (int argc, char *argv[])
     {
         params.queryPortNum = 8000;
         params.statisticsPortNum = 9000;
-        params.numThreads = 4;
-        params.bufferSize = 10;
+        params.numThreads = 10;
+        params.bufferSize = 20;
         return params;
     }
 
@@ -403,82 +407,8 @@ void initSocketFd(Socket_fd * socket_fds, int worker_sock, int client_sock)
 /*************************************/
 
 
-
-
-// int accept_connection(struct sockaddr** clientptr,  socklen_t *clientlen, Socket_fd * socket_fds, int worker_sock, int client_sock, char **ip)
-// {
-//     struct pollfd fdarray[FD_POOL];
-//     initSocketFd( socket_fds, worker_sock, client_sock );
-//     int new_sock;
-//     int i;
-//     while(checkAllFlags(socket_fds))
-//     {
-//         for (i = 0; i < FD_POOL; i++)
-//         {
-//             fdarray[i].fd = socket_fds[i].fd;
-//             fdarray[i].events = POLLIN;
-//         }
-
-//         poll(fdarray, FD_POOL, -1);
-//         //printf("Infinite\n");
-//         for (i = 0; i < FD_POOL; i++)
-//         {
-            
-//             if((fdarray[i].revents & POLLIN))
-//             {
-//                 if(fdarray[i].fd ==  socket_fds[i].fd)
-//                 {   
-//                     /* accept connection */
-//                     if ((new_sock = accept(socket_fds[i].fd, *clientptr, clientlen)) < 0)
-//                             perror("accept");
-//                     // convert to client ip
-//                     struct sockaddr_in *addr_in = (struct sockaddr_in *)clientptr;
-//                     char *s = inet_ntoa(addr_in->sin_addr);
-//                     getpeername(new_sock, addr_in, clientlen);
-//                     *ip = malloc(sizeof(char) * 50);
-//                     strcpy(*ip, s);
-
-//                     //printf("Accepted connection from %s\n", s);
-//                     socket_fds[i].flag = 0;
-//                     return new_sock;                    
-//                 }               
-//             }
-//             else if((fdarray[i].revents & POLLHUP)) 
-//                 socket_fds[i].flag = 1;
-//         }
-//     }
-// }
-
-
-// int create_passive_endpoints(struct sockaddr** serverptr, struct sockaddr** clientptr, struct sockaddr_in *server, struct sockaddr_in *client, int * worker_sock, int *client_sock, socklen_t *clientlen, Params params)
-// {
-//  if ((*worker_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 || (*client_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
-//         perror_exit("socket");
-
-//     server->sin_family = AF_INET;
-//     server->sin_addr.s_addr = htonl(INADDR_ANY);
-//     server->sin_port = htons(params.statisticsPortNum);
-
-//     /* Bind socket to address */
-//     if (bind(*worker_sock, *serverptr, sizeof(*server)) < 0) 
-//         perror_exit("bind");
-
-//     getsockname(*worker_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
-//     params.statisticsPortNum = ntohs(server->sin_port);
-
-//     server->sin_port = htons(params.queryPortNum);
-
-//     if (bind(*client_sock, *serverptr, sizeof(*server)) < 0) 
-//         perror_exit("bind");
-
-//     getsockname(*client_sock, (struct sockaddr *)&server, clientlen); //takes the first available port and give it to server
-//     params.queryPortNum = ntohs(server->sin_port);
-//     /* Listen for connections */
-//     if (listen(*worker_sock, 10) < 0 || listen(*client_sock, 10) < 0) 
-//         perror_exit("listen");
-
-//     printf("Listening for worker connections to port %d\n", params.statisticsPortNum);
-//     printf("Listening for client connections to port %d\n", params.queryPortNum);
-
-//     return 1;
-// }
+void signal_handler(int sig)
+{
+    kill_flag = 1;
+    exit(0);
+}

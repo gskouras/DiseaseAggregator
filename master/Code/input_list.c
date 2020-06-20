@@ -61,8 +61,11 @@ CountryPath_Node* get_country(Directory_list * list,  int index)
     int count = 0; 
     while (current != NULL) 
     { 
-        if (count == index) 
+        if (count == index)
+        {
+        	//printf("Current in get_country is %\n", current->country_path);
             return(current); 
+        }
         count++; 
         current = current->next; 
     }         

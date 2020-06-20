@@ -22,17 +22,12 @@ int main(int argc, char *argv[])
 
     readQueryFile(params);
 
+    int thread_id = 0, counter = 0;
+    
+    int remaining_queries = q_array->total;
     pthread_t  threads[params.numThreads];
 
-    int thread_id = 0;
-
-    int counter = 0;
-
-    int remaining_queries = q_array->total;
-
-    int i;
-
-    for (i = 0; i < q_array->total; ++i)
+    for (int i = 0; i < q_array->total; ++i)
     {
         while(params.numThreads > counter)
         {
@@ -93,6 +88,9 @@ int main(int argc, char *argv[])
 
     }
 
+    freeQuriesArray();
+    free(params.queryFile);
+    free(params.servIP);
 
 	return 0;
 }
@@ -170,9 +168,9 @@ void readQueryFile(Params params)
     int count = 0;
     while ((nread = getline(&line, &len, fp)) != -1) 
     {   
-        char * query = strtok(line, "\n");
-        line[strlen(line) - 1] = '\0';
-        strcpy(q_array->queries[count] , line);
+        char * query = strtok(line, "\r\n");
+        query[strlen(query) + 1] = '\0';
+        strcpy(q_array->queries[count] , query);
         count++;
     }  
 
@@ -257,7 +255,7 @@ Params inputValidate (int argc, char *argv[])
     		exit(0);
     	}
 
-    	if ( (strcmp(argv[1], "-q") == 0 && strcmp(argv[3], "-w") == 0 && strcmp(argv[5], "-sp") == 0 && strcmp(argv[7], "-sip"))
+    	if ( (strcmp(argv[1], "-q") == 0 && strcmp(argv[3], "-w") == 0 && strcmp(argv[5], "-sp") == 0 && strcmp(argv[7], "-sip") == 0)
     	&& !digitValidate(argv[4]) && !digitValidate(argv[6]) )
     	{
         	params.queryFile = malloc(sizeof(char) *strlen(argv[2])+1);
@@ -285,4 +283,15 @@ int digitValidate(char *a)
 			return -1;
 	}
 	return 0;
+}
+
+
+void freeQuriesArray()
+{
+    for (int i = 0; i < q_array->total; ++i)
+    {
+        free(q_array->queries[i]);
+    }
+    free(q_array->queries);
+    free(q_array);
 }

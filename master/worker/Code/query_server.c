@@ -172,7 +172,7 @@ char * numPatientAdmissions( char * input, HashTable * disease_HT, Patient_list 
 	int counter = 0;
 	int found = 0;
 
-	//printf("NumPAtient received your queryL:::::: %s \n", input);
+	//printf("NumPatient received your queryL:::::: %s \n", input);
 	char temp_input[50];
 	strcpy(temp_input , input);
 
@@ -441,14 +441,14 @@ int check_for_country( char * query)
     strcpy(temp, query);
     char * token = NULL;
     int count = 0;
-
+    
     token = strtok(temp, " ");
     while(token !=NULL)
     {
-        token = strtok(NULL, " ");
+        token = strtok(NULL, " \n");
         count++;
     }
-    //printf("counter is %d\n", count);
+    // printf("counter is %d\n", count);
     if (count == 3)
         return 1;
 

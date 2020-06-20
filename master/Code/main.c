@@ -5,16 +5,19 @@
 
 Params params;	
 Worker_info * workers_array = NULL;
+
 Log_Info log_info;
-int kill_flag;
+
 Directory_list d_list;
 
-volatile sig_atomic_t child_flag = 0;
+volatile sig_atomic_t free_flag = 0;
+
+volatile sig_atomic_t kill_flag = 0;
 
 int main(int argc, char* argv[])
 {
-	signal(SIGCHLD, worker_handler);
-	// signal(SIGINT, signal_handler);
+	//signal(SIGCHLD, worker_handler);
+	signal(SIGINT, signal_handler);
 	// signal(SIGQUIT, signal_handler);
 
 	kill_flag = 1;
@@ -89,9 +92,11 @@ int main(int argc, char* argv[])
 
 	send_connection_info(workers_array, params);
 
+	sleep(1);
+
 	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
 
-	getchar(); 
+	while (free_flag = 0){}
 	
     for (int i = 0; i < params.numWorkers; ++i)
     {
@@ -232,7 +237,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 4;
+        params.numWorkers = 6;
         params.bufferSize = 512;
         params.serverPort = 9000;
         params.serverIP = malloc(sizeof(char) * 30);
@@ -360,46 +365,15 @@ void worker_handler( int sig )
 void signal_handler(int sig)
 {
 	kill_flag = 0;
-	char logs[50];
+	free_flag = 0;
 	int status;
-	memset(logs, '\0', sizeof(logs));
+	
 	for (int i = 0; i < params.numWorkers; ++i)
     {	
 		kill(workers_array[i].pid, SIGKILL);
 		pid_t pid = wait(&status);
    	}
 
-   	sprintf(logs, "log_file_aggregator.");
-    sprintf(logs + strlen(logs), "%u", getpid());
-
-    FILE *fp = fopen(logs, "w");
-
-    CountryPath_Node* temp = NULL;
-    int counter = d_list.counter;
-    char *token = NULL;
-    int index = 0;
-        
-    while(counter > 0)
-    {
-        temp = get_country(&d_list, index);
-        //printf("temp->country path is %s\n", temp->country_path);
-        token = strtok(temp->country_path, "/");
-        token = strtok(NULL, "/");
-        token = strtok(NULL, "/");
-        token = strtok(NULL, "/");
-
-        //printf("token is %s\n", token );
-        fprintf(fp, "%s\n", token);
-        index++;
-        counter--;
-    }
-
-    fprintf(fp, "Total: %d\n", log_info.total);
-    fprintf(fp, "Success: %d\n", log_info.success);
-    fprintf(fp, "Fail: %d\n" , log_info.fail);
-
-    fclose(fp);
-    exit(0);
 }
 
 
