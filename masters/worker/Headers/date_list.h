@@ -2,7 +2,7 @@
 #define DATE_LIST_H
 #include <stdio.h>
 #include <stdlib.h>
-#include "../Headers/patient_list.h"
+#include "../headers/patient_list.h"
 
 
 typedef struct Date_Node

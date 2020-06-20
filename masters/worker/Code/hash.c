@@ -1,4 +1,4 @@
-#include "../Headers/hash.h"
+#include "../headers/hash.h"
 
 /*** Constructors ***/
 

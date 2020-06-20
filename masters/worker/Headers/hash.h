@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../Headers/tree.h"
+#include "../headers/tree.h"
 
 
 typedef struct {

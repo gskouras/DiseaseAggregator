@@ -5,36 +5,36 @@ all:  master worker server client
 worker: query_server.o worker.o patient_list.o hash.o tree.o date_list.o
 	gcc -o  workers  query_server.o worker.o patient_list.o date_list.o hash.o tree.o -g -Wall
 
-worker.o: ./master/worker/Code/worker.c
-	gcc -g -c ./master/worker/Code/worker.c
+worker.o: ./masters/worker/Code/worker.c
+	gcc -g -c ./masters/worker/code/worker.c
 
-patient_list.o: ./master/worker/Code/patient_list.c
-	gcc -g -c  ./master/worker/Code/patient_list.c
+patient_list.o: ./masters/worker/code/patient_list.c
+	gcc -g -c  ./masters/worker/code/patient_list.c
 
-date_list.o: ./master/worker/Code/date_list.c
-	gcc -g -c  ./master/worker/Code/date_list.c
+date_list.o: ./masters/worker/code/date_list.c
+	gcc -g -c  ./masters/worker/code/date_list.c
 
-hash.o: ./master/worker/Code/hash.c
-	gcc -g -c  ./master/worker/Code/hash.c
+hash.o: ./masters/worker/code/hash.c
+	gcc -g -c  ./masters/worker/code/hash.c
 
-tree.o: ./master/worker/Code/tree.c
-	gcc -g -c  ./master/worker/Code/tree.c
+tree.o: ./masters/worker/code/tree.c
+	gcc -g -c  ./masters/worker/code/tree.c
 
-query_server.o: ./master/worker/Code/query_server.c
-	gcc -g -c  ./master/worker/Code/query_server.c
+query_server.o: ./masters/worker/code/query_server.c
+	gcc -g -c  ./masters/worker/code/query_server.c
 
 # Target to compile Aggregator files seperately#
 master: main.o pipe.o input_list.o
 	gcc -o master main.o pipe.o input_list.o -g -Wall
 
-main.o:	 ./master/code/main.c
-	gcc -c -g ./master/code/main.c
+main.o:	 ./masters/code/main.c
+	gcc -c -g ./masters/code/main.c
 
-pipe.o:	 ./master/code/pipe.c
-	gcc -c -g ./master/code/pipe.c
+pipe.o:	 ./masters/code/pipe.c
+	gcc -c -g ./masters/code/pipe.c
 
-input_list.o:	./master/code/input_list.c
-	gcc -c -g ./master/code/input_list.c
+input_list.o:	./masters/code/input_list.c
+	gcc -c -g ./masters/code/input_list.c
 
 
 #target to compile server files seperately#
@@ -54,19 +54,13 @@ query_handler.o: ./server/code/query_handler.c
 client: client.o
 	gcc -o whoclient client.o -pthread -Wall
 
-client.o:	./client/code/client.c
-	gcc -c -g ./client/code/client.c
+client.o:	./client/client.c
+	gcc -c -g ./client/client.c
 
 
 clean:
 	rm *.o
-	rm masters
+	rm master
 	rm workers
-	rm servers
-	rm clients
-
-# run:
-# 	./masters
-
-# val:
-# 	valgrind --trace-children=yes --track-origins=yes --leak-check=full ./masters
+	rm whoServer
+	rm whoClient

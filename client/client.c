@@ -1,4 +1,4 @@
-#include "../headers/client.h"
+#include "client.h"
 
 
 // conditional variable, signals a send operation (sender waits on this)

@@ -1,4 +1,4 @@
-#include "../Headers/patient_list.h"
+#include "../headers/patient_list.h"
 
 
 Patient_Node *createPatientNode(Patient patient)

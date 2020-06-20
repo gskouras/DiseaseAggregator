@@ -1,4 +1,4 @@
-#include "../Headers/worker.h"
+#include "../headers/worker.h"
 #include "../../code/input_list.c"
 
 /*** Global Variables that allow signal handlers to retrive usefull Informations ***/ 

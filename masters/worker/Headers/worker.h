@@ -20,8 +20,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>	
-#include "../Headers/hash.h"
-#include "../Headers/query_server.h"
+#include "../headers/hash.h"
+#include "../headers/query_server.h"
 #include "../../headers/input_list.h"
 
 
