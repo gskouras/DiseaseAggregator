@@ -35,7 +35,7 @@ The job of server threads is to take a file descriptor form circular buffer, ide
 
 The multithreaded Client functions as follows. The main thread starts by reading the [queryFile](./resources/lib/manual.txt) line by line. In each line there is an order for the server. For each command a new thread is being created that will undertake to send a command via socket to the server. Threads are created but not immediately connected to server. When all the threads of the thread pool have receive an order, then the threads should start all together to try to connect to the server and send their order.
 
-When commands are sent, each thread prints the answer it received from Server to stdout and terminates. When all the threads are finished, the client also terminates.
+When commands have been sent, each thread prints the answer it received from Server to stdout and terminates. When all the threads are finished, the client also terminates.
 
 
 #### The overall architectural design of the Project is depicted below.
@@ -68,7 +68,7 @@ where -q is the name of the file which contains the queries, -w is the number of
 
 #### Create Directories
 
-The input directory can me mannually created by running the shell script files_create.sh executable(./resources/scripts/input_generator/create_file)
+The input directory can me mannually created by running the [files_create.sh](./resources/scripts/input_generator/create_files.sh) bash script.
 
 Execution
  ```bash
@@ -77,7 +77,7 @@ Execution
 
 #### Create Queries
 
-Also there is an option to generate random queries that can be sent to the servers by running the python script generator.py(./resources/scripts/query_generator/generator.py)
+Also there is an option to generate random queries that can be sent to the servers by running the python script [generator.py](./resources/scripts/query_generator/generator.py)
 
 Execution
  ```bash
