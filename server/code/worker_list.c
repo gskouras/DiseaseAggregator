@@ -78,8 +78,14 @@ void freeWorkerList(Worker_list * list )
 	while (list->counter != 0)
 	{
 		temp = list->head;
+		for (int i = 0; i < temp->country_count; ++i)
+		{
+			free(temp->countries[i]);
+		}
+		free(temp->countries);
+		free(temp->ip);
+		free(temp);
 		list->head = list->head->next;
 		list->counter--;
-		free(temp);
 	}
 }

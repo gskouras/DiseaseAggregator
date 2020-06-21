@@ -16,8 +16,6 @@ int main(int argc, char *argv[])
 {
 	params = inputValidate(argc, argv);
 
-    printf("params num/Threads are %d\n", params.numThreads);
-
     int queries = count_queries(params.queryFile);
 
     readQueryFile(params);
@@ -27,8 +25,14 @@ int main(int argc, char *argv[])
     int remaining_queries = q_array->total;
     pthread_t  threads[params.numThreads];
 
+    printf("Number of Queries is %d and number of Threads is %d\n\n", queries, params.numThreads);
+    printf("Queries will be sent to the Server in %d Batches of %d\n", queries/params.numThreads, params.numThreads);
+
+    printf("\nProccedure Starts in 3\n");sleep(1);printf("2\n");sleep(1);printf("1\n");sleep(1);printf("\nGO!\n\n");
+
     for (int i = 0; i < q_array->total; ++i)
     {
+        flag = 0;       
         while(params.numThreads > counter)
         {
             if(remaining_queries >= params.numThreads)
@@ -42,11 +46,10 @@ int main(int argc, char *argv[])
 
                 if(params.numThreads == counter)
                 {   
-                    //printf("\nKano broadcast sta thread\n");
                     // printf("\n");
-                    pthread_cond_broadcast(&send_message);
                     flag = 1;
-                    printf("\n");
+                    pthread_cond_broadcast(&send_message);
+                    printf("\n\n");
                     if(remaining_queries >= params.numThreads)
                     {
                         // printf("remaining_queries are %d\n",remaining_queries );
@@ -55,8 +58,7 @@ int main(int argc, char *argv[])
                             pthread_join(threads[i], NULL);
                             remaining_queries--;
                             //printf("Perimeno na teliosei to %d thread me id %d\n",i, thread_id );
-                        }
-                    usleep(1000);                    
+                        }                   
                     }
                     thread_id = 0;
                 }
@@ -64,33 +66,26 @@ int main(int argc, char *argv[])
             else
             {      
                 if(remaining_queries == 0)
-                    exit(0);
+                    client_exit();
 
                 for (int j = i; j < q_array->total; j++)
                 {
                     pthread_create(&threads[thread_id], NULL, send_query, q_array->queries[j]);  
                 }
-                pthread_cond_broadcast(&send_message);
                 flag = 1;
-                printf("\n");
+                pthread_cond_broadcast(&send_message);
+                printf("\n\n");
                 for (int i = 0; i < remaining_queries; ++i)
                 {
                     pthread_join(threads[i], NULL);
                     remaining_queries--;
                 }
-                usleep(1000);
-            }   
-
-            flag = 0;          
+            }      
         }
         i--;
         counter = 0;
 
     }
-
-    freeQuriesArray();
-    free(params.queryFile);
-    free(params.servIP);
 
 	return 0;
 }
@@ -98,12 +93,16 @@ int main(int argc, char *argv[])
 
 void * send_query(void * args)
 {
-    //printf("Irtha na perimeno me thread id %ld\n", pthread_self());
-    // usleep(1000);
-    while(flag = 0)
+    //printf("Irtha na perimeno me thread id %ld ::: %s\n", pthread_self(), (char*)args);
+    // printf("Flag is %d\n", flag );
+    pthread_mutex_lock(&query_mutex);
+    while(flag == 0)
     {
         pthread_cond_wait(&send_message, &query_mutex); //while buffer is empty this thread sleeps
     }
+    pthread_mutex_unlock(&query_mutex);
+
+
     int sock;
     struct sockaddr_in server;
     struct sockaddr *serverptr = (struct sockaddr*)&server;
@@ -123,13 +122,9 @@ void * send_query(void * args)
     server.sin_port = htons(params.servPort); /* Server port */
     if (connect(sock, serverptr, sizeof(server)) < 0)
         perror("connect");
-    //printf("Connecting to %s port %d\n", params.servIP, params.servPort);
 
-    
+    // printf("Connecting to %s port %d\n", params.servIP, params.servPort);
     write_to_socket(sock, (char *)args);
-    // pthread_mutex_unlock(&query_mutex);
-
-
     char response[200];
     
     pthread_mutex_lock(&query_mutex);
@@ -240,7 +235,7 @@ Params inputValidate (int argc, char *argv[])
     {
         params.queryFile = malloc(sizeof(char) *25);
         strcpy(params.queryFile, "./resources/queryFile");
-        params.numThreads = 2;
+        params.numThreads = 5;
         params.servPort = 8000;
         params.servIP = malloc(sizeof(char) * 20);
         strcpy(params.servIP, "127.0.0.1");
@@ -286,7 +281,7 @@ int digitValidate(char *a)
 }
 
 
-void freeQuriesArray()
+void freeQueriesArray()
 {
     for (int i = 0; i < q_array->total; ++i)
     {
@@ -294,4 +289,13 @@ void freeQuriesArray()
     }
     free(q_array->queries);
     free(q_array);
+}
+
+
+void client_exit()
+{
+    freeQueriesArray();
+    free(params.queryFile);
+    free(params.servIP);
+    exit(0);
 }

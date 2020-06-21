@@ -70,6 +70,8 @@ int buffer_isFull();
 
 Job get_job();
 
+void free_cycle_buffer();
+
 /*************************/
 
 int accept_connection(struct sockaddr**, socklen_t *, Socket_fd *, int , int, char ** );

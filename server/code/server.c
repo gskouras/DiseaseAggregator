@@ -16,6 +16,8 @@ Params params; //parameters of the programm
 
 Worker_list w_list;
 
+pthread_t * threads = NULL;
+
 volatile sig_atomic_t kill_flag = 0;
 
 /*************************/
@@ -64,10 +66,10 @@ int main(int argc, char *argv[])
     printf("Listening for worker connections to port %d\n", params.statisticsPortNum);
     printf("Listening for client connections to port %d\n", params.queryPortNum);
 
-    pthread_t threads[params.numThreads];
-
     init_cycle_buffer();
    
+    threads = malloc(sizeof(pthread_t) * params.bufferSize);
+
     for (int i = 0; i < params.numThreads; ++i)
     {
         pthread_create(&threads[i],NULL,handle_request,NULL);
@@ -77,6 +79,7 @@ int main(int argc, char *argv[])
     Job new_job;
 
     Socket_fd socket_fds[FD_POOL];
+
 
     char ip[30];
     while (1) 
@@ -125,11 +128,6 @@ int main(int argc, char *argv[])
 
     }
 
-    for (int i = 0; i < params.numThreads; ++i)
-    {
-        pthread_join(threads[i],NULL);
-    }
-
     return 0;
 }
 
@@ -140,7 +138,7 @@ int main(int argc, char *argv[])
 void * handle_request()
 {
     Job job;
-    while(1)
+    while(kill_flag == 0)
     {
         job = get_job();
 
@@ -150,6 +148,7 @@ void * handle_request()
         else if(job.flag == 0) //it means tha the job came from a client
             handle_client(job);
     }
+    pthread_exit(NULL);
 }
 
 
@@ -321,6 +320,20 @@ int buffer_isFull()
     return 0;
 }
 
+
+
+void free_cycle_buffer()
+{
+    for (int i = 0; i < circular_buffer->size; ++i)
+    {
+        // if(ip != NULL)
+        //     free(circular_buffer->job_array[i].ip);        
+    }
+
+    free(circular_buffer->job_array);
+    free(circular_buffer);
+}
+
 /*************************/
 
 /*** Utillity Functions ***/
@@ -410,5 +423,10 @@ void initSocketFd(Socket_fd * socket_fds, int worker_sock, int client_sock)
 void signal_handler(int sig)
 {
     kill_flag = 1;
+    freeWorkerList(&w_list);
+    free_cycle_buffer();
+    free(threads);
+    printf("\n\nServer is Exiting...\n\n");
     exit(0);
+
 }

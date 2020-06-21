@@ -2,12 +2,12 @@
 
 ### [System Programming](http://cgi.di.uoa.gr/~mema/courses/k24/k24.html) - [Second Assigment](./resources/lib/hw3-spring-2020.pdf)
 
-The aim of this project is to get familiarize with thread programming and network communication, get acquainted with creating proccesses making use of the fork/exec system calls, inter-process communication(IPC) via named pipes and signalsthe use of low-level I\O. 
+The aim of this project is to get familiarize with thread programming and network communication, get acquainted with creating proccesses making use of the fork/exec system calls, inter-process communication(IPC) via named pipes and signals making use of low-level I\O. 
 
-As part of this work i implemented a distributed information processing software that that receives and asnwer queries about diseases infections. Specifically, three programms were  implemented: 
-1) a master program that will create a series of Worker processes 
-2) a multi-threaded server that will collect summary statistics from the Worker through netwok and queries from customers
-3) a multithreaded client program whoClient that will create a lot threads, where each thread plays the role of a customer who will send questions to server.
+As part of this work i implemented a distributed information processing software that receives and asnwer queries about diseases infections. Specifically, three programms were implemented: 
+1) a master program that creates a series of Worker processes 
+2) a multi-threaded server that collects summary statistics from Worker procceses and queries from customers through network.
+3) a multithreaded Client program that creates threads, where each thread plays the role of a customer who will send queries to server.
 
 ## Implementation
 
@@ -19,30 +19,30 @@ Each Worker process, for each catalog assigned to it, reads all its files in chr
 
 The architectural design of data structures used for saving incoming data is depicted below
 
->![alt text](./resources/lib/structs.c.jpg "Structs")
+![alt text](./resources/lib/structs.c.jpg "Structs")
 
-When this procedure finish, worker process receives [queries](./resources/lib/manual.txt) via socket from the server and send him the result back to him. 
+When this procedure finish, worker process receives queries via socket from the server and send the result back to him. 
 
-Parent process finally waits to fork a new Worker process in case an existing Worker suddenly terminates.
+In the meantime, Parent process waits to fork a new Worker process in case an existing Worker suddenly terminates.
 
 #### Server
 
-When the Server starts, the original thread should create numThreads threads. The main process thread is listening to ports queryPortNum and statisticsPortNum, accepts connections with the accept () system call and place the socket descriptors correspond to the connections in a circular size buffer defined by bufferSize. 
+When the Server starts, the original thread creates numThreads threads. The main process thread is listening to queryPortNum and statisticsPortNum ports, accepts connections with the accept() system call and place the socket descriptors correspond to the connections in a circular buffer. 
 
 The job of server threads is to take a file descriptor form circular buffer, identify where the request came from(worker or client) and service that request. When the Server accepts a question from a client, it forwards it to the respective worker processes via socket and waits the answer from the workers. The question he promoted in a Worker process along with the answers that server receives from this Worker, are printed on stdout. Server also promotes the answer to corresponding thread of Client who asked the question
 
 ### Client
 
-The multithreaded Client functions as follows. The main thread stars by reading the queryFile line by line. In each line there is an order for the server. For each command a new thread is being created that will undertake to send a command via socket to the server. Threads are created but not immediately connected to server. When all the threads of the thread pool have receive an order, then the threads should start all together to try to connect to the server and send their order.
+The multithreaded Client functions as follows. The main thread starts by reading the queryFile line by line. In each line there is an order for the server. For each command a new thread is being created that will undertake to send a command via socket to the server. Threads are created but not immediately connected to server. When all the threads of the thread pool have receive an order, then the threads should start all together to try to connect to the server and send their order.
 
-When commands are sent, each thread will print the answer it received from Server to stdout and can terminate. When all the threads are finished, the client also finishes.
+When commands are sent, each thread prints the answer it received from Server to stdout and terminates. When all the threads are finished, the client also terminates.
 
 
 The overall architectural design of the Project is depicted below.
 
->![alt text](./resources/lib/overall.jpg "Overall")
+![alt text](./resources/lib/overall.jpg "Overall")
 
-### Compilation and Running
+## Compilation and Running
 
 Compile
 ```bash
@@ -64,7 +64,9 @@ where -q is the port to communicate with client, -s the port to communicate with
  ```
 where -q is the name of the file which contains the queries, -w is the number of client's threads, -sp is the port the server is listening for connections with the client and -sip is the server's IP address
 
-### Scripts
+## Scripts
+
+#### Create Directories
 
 The input directory can me mannually created by running the shell script files_create.sh executable(./resources/scripts/input_generator/create_file)
 
@@ -72,6 +74,9 @@ Execution
  ```bash
   ./create_files.sh diseaseFile countriesFile input_dir numFilesPerDirectory numRecordsPerFile
  ```
+
+#### Create Queries
+
 Also there is an option to generate random queries that can be sent to the servers by running the python script generator.py(./resources/scripts/query_generator/generator.py)
 
 Execution

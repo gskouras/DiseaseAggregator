@@ -47,7 +47,9 @@ void initQueryArray( int );
 
 void write_to_socket( int , char * );
 
-void freeQuriesArray();
+void freeQueriesArray();
+
+void client_exit();
 
 
 #endif
