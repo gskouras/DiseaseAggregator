@@ -11,7 +11,7 @@ As part of this work i implemented a distributed information processing software
 
 ## Implementation
 
-#### Master
+### Master
 
 First of all the application starts numWorkers Workers child processes and distributes subdirectories with the countries evenly to all worker proccesses and inform each Worker via named pipe for  the subdirectories which he will be undertaken.
 
@@ -25,7 +25,7 @@ When this procedure finish, worker process receives queries via socket from the 
 
 In the meantime, Parent process waits to fork a new Worker process in case an existing Worker suddenly terminates.
 
-#### Server
+### Server
 
 When the Server starts, the original thread creates numThreads threads. The main process thread is listening to queryPortNum and statisticsPortNum ports, accepts connections with the accept() system call and place the socket descriptors correspond to the connections in a circular buffer. 
 
@@ -38,7 +38,7 @@ The multithreaded Client functions as follows. The main thread starts by reading
 When commands are sent, each thread prints the answer it received from Server to stdout and terminates. When all the threads are finished, the client also terminates.
 
 
-The overall architectural design of the Project is depicted below.
+#### The overall architectural design of the Project is depicted below.
 
 ![alt text](./resources/lib/overall.jpg "Overall")
 
