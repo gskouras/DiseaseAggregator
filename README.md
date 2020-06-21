@@ -33,7 +33,7 @@ The job of server threads is to take a file descriptor form circular buffer, ide
 
 ### Client
 
-The multithreaded Client functions as follows. The main thread starts by reading the queryFile line by line. In each line there is an order for the server. For each command a new thread is being created that will undertake to send a command via socket to the server. Threads are created but not immediately connected to server. When all the threads of the thread pool have receive an order, then the threads should start all together to try to connect to the server and send their order.
+The multithreaded Client functions as follows. The main thread starts by reading the [queryFile](./resources/lib/manual.txt) line by line. In each line there is an order for the server. For each command a new thread is being created that will undertake to send a command via socket to the server. Threads are created but not immediately connected to server. When all the threads of the thread pool have receive an order, then the threads should start all together to try to connect to the server and send their order.
 
 When commands are sent, each thread prints the answer it received from Server to stdout and terminates. When all the threads are finished, the client also terminates.
 
