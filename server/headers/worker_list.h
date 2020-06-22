@@ -35,6 +35,8 @@ void initWorkertList(Worker_list *);
 /**** Date List Functions *****/
 void insertNewWorker( Worker_list * , char ** , int, int, char *);
 
+void update_worker(Worker_list * , int, char *, int);
+
 void printWorkerList( Worker_list * );
 
 Worker_Node* get_worker(Worker_list *,  int );

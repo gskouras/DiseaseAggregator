@@ -41,6 +41,21 @@ void insertNewWorker(Worker_list * list, char ** countries, int portNum, int cou
 	list->tail = new_worker;
 }
 
+void update_worker(Worker_list *w_list, int portnum, char * ip, int country_pos)
+{
+	Worker_Node *temp = w_list->head;
+	int count = 0;
+	while(temp != NULL)
+	{
+		if(count == country_pos)
+		{
+			temp->portNum = portnum;
+			strcpy(temp->ip, ip);
+		}
+		count++;
+		temp = temp->next;
+	}
+}
 
 void printWorkerList(Worker_list * list )
 {

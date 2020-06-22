@@ -209,13 +209,47 @@ void handle_worker(Job job)
     //printf("\n\nI took a job with fd = %d MY ID IS %ld\n", job.fd, pthread_self());
     printf("%s\n",stats);
 
-    insertNewWorker(&w_list, countries_array, portnum, size, job.ip);
+    int country_pos;
+    country_pos = country_exist(&w_list, countries_array); //check if a country already exist in worker_list
+     
+
+    if(country_pos != -1)
+    {
+        //printf("I only update worker with country pos  = %d\n", country_pos);
+        update_worker(&w_list, portnum, job.ip, country_pos);
+    }
+    else
+    {
+        //printf("I only inserting new worker with country pos = %d\n", country_pos);
+        insertNewWorker(&w_list, countries_array, portnum, size, job.ip);
+    }
+
     close(job.fd);
     pthread_mutex_unlock(&print_mutex);
 
     free(temp_countries);
 }
 
+
+
+int country_exist(Worker_list * w_list, char** countries)
+{
+    Worker_Node * temp = w_list->head;
+    int pos = 0;
+    while(temp != NULL)
+    {
+        for (int i = 0; i < temp->country_count; ++i)
+        {
+            if(strcmp(temp->countries[i], countries[i]) == 0)
+            {
+                return pos;
+            }
+        }
+        temp = temp->next;
+        pos++;
+    }
+    return -1;
+}
 
 int count_countries( char* string)
 {
@@ -423,6 +457,10 @@ void initSocketFd(Socket_fd * socket_fds, int worker_sock, int client_sock)
 void signal_handler(int sig)
 {
     kill_flag = 1;
+
+    for (int i = 0; i < params.numThreads; ++i)
+        pthread_cancel(threads[i]);
+
     freeWorkerList(&w_list);
     free_cycle_buffer();
     free(threads);

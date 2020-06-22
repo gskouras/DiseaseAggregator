@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
 {
     signal(SIGINT, signal_handler);
     // signal(SIGQUIT, signal_handler);
-
     char  *countries = NULL , *connect_info = NULL, *summary_stats = NULL;
 
     Params params = init_params( argv[1], argv[2], &countries, &connect_info, atoi(argv[3]));
@@ -93,7 +92,7 @@ int create_socket(struct sockaddr** serverptr, struct sockaddr** clientptr, stru
 
     printf("worker_port is %d\n",worker_port );
     
-    if (listen(*worker_sock, 5) < 0) 
+    if (listen(*worker_sock, 50) < 0) 
         perror_exit("listen");
 
     return worker_port;

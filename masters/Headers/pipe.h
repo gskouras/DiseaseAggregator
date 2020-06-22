@@ -47,16 +47,7 @@ void write_to_fifo(int, char *);
 
 int worker( char *, char * , int );
 
-void open_manual();
 
-
-/*** Utillity Functions *////
-
-int find_worker_country( Worker_info *, int,  char *); // find the position of the worker with a specific country
-
-void df_tokenize (char *, char ** , char ** , Date *, Date *);
-
-void dateTokenize( char *, Date *, Date *);
 
 #endif
 

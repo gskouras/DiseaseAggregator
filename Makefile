@@ -5,7 +5,7 @@ all:  master worker server client
 worker: query_server.o worker.o patient_list.o hash.o tree.o date_list.o
 	gcc -o  workers  query_server.o worker.o patient_list.o date_list.o hash.o tree.o -g -Wall
 
-worker.o: ./masters/worker/Code/worker.c
+worker.o: ./masters/worker/code/worker.c
 	gcc -g -c ./masters/worker/code/worker.c
 
 patient_list.o: ./masters/worker/code/patient_list.c
@@ -52,7 +52,7 @@ query_handler.o: ./server/code/query_handler.c
 
 #target to compile client files seperately#
 client: client.o
-	gcc -o whoclient client.o -pthread -Wall
+	gcc -o whoClient client.o -pthread -Wall
 
 client.o:	./client/client.c
 	gcc -c -g ./client/client.c

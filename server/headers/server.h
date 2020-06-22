@@ -86,6 +86,8 @@ void handle_client( Job );
 
 int count_countries( char* );
 
+int country_exist( Worker_list * , char** ); //check if a country exist in worker_list
+
 
 /*** Poll() helper functions ***/
 

@@ -16,7 +16,7 @@ volatile sig_atomic_t kill_flag = 0;
 
 int main(int argc, char* argv[])
 {
-	//signal(SIGCHLD, worker_handler);
+	signal(SIGCHLD, worker_handler);
 	signal(SIGINT, signal_handler);
 	// signal(SIGQUIT, signal_handler);
 
@@ -96,7 +96,8 @@ int main(int argc, char* argv[])
 
 	printf("\nWorkers Received and Saved Requested Data Succesfully!\n");
 
-	while (free_flag = 0){}
+	// while (free_flag = 0){}
+	getchar();
 	
     for (int i = 0; i < params.numWorkers; ++i)
     {
@@ -237,7 +238,7 @@ Params inputValidate (int argc, char *argv[])
     
     if(argc==1)
     {
-        params.numWorkers = 6;
+        params.numWorkers = 5;
         params.bufferSize = 512;
         params.serverPort = 9000;
         params.serverIP = malloc(sizeof(char) * 30);
@@ -249,9 +250,9 @@ Params inputValidate (int argc, char *argv[])
 
     else
     { 
-    	if ( argc != 10 )
+    	if ( argc != 11 )
     	{
-    		printf("Error. Arguement related error: Got %d, expectetd 7\n", argc);
+    		printf("Error. Arguement related error: Got %d, expectetd 11\n", argc);
     		exit(0);
     	}
 
@@ -343,7 +344,9 @@ void worker_handler( int sig )
 	        strcat(message_buffer, temp_buffer); //ston synoliko message buffer vazo ton temp
 
 	       	write_to_fifo(workers_array[index].write_fd, message_buffer); //grafo se olous tous worker ta path me tis xores		
+	        char info[50];
 	        sprintf(info ,"%s$%d", params.serverIP, params.serverPort);
+	        printf("connection info to new child is %s\n", info);
 			write_to_fifo(workers_array[index].write_fd, info);
 		}
 		else
@@ -353,12 +356,13 @@ void worker_handler( int sig )
 			CountryPath_Node *temp =  get_country(&workers_array[index].country_list, 0);
 			strcat(message_buffer, temp->country_path);
 			write_to_fifo(workers_array[index].write_fd, message_buffer);
+			char info[50];
 			sprintf(info ,"%s$%d", params.serverIP, params.serverPort);
 			write_to_fifo(workers_array[index].write_fd, info);
+
+			printf("connection info to new child is %s\n", info);
 		}
 	}
-
-	return;
 }
 
 

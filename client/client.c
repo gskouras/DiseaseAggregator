@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     printf("Number of Queries is %d and number of Threads is %d\n\n", queries, params.numThreads);
     printf("Queries will be sent to the Server in %d Batches of %d\n", queries/params.numThreads, params.numThreads);
 
-    printf("\nProccedure Starts in 3\n");sleep(1);printf("2\n");sleep(1);printf("1\n");sleep(1);printf("\nGO!\n\n");
+    printf("\nProccedure Starts in: \n3\n");sleep(1);printf("2\n");sleep(1);printf("1\n");sleep(1);printf("\nGO!\n\n");
 
     for (int i = 0; i < q_array->total; ++i)
     {
